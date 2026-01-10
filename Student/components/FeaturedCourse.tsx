@@ -1,20 +1,19 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Component Tabs mới cài
+import Link from "next/link"; // 1. QUAN TRỌNG: Import Link từ next/link
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { BookOpen, Star } from "lucide-react";
+import { Button } from "@/components/ui/button"; // Dùng Button của Shadcn để style cho đẹp
+import { ArrowRight, BookOpen, Star } from "lucide-react"; // Import icon ArrowRight
 
-// 1. Định nghĩa danh sách các Danh mục (Tabs)
+// 2. Thêm trường 'slug' vào data để biết link đi đâu
 const categories = [
-  { id: "web", label: "Web Development" },
-  { id: "data", label: "Data Science" },
-  { id: "mobile", label: "Mobile App" },
-  { id: "design", label: "Design" },
+  { id: "web", label: "Web Development", slug: "web-development" },
+  { id: "data", label: "Data Science", slug: "data-science" },
+  { id: "mobile", label: "Mobile App", slug: "mobile-apps" },
+  { id: "design", label: "Design", slug: "design" },
 ];
 
-// 2. Dữ liệu giả lập (Mock Data) - Mỗi khóa học phải có trường 'categoryId' khớp với id ở trên
 const courses = [
   // --- WEB DEVELOPMENT ---
   {
@@ -54,7 +53,7 @@ const courses = [
     categoryId: "data",
     title: "Machine Learning A-Z",
     price: "1.800.000đ",
-    image: "https://files.fullstack.edu.vn/f8-prod/courses/7.png", // Ảnh tạm
+    image: "https://files.fullstack.edu.vn/f8-prod/courses/7.png", 
     rating: 4.6,
     lessons: 200,
     isFeatured: true,
@@ -66,7 +65,7 @@ const courses = [
     categoryId: "mobile",
     title: "Lập trình Flutter Pro",
     price: "1.500.000đ",
-    image: "https://files.fullstack.edu.vn/f8-prod/courses/12.png", // Ảnh tạm
+    image: "https://files.fullstack.edu.vn/f8-prod/courses/12.png",
     rating: 5.0,
     lessons: 90,
     isFeatured: true,
@@ -77,21 +76,21 @@ export function FeaturedCourses() {
   return (
     <div className="py-10 space-y-6">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold text-slate-900">Khởi đầu sự nghiệp của bạn</h2>
+        <h2 className="text-3xl font-bold text-slate-900">Skills to transform your career and life</h2>
         <p className="text-slate-600">
-            Các khóa học được biên soạn bài bản, phù hợp với người mới bắt đầu.
+        From critical skills to technical topics, <b>Keducation</b> supports your professional development.
         </p>
       </div>
 
       {/* --- PHẦN TABS --- */}
       <Tabs defaultValue="web" className="w-full">
         {/* Danh sách các nút bấm (Tab Headers) */}
-        <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b rounded-none mb-6 overflow-x-auto flex-nowrap">
+        <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b rounded-none mb-6 overflow-x-auto flex-nowrap scrollbar-hide">
           {categories.map((cat) => (
             <TabsTrigger
               key={cat.id}
               value={cat.id}
-              className="rounded-none border-b-2 border-transparent px-4 py-3 font-semibold text-slate-500 data-[state=active]:border-slate-900 data-[state=active]:text-slate-900 hover:text-slate-800 transition-colors"
+              className="rounded-none border-b-2 border-transparent px-4 py-3 font-bold text-slate-500 data-[state=active]:border-slate-900 data-[state=active]:text-slate-900 hover:text-slate-800 transition-colors"
             >
               {cat.label}
             </TabsTrigger>
@@ -100,14 +99,13 @@ export function FeaturedCourses() {
 
         {/* Nội dung tương ứng với từng Tab */}
         {categories.map((cat) => {
-            // LOGIC LỌC: Chỉ lấy khóa học thuộc category này VÀ là featured
             const filteredCourses = courses.filter(
                 (c) => c.categoryId === cat.id && c.isFeatured
             );
 
             return (
-                <TabsContent key={cat.id} value={cat.id} className="animate-in fade-in-50 duration-500">
-                     {/* Nếu không có khóa học nào thì hiện thông báo */}
+                <TabsContent key={cat.id} value={cat.id} className="animate-in fade-in-50 duration-500 space-y-8">
+                     {/* Grid khóa học */}
                     {filteredCourses.length === 0 ? (
                         <div className="text-center py-10 text-slate-500">Chưa có khóa học nổi bật cho mục này.</div>
                     ) : (
@@ -117,6 +115,16 @@ export function FeaturedCourses() {
                             ))}
                         </div>
                     )}
+
+                    {/* 3. Nút Show All  */}
+                    <div className="flex justify-start">
+                      <Button variant="outline" className="border-slate-800 text-slate-900 font-bold hover:bg-slate-100 h-10 px-4" asChild>
+                          <Link href={`/topic/${cat.slug}`}>
+                              Show all {cat.label} courses
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                          </Link>
+                      </Button>
+                    </div>
                 </TabsContent>
             );
         })}
@@ -125,7 +133,6 @@ export function FeaturedCourses() {
   );
 }
 
-// Tách nhỏ Component Card ra cho code gọn gàng
 function CourseCard({ data }: { data: any }) {
     return (
         <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border-slate-200 h-full flex flex-col">
