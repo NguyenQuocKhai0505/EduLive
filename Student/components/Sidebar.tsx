@@ -13,9 +13,9 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/", label: "Trang chủ", icon: Home },
-    { href: "/roadmap", label: "Lộ trình", icon: Map },
-    { href: "/articles", label: "Bài viết", icon: FileText },
+    { href: "/", label: "HOME", icon: Home },
+    { href: "/courses", label: "COURSES", icon: Map },
+    { href: "/blog", label: "BLOGS", icon: FileText },
   ];
 
   return (
