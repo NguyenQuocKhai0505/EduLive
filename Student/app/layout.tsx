@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { Sidebar } from "@/components/Sidebar";
+import { Header } from "@/components/layout/Header";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "EduLive - Student Portal",
@@ -29,11 +30,7 @@ export default function RootLayout({
         </div>
         
         {/* Footer placeholder - will be implemented in next step */}
-        <footer className="border-t mt-auto">
-          <div className="container mx-auto px-4 py-4">
-            <p className="text-sm text-gray-500">Footer - Coming soon</p>
-          </div>
-        </footer>
+        <Footer/>
       </body>
     </html>
   );

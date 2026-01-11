@@ -76,8 +76,8 @@ export function FeaturedCourses() {
   return (
     <div className="py-10 space-y-6">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold text-slate-900">Skills to transform your career and life</h2>
-        <p className="text-slate-600">
+        <h2 className="text-3xl font-bold text-slate-900 dark:bg-slate-950 dark:text-white">Skills to transform your career and life</h2>
+        <p className="text-slate-600 dark:bg-slate-950 dark:text-white">
         From critical skills to technical topics, <b>Keducation</b> supports your professional development.
         </p>
       </div>
@@ -90,7 +90,7 @@ export function FeaturedCourses() {
             <TabsTrigger
               key={cat.id}
               value={cat.id}
-              className="rounded-none border-b-2 border-transparent px-4 py-3 font-bold text-slate-500 data-[state=active]:border-slate-900 data-[state=active]:text-slate-900 hover:text-slate-800 transition-colors"
+              className="rounded-none border-b-2 border-transparent px-4 py-3 font-bold text-slate-500 data-[state=active]:border-slate-900 data-[state=active]:text-slate-900 hover:text-slate-800 transition-colors dark:bg-slate-950 dark:text-white bg-white"
             >
               {cat.label}
             </TabsTrigger>
@@ -118,7 +118,7 @@ export function FeaturedCourses() {
 
                     {/* 3. Nút Show All  */}
                     <div className="flex justify-start">
-                      <Button variant="outline" className="border-slate-800 text-slate-900 font-bold hover:bg-slate-100 h-10 px-4" asChild>
+                      <Button variant="outline" className="border-slate-800 text-slate-900 font-bold hover:bg-slate-100 h-10 px-4 dark:bg-slate-950 dark:text-white" asChild>
                           <Link href={`/topic/${cat.slug}`}>
                               Show all {cat.label} courses
                               <ArrowRight className="w-4 h-4 ml-2" />

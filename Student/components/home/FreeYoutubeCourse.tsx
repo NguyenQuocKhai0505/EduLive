@@ -68,7 +68,7 @@ const youtubeCourses = [
   ];
 export function FreeYoutubeCourses(){
     return(
-        <div className="py-16 bg-white-900 text-slate-900">
+        <div className="py-16 bg-white-900 text-slate-900 dark:bg-slate-900 dark:text-white ">
             <div className="max-w-7xl mx-auto px-6 space-y-8">
                 {/* Header Section */}
                 <div className="flex items-end justify-between">
