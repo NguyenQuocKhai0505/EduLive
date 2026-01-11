@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import CourseCard from "./CourseCard";
+import CourseCard from "../shared/CourseCard";
 
 interface RecentlyViewedProps{
     currentCourse:any

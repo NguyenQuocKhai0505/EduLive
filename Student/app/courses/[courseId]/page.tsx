@@ -5,7 +5,7 @@ import { ALL_COURSES } from "@/lib/mock-data";
 
 // Import các Component con
 import CourseHeader from "@/components/course-detail/CourseHeader";
-import CourseSidebar from "../../../components/course-detail/CourseSideBar";
+import CourseSidebar from "../../../components/course-detail/CourseSidebar"
 import SimilarCourses from "../../../components/course-detail/SimiliarCourse";
 import RecentlyViewed from "../../../components/course-detail/RecentlyView";
 import CourseCurriculum from "@/components/course-detail/CourseCurriculum";
