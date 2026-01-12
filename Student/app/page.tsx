@@ -4,7 +4,6 @@ import { FeaturedCourses } from "../components/home/FeaturedCourse";
 import { TopicCategories } from "../components/home/TopicCategories";
 import { FreeYoutubeCourses } from "@/components/home/FreeYoutubeCourse";
 import { Testimonials } from "@/components/home/Testimonials";
-import { Footer } from "@/components/layout/Footer";
 export default function Home() {
   return (
     <div className="p-6 space-y-6"> 

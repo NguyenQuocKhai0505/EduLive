@@ -1,6 +1,46 @@
-// lib/mock-data.ts
+// --- PHẦN 1: ĐỊNH NGHĨA INTERFACE (Khuôn mẫu) ---
 
-export const ALL_COURSES = [
+export interface Lesson {
+  title: string;
+  time: string;
+  type: "video" | "article" | "quiz";
+  preview: boolean;
+}
+
+export interface Section {
+  id: string;
+  title: string;
+  lessons: Lesson[];
+}
+
+export interface Course {
+  id: number | string; // Chấp nhận cả số và chuỗi cho linh hoạt
+  category: string;
+  title: string;
+  description: string;
+  rating: number;
+  students: number;
+  lastUpdated: string;
+  language: string;
+  price: string;          // "1.299.000đ"
+  originalPrice: string;  // "2.500.000đ"
+  discount: string;       // "48%"
+  thumbnail: string;      // URL ảnh
+  instructor: string;
+  duration: string;
+  lectures: number;
+  level: string;
+  
+  // Mảng các chương học (quan trọng cho trang chi tiết)
+  curriculum: Section[];
+  
+  // Mảng kiến thức đạt được
+  whatYouWillLearn: string[];
+}
+
+// --- PHẦN 2: DỮ LIỆU GIẢ (MOCK DATA) ---
+
+export const ALL_COURSES: Course[] = [
   {
     id: 1,
     category: "Data Science",
@@ -17,7 +57,7 @@ export const ALL_COURSES = [
     instructor: "Dr. Angela Yu",
     duration: "29.5 hours",
     lectures: 107,
-    // --- BẠN ĐANG THIẾU PHẦN NÀY ---
+    level: "Beginner",
     curriculum: [
       {
         id: "s1",
@@ -53,7 +93,6 @@ export const ALL_COURSES = [
         ]
       }
     ],
-    // -------------------------------
     whatYouWillLearn: [
       "Master AI concepts and Machine Learning logic.",
       "Build real-world AI apps with Python.",
@@ -61,5 +100,5 @@ export const ALL_COURSES = [
       "Deploy AI models to production."
     ]
   },
-  // ... các khóa học khác (id: 2, 3...)
+  // Bạn có thể copy object trên dán xuống dưới để tạo thêm item id: 2, id: 3...
 ];
