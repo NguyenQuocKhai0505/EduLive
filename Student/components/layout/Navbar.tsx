@@ -10,7 +10,7 @@ import { LanguageModal } from "../shared/LanguageModal";
 import SearchInput from "@/components/shared/SearchInput"; // <--- Import Component mới
 import { useCart } from "@/context/CartContext";
 export function NavBar(){
-    const {cartItems} = useCart() //Lay danh sach gio hang tu kho chung
+    const {items} = useCart() //Lay danh sach gio hang tu kho chung
     // ... (Giữ nguyên phần logic Theme)
     const [theme,setTheme] = useState("light")
     useEffect(()=>{
@@ -60,9 +60,9 @@ export function NavBar(){
                             <ShoppingCart className="h-5 w-5"/>
                             
                             {/* Chỉ hiện số nếu giỏ hàng có đồ (lớn hơn 0) */}
-                            {cartItems.length > 0 && (
+                            {items.length > 0 && (
                                 <span className="absolute top-1 -right-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white ring-2 ring-white">
-                                    {cartItems.length} {/* 👈 3. Hiển thị số lượng thật */}
+                                    {items.length} {/* 👈 3. Hiển thị số lượng thật */}
                                 </span>
                             )}
                         </Button>
