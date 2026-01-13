@@ -1,60 +1,63 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { Course } from "@/lib/mock-data";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { Course } from "../lib/mock-data"; // Import interface của bạn
 
-
-type CartContextType ={
-    cartItems:Course[]
-    addToCart: (course:Course) => void
-    removeFromCart:(courseId:string | number) =>void
-    isInCart:(courseId:string | number) =>boolean
+// CartItem sẽ kế thừa từ Course nhưng có giá dạng số để tính toán
+export interface CartItem extends Omit<Course, "price" | "originalPrice"> {
+  price: number;           
+  originalPrice: number;   
+  priceDisplay: string;    
 }
+
+interface CartContextType {
+  addToCart: (course: Course) => void; 
+  removeFromCart: (id: string | number) => void;
+  totalPrice: number;
+}
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }){
-    const [cartItems,setCartItems] = useState<Course[]>([])
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>([]);
 
-    
+  // Hàm chuyển đổi chuỗi tiền "1.299.000đ" -> số 1299000
+  const parsePrice = (priceString: string): number => {
+    if (!priceString) return 0;
+    // Xóa tất cả ký tự không phải số
+    return parseInt(priceString.replace(/\D/g, '')) || 0;
+  };
 
-    //Luu vao localstorage moi khi cart thay doi(sau nay se thay bang Api)
-    useEffect(() => {
-        const savedCart = localStorage.getItem("cart");
-        if (savedCart) {
-          setCartItems(JSON.parse(savedCart));
-        }
-      }, []);
-
-      // Lưu vào LocalStorage mỗi khi cart thay đổi (sau này thay bằng API post)
-    useEffect(() => {
-        localStorage.setItem("cart", JSON.stringify(cartItems));
-    }, [cartItems]);
-
-    const addToCart = (course: Course) => {
-        setCartItems((prev) => {
-            // Kiểm tra trùng lặp
-            if (prev.find((item) => item.id === course.id)) return prev;
-            return [...prev, course];
-        });
-      }
-
-    const removeFromCart = (courseId: string | number) => {
-        setCartItems((prev) => prev.filter((item) => item.id !== courseId));
-    };
-
-    const isInCart = (courseId: string | number) => {
-        return cartItems.some((item) => item.id === courseId);
-      }
-
-      return (
-        <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, isInCart }}>
-          {children}
-        </CartContext.Provider>
-      );
+  const addToCart = (course: Course) => {
+    // Kiểm tra trùng lặp
+    if (!items.find((i) => i.id === course.id)) {
+      const newItem: CartItem = {
+        ...course,
+        price: parsePrice(course.price),
+        originalPrice: parsePrice(course.originalPrice),
+        priceDisplay: course.price // Lưu lại chuỗi gốc để hiển thị
+      };
+      setItems([...items, newItem]);
     }
+  };
 
-    export const useCart = () => {
-        const context = useContext(CartContext);
-        if (!context) throw new Error("useCart must be used within a CartProvider");
-        return context;
-      }
+  const removeFromCart = (id: string | number) => {
+    setItems(items.filter((item) => item.id !== id));
+  };
+
+  const totalPrice = items.reduce((total, item) => total + item.price, 0);
+
+  return (
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, totalPrice }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+export function useCart() {
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+}
