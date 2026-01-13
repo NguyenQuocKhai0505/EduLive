@@ -1,19 +1,21 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { Course } from "../lib/mock-data"; // Import interface của bạn
+import { Course } from "../lib/mock-data";
 
-// CartItem sẽ kế thừa từ Course nhưng có giá dạng số để tính toán
 export interface CartItem extends Omit<Course, "price" | "originalPrice"> {
-  price: number;           
-  originalPrice: number;   
-  priceDisplay: string;    
+  price: number;
+  originalPrice: number;
+  priceDisplay: string;
 }
 
 interface CartContextType {
-  addToCart: (course: Course) => void; 
+  items: CartItem[];
+  addToCart: (course: Course) => void;
   removeFromCart: (id: string | number) => void;
   totalPrice: number;
+  // 👇 1. Thêm dòng này vào Interface để TypeScript hiểu hàm này tồn tại
+  isInCart: (id: string | number) => boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -21,21 +23,18 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Hàm chuyển đổi chuỗi tiền "1.299.000đ" -> số 1299000
   const parsePrice = (priceString: string): number => {
     if (!priceString) return 0;
-    // Xóa tất cả ký tự không phải số
     return parseInt(priceString.replace(/\D/g, '')) || 0;
   };
 
   const addToCart = (course: Course) => {
-    // Kiểm tra trùng lặp
     if (!items.find((i) => i.id === course.id)) {
       const newItem: CartItem = {
         ...course,
         price: parsePrice(course.price),
         originalPrice: parsePrice(course.originalPrice),
-        priceDisplay: course.price // Lưu lại chuỗi gốc để hiển thị
+        priceDisplay: course.price 
       };
       setItems([...items, newItem]);
     }
@@ -45,10 +44,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems(items.filter((item) => item.id !== id));
   };
 
+  // 👇 2. Viết hàm kiểm tra xem khóa học đã có trong giỏ chưa
+  const isInCart = (id: string | number) => {
+    return items.some((item) => item.id === id);
+  };
+
   const totalPrice = items.reduce((total, item) => total + item.price, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, totalPrice }}>
+    // 👇 3. Nhớ bỏ isInCart vào value để component khác dùng được
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, totalPrice, isInCart }}>
       {children}
     </CartContext.Provider>
   );

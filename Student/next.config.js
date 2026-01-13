@@ -18,6 +18,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'frontends.udemycdn.com', // <--- THÊM CÁI MỚI NÀY VÀO
       },
+      {
+        protocol: "https",
+        hostname: "files.fullstack.edu.vn", // 👇 Thêm domain này vào
+      },
     ],
   },
 }
