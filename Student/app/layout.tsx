@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext"; // <--- 1. Import cái này
-
+import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -21,6 +21,7 @@ export default function RootLayout({
         {/* 2. Bọc CartProvider quanh children */}
         <CartProvider>
             {children}
+            <Toaster position="top-center" richColors />
         </CartProvider>
       </body>
     </html>

@@ -1,24 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, User, Mail, Lock } from "lucide-react";
-
+import { useRouter } from "next/navigation";
+import { registerUser } from "@/services/auth.service";
+import { toast } from "sonner";
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter()
+  const [error,setError] = useState("")
+  const [formData,setFormData] = useState({
+    fullName:"",
+    email:"",
+    password:"",
+   })
+   const handleChange = (e:React.ChangeEvent<HTMLInputElement>) =>{
+    setFormData({
+        ...formData,
+        [e.target.name]: e.target.value
+    })
+   }
+    const handleRegister = async(e:React.FormEvent) =>{
+        e.preventDefault()
+        setIsLoading(true)
+        try{
+            await registerUser(formData)
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Giả lập API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Xử lý sau khi đăng ký thành công (ví dụ: chuyển sang login)
-    }, 1500);
-  };
+            toast.success("Registration successful!",{
+                description:"Welcome to EduLive website. Beginning of your learning journey"
+            })
+            router.push("/login")
+        }catch(err:any){
+            toast.error("Registration failed",{
+                description: err.message
+            })
+        }finally{
+            setIsLoading(false)
+        }
+   }
+
       return(
         <div className="w-full h-screen lg:grid lg:grid-cols-2">
             {/* COT TRAI: ANH MINH HOA */}
@@ -50,8 +74,11 @@ export default function RegisterPage() {
                     <div className="relative">
                         <User className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
                         <Input 
+                            name="fullName"
                             type="text" 
                             placeholder="Full Name" 
+                            value={formData.fullName}
+                            onChange={handleChange}
                             className="pl-10 h-12 border-slate-300 dark:border-slate-700" 
                             required 
                         />
@@ -63,6 +90,9 @@ export default function RegisterPage() {
                     <div className="relative">
                         <Mail className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
                         <Input 
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
                             type="email" 
                             placeholder="Email" 
                             className="pl-10 h-12 border-slate-300 dark:border-slate-700" 
@@ -76,6 +106,9 @@ export default function RegisterPage() {
                     <div className="relative">
                         <Lock className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
                         <Input 
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
                             type="password" 
                             placeholder="Password" 
                             className="pl-10 h-12 border-slate-300 dark:border-slate-700" 
@@ -83,7 +116,7 @@ export default function RegisterPage() {
                         />
                     </div>
                     <p className="text-xs text-slate-500">
-                        Must be at least 8 characters.
+                        Must be at least 6 characters.
                     </p>
                 </div>
 
