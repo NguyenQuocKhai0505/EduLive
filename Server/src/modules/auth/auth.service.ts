@@ -51,17 +51,28 @@ export class AuthService {
          
   
           const payload = { sub: user?.id, email: user?.email, role: user?.role };
-         
-          
           const token = await this.jwtService.signAsync(payload);
           
           
-          return { access_token: token };
+          
+          return { access_token: token,
+            user:{
+                id:user?.id,
+                email: user?.email,
+                name: user?.fullName,
+                role:user?.role,
+                avatar:user?.avatar
+            }
+           };
   
       } catch (error) {
           
           throw error;
       }
   }
+    async logout(token:string,userEmail:string){
+            await this.redis.set(`blacklist:${token}`,"true",86400)
+            return {message:"Logout Successfully"}
+    }
   
 }
