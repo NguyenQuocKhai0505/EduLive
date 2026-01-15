@@ -98,9 +98,6 @@ export default function LoginPage(){
                  <Button variant="outline" className="h-12 w-12 rounded-full p-0 border-slate-300">
                     <div className="h-5 w-5 bg-blue-600 text-white font-bold rounded flex items-center justify-center text-xs">f</div> {/* Giả lập Facebook */}
                  </Button>
-                 <Button variant="outline" className="h-12 w-12 rounded-full p-0 border-slate-300">
-                    <Github className="h-5 w-5" /> {/* Giả lập Apple/Github */}
-                 </Button>
                </div>
                 {/* FOOTER */}
                 <div className="text-center text-sm font-medium">
