@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './modules/users/users.service';
 import { UsersController } from './modules/users/users.controller';
 import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
 @Module({
   imports: [
     //Cau hinh de doc env
@@ -15,6 +16,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     //Users
     UsersModule,
+    AuthModule,
     //Cau hinh ket noi Postgres
     TypeOrmModule.forRootAsync({
       imports:[ConfigModule],

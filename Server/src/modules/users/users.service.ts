@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 export class UsersService{
         
     constructor(@InjectRepository(User)
-        private usersRepository: Repository<User>,
+        private readonly usersRepository: Repository<User>,
     ){}
     //CREATE USER
     async create(createUserDto:CreateUserDto):Promise<User>{
@@ -44,5 +44,11 @@ export class UsersService{
     //FIND USER BY ID
     async findOne(id: number): Promise<User | null> { 
         return this.usersRepository.findOneBy({ id });
+    }
+    //FIND USER BY EMAIL 
+    async findByEmail(email: string): Promise<User | null> {
+        return await this.usersRepository.findOne({ 
+          where: { email } 
+        });
     }
 }

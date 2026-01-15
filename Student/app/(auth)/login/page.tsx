@@ -3,25 +3,39 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image"; // Import Image
-import { useRouter } from "next/navigation";
+import { useRouter,useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Github, Chrome } from "lucide-react";
 import image from "../../../public/assets/logo.png"
+import { login } from "@/services/auth.service";
+import { toast } from "sonner";
 export default function LoginPage(){
     const router = useRouter()
+    const searchParams = useSearchParams();
     const [isLoading,setIsLoading] = useState(false)
+    const [email,setEmail] = useState("")
+    const [password,setPassword] = useState("")
+    const [error,setError] = useState("")
 
-    const handleLogin = async(e: React.FormEvent) =>{
+    // Lấy giá trị callbackUrl từ URL
+    const callbackUrl = searchParams.get("callbackUrl") || "/"
+    const handleSubmit = async(e:React.FormEvent) =>{
         e.preventDefault()
         setIsLoading(true)
-
-        //Gia lap goi API
-        setTimeout(() =>{
+        const loadingToast = toast.loading("Information is being verified.")
+        try{
+            await login(email,password)
+            toast.success('Login succesfully!',{id:loadingToast});
+            router.push(callbackUrl)
+            router.refresh()
+        }catch(error:any){
+            toast.error(error,{id:loadingToast})
+        }finally{
             setIsLoading(false)
-            router.push("/") 
-        },1500)
+        }
     }
+    
     return(
        <div className="w-full h-screen lg:grid lg:grid-cols-2">
             {/* COT TRAI: ANH MINH HOA) */}
@@ -45,12 +59,24 @@ export default function LoginPage(){
                         </h1>
                     </div>
                     {/* FORM */}
-                    <form onSubmit={handleLogin} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
-                            <Input type="email" placeholder="Email" className="h-12 border-slate-300 dark:slate-700" required/>
+                            <Input 
+                             type="email"
+                             name="email"
+                             placeholder="Email" 
+                             onChange={(e)=>setEmail(e.target.value)}
+                             className="h-12 border-slate-300 dark:slate-700"
+                             required/>
                         
                         <div className="space-y-2">
-                            <Input type="password" placeholder="Password" className="h-12 border-slate-300 dark:border-slate-700"/>
+                            <Input 
+                            type="password" 
+                            placeholder="Password"
+                            name="password"
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required
+                            className="h-12 border-slate-300 dark:border-slate-700"/>
                         </div>
                         <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 h-12 text-base font-bold"
                             disabled={isLoading}
