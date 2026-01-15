@@ -21,9 +21,13 @@ export class UsersService{
             throw new ConflictException("Email is aldready used")
         }
         //WORKFLOW2: SECURITY
-        //SALT 10 ROUND 
-        const salt = await bcrypt.genSalt()
-        const hashedPassword = await bcrypt.hash(createUserDto.password,salt)
+        // Chỉ hash password nếu có password (không phải social login)
+        let hashedPassword = createUserDto.password;
+        if (createUserDto.password && createUserDto.password.trim() !== '') {
+            //SALT 10 ROUND 
+            const salt = await bcrypt.genSalt()
+            hashedPassword = await bcrypt.hash(createUserDto.password, salt)
+        }
 
         //WORKFLOW3: INSTANCE USER 
         const newUser = this.usersRepository.create({
@@ -50,5 +54,14 @@ export class UsersService{
         return await this.usersRepository.findOne({ 
           where: { email } 
         });
+    }
+    //UPDATE USER
+    async update(id: number, updateData: Partial<User>): Promise<User> {
+        const user = await this.findOne(id);
+        if (!user) {
+            throw new BadRequestException("User not found");
+        }
+        Object.assign(user, updateData);
+        return this.usersRepository.save(user);
     }
 }

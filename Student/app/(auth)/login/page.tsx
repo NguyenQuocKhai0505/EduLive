@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Github, Chrome } from "lucide-react";
 import image from "../../../public/assets/logo.png"
-import { login } from "@/services/auth.service";
+import { login, loginWithGoogle } from "@/services/auth.service";
 import { toast } from "sonner";
 export default function LoginPage(){
     const router = useRouter()
@@ -20,6 +20,23 @@ export default function LoginPage(){
 
     // Lấy giá trị callbackUrl từ URL
     const callbackUrl = searchParams.get("callbackUrl") || "/"
+    
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        const loadingToast = toast.loading("Opening Google authentication...");
+        
+        try {
+            await loginWithGoogle();
+            toast.success("Login successfully!", { id: loadingToast });
+            router.push(callbackUrl);
+            router.refresh();
+        } catch (error: any) {
+            toast.error(error.message || "Google authentication failed", { id: loadingToast });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleSubmit = async(e:React.FormEvent) =>{
         e.preventDefault()
         setIsLoading(true)
@@ -92,11 +109,17 @@ export default function LoginPage(){
                </div>
                {/* SOCIAL ICONS */}
                <div className="flex justify-center gap-4">
-                 <Button variant="outline" className="h-12 w-12 rounded-full p-0 border-slate-300">
-                    <Chrome className="h-5 w-5 text-red-500" /> {/* Giả lập Google */}
+                 <Button 
+                    variant="outline" 
+                    className="h-12 w-12 rounded-full p-0 border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    onClick={handleGoogleLogin}
+                    type="button"
+                    disabled={isLoading}
+                 >
+                    <Chrome className="h-5 w-5 text-red-500" />
                  </Button>
                  <Button variant="outline" className="h-12 w-12 rounded-full p-0 border-slate-300">
-                    <div className="h-5 w-5 bg-blue-600 text-white font-bold rounded flex items-center justify-center text-xs">f</div> {/* Giả lập Facebook */}
+                    <div className="h-5 w-5 bg-blue-600 text-white font-bold rounded flex items-center justify-center text-xs">f</div>
                  </Button>
                </div>
                 {/* FOOTER */}

@@ -1,5 +1,5 @@
 
-import { IsEmail, IsNotEmpty, MinLength, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, MinLength, IsEnum, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator';
 import { UserRole } from '../enums/user-role.enum';
 
 export class CreateUserDto{
@@ -7,9 +7,11 @@ export class CreateUserDto{
     @IsEmail({},{message:"Email is in the wrong format."})
     email:string
 
+    @ValidateIf((o) => !o.provider) // Chỉ validate password nếu không phải social login
     @IsNotEmpty({message:"Password cannot be left blank"})
     @MinLength(6,{message:"Password muse be more 6 characters"})
-    password:string 
+    @IsOptional()
+    password?:string 
 
     @IsNotEmpty({message:"Full name cannot be left blank"})
     @IsString()
@@ -27,4 +29,15 @@ export class CreateUserDto{
     @IsOptional()
     @IsEnum(UserRole, { message: 'Role không hợp lệ' })
     role?: UserRole;
+
+    @IsOptional()
+    @IsString()
+    socialId?:string
+
+    @IsOptional()
+    @IsString()
+    provider?: string 
+
+    @IsOptional()
+    isVerified?:boolean
 }

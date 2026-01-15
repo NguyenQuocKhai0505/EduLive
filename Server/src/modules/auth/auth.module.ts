@@ -5,11 +5,15 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { RedisService } from '../../common/redis/redis.service';
+import { PassportModule } from '@nestjs/passport';
+import { GoogleStrategy } from './strategies/google.strategy';
+// import { FacebookStrategy } from './strategies/facebook.strategy'; // Tạm thời ẩn
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
     UsersModule,
-    // Cấu hình JWT lấy secret từ file .env
+    PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,7 +26,7 @@ import { RedisService } from '../../common/redis/redis.service';
       }),
     }),
   ],
-  providers: [AuthService, RedisService],
+  providers: [AuthService, RedisService,GoogleStrategy,/*FacebookStrategy,*/JwtStrategy], // Tạm thời ẩn FacebookStrategy
   controllers: [AuthController],
   exports: [AuthService],
 })

@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import SearchInput from "@/components/shared/SearchInput";
-import { logout } from "@/services/auth.service"; 
+import { logout } from "@/services/auth.service";
 export function NavBar() {
     const [user, setUser] = useState<any>(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -40,6 +40,38 @@ export function NavBar() {
             document.documentElement.classList.add('dark');
             setIsDarkMode(true);
         }
+
+        // 3. Lắng nghe storage event để cập nhật user khi đăng nhập từ tab khác
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'user' && e.newValue) {
+                try {
+                    setUser(JSON.parse(e.newValue));
+                } catch (e) {
+                    console.error('Error parsing user from storage:', e);
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        
+        // 4. Lắng nghe custom event khi user đăng nhập thành công (từ popup)
+        const handleUserUpdate = () => {
+            const updatedUser = localStorage.getItem('user');
+            if (updatedUser) {
+                try {
+                    setUser(JSON.parse(updatedUser));
+                } catch (e) {
+                    console.error('Error parsing user:', e);
+                }
+            }
+        };
+
+        window.addEventListener('userUpdated', handleUserUpdate);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('userUpdated', handleUserUpdate);
+        };
     }, []);
 
     const toggleTheme = () => {

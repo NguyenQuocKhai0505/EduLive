@@ -8,7 +8,7 @@ export class User extends BaseEntity{
     @Column({unique:true})
     email: string
 
-    @Column()
+    @Column({nullable:true})
     @Exclude() 
     password: string;
 
@@ -30,4 +30,13 @@ export class User extends BaseEntity{
 
     @Column({default:true})
     isActive: boolean
+
+    @Column({nullable:true})
+    socialId: string
+
+    @Column({nullable:true})
+    provider: string
+
+    @Column({default:false})
+    isVerified: boolean
 }
