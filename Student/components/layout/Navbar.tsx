@@ -87,7 +87,11 @@ export function NavBar() {
                         {isDarkMode ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} />}
                     </Button>
 
-                    <Button variant="ghost" size="icon"><ShoppingCart size={20} /></Button>
+                    <Button asChild variant="ghost" size="icon">
+                        <Link href={"/cart"}>
+                          <ShoppingCart size={20} />
+                        </Link>
+                    </Button>
 
                     {/* Chuyển đổi ngôn ngữ */}
                     <DropdownMenu>
@@ -99,7 +103,7 @@ export function NavBar() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem className="cursor-pointer">English</DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">Tiếng Việt</DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer">Vietnamese</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
@@ -114,9 +118,6 @@ export function NavBar() {
                     ) : (
                         /* ĐÃ LOGIN */
                         <div className="flex items-center gap-3 ml-1">
-                            <span className="text-sm font-medium hidden md:block hover:text-purple-600 cursor-pointer">
-                                Khóa học của tôi
-                            </span>
                             <DropdownMenu>
                                 <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
                                     <Avatar className="h-9 w-9 border">
