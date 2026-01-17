@@ -42,7 +42,7 @@ const QuickDropdown = ({
       <button
         onClick={() => setActiveDropdown(isOpen ? null : paramKey)}
         className={cn(
-          "flex items-center gap-2 border rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+          "flex items-center gap-1.5 sm:gap-2 border rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap",
           /* Logic màu sắc: Active vs Inactive (Hỗ trợ Dark Mode) */
           currentValue
             ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100"
@@ -113,25 +113,25 @@ export default function FilterBar() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
         {/* NÚT MỞ SIDEBAR */}
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="flex items-center gap-2 border px-4 py-3 font-bold transition shadow-sm rounded-sm
+          className="flex items-center gap-2 border px-3 sm:px-4 py-2 sm:py-3 font-bold transition shadow-sm rounded-sm text-xs sm:text-sm
             /* Light Mode */
             bg-white border-black hover:bg-slate-50 
             /* Dark Mode */
             dark:bg-slate-900 dark:border-slate-600 dark:text-white dark:hover:bg-slate-800
           "
         >
-          <Filter className="w-4 h-4" /> Filter
+          <Filter className="w-3 h-3 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Filter</span>
           {Array.from(searchParams.keys()).length > 0 && (
             <span className="ml-1 flex h-2 w-2 rounded-full bg-purple-600 dark:bg-purple-400" />
           )}
         </button>
 
         {/* CÁC DROPDOWN NHANH */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-2 sm:gap-3">
           <QuickDropdown
             label="Level"
             paramKey="level"
@@ -202,18 +202,18 @@ export default function FilterBar() {
         {/* Nội dung Sidebar */}
         <div
           className={cn(
-            "fixed top-0 left-0 h-full w-[340px] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto",
+            "fixed top-0 left-0 h-full w-full sm:w-[340px] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto",
             /* Background Sidebar */
             "bg-white dark:bg-slate-950 dark:border-r dark:border-slate-800",
             isFilterOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header Sidebar */}
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-bold dark:text-white">Filter</h2>
+            <div className="flex items-center justify-between mb-6 sm:mb-8">
+              <h2 className="text-lg sm:text-xl font-bold dark:text-white">Filter</h2>
               <button onClick={() => setIsFilterOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition">
-                <X className="w-6 h-6 text-slate-500 dark:text-slate-400" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500 dark:text-slate-400" />
               </button>
             </div>
 
@@ -303,21 +303,21 @@ export default function FilterBar() {
             </div>
 
             {/* Footer Sidebar */}
-            <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex gap-3">
+            <div className="mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-slate-100 dark:border-slate-800 flex gap-2 sm:gap-3">
               <button
                 onClick={() => {
                   router.push("/search");
                   setIsFilterOpen(false);
                 }}
-                className="flex-1 py-3 border border-slate-900 font-bold transition
+                className="flex-1 py-2.5 sm:py-3 border border-slate-900 dark:border-slate-600 font-bold transition text-sm sm:text-base
                   hover:bg-slate-50 
-                  dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                  dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 Clear All
               </button>
               <button
                 onClick={() => setIsFilterOpen(false)}
-                className="flex-1 py-3 font-bold transition
+                className="flex-1 py-2.5 sm:py-3 font-bold transition text-sm sm:text-base
                   bg-slate-900 text-white hover:bg-slate-800 
                   dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
               >

@@ -71,16 +71,16 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
-      <div className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
             {title ? (
               <>Results for <span className="text-purple-600 dark:text-purple-400">"{title}"</span></>
             ) : (
               "All Courses"
             )}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2">
             {course.length} result{course.length !== 1 && "s"} found
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function SearchPage() {
 
         {displayedCourses.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mt-4 sm:mt-6">
               {displayedCourses.map((course) => (
                 <CourseCard 
                   key={course.id} 

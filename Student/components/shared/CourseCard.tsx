@@ -25,7 +25,7 @@ export default function CourseCard({ item }: CourseCardProps) {
   };
 
   return (
-    <div className="group flex flex-col gap-3 h-full bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
+    <div className="group flex flex-col gap-2 sm:gap-3 h-full bg-white dark:bg-slate-900 rounded-lg p-2 sm:p-3 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
       {/* Thumbnail */}
       <div className="overflow-hidden rounded-lg aspect-video border border-slate-200 dark:border-slate-700 relative">
         {/* Bọc Link quanh ảnh */}

@@ -43,18 +43,18 @@ const reviews = [
 
 export function Testimonials(){
     return(
-        <section className="max-w-7xl mx-auto px-6 space-y-12">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12">
             {/* Header Section */}
-            <div className="text-center space-y-4 max-w-3xl mx-auto">
-                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
-                    What Students Say About <span className="text-blue-600">EduLive</span>
+            <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
+                    What Students Say About <span className="text-blue-600 dark:text-blue-400">EduLive</span>
                 </h2>
-                <p className="text-slate-600 text-lg">
+                <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400">
                     Many students have joined and achived their carrer roles
                 </p>
             </div>
             {/* Grid Reviews */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {reviews.map((reviews)=>(
                     <Card key={reviews.id} className="border-none shadow-md hover:shadow-lg transition-shadow bg-white flex flex-col h-full dark:bg-slate-900 dark:border-slate-800">
                          <CardHeader className="pb-2">
@@ -94,22 +94,22 @@ export function Testimonials(){
                 ))}
             </div>
             {/* Stat Section */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-8 border-t border-slate-200 mt-12">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 py-6 sm:py-8 border-t border-slate-200 dark:border-slate-800 mt-8 sm:mt-12">
                 <div className="text-center">
-                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white ">10k+</h3>
-                    <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Students</p>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">10k+</h3>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Students</p>
                 </div>
                 <div className="text-center">
-                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">50+</h3>
-                    <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Courses</p>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">50+</h3>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Courses</p>
                 </div>
                 <div className="text-center">
-                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">1200+</h3>
-                    <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Lessons</p>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">1200+</h3>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Lessons</p>
                 </div>
                 <div className="text-center">
-                    <h3 className="text-3xl font-bold text-slate-900 dark:text-white">4.9/5</h3>
-                    <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Rating</p>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">4.9/5</h3>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Rating</p>
                 </div>
             </div>
         </section>

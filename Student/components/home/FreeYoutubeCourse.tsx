@@ -88,16 +88,16 @@ export function FreeYoutubeCourses(){
     }, [api]);
 
     return(
-        <div className="py-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
-            <div className="max-w-7xl mx-auto px-6 space-y-8">
+        <div className="py-8 sm:py-12 md:py-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8">
                 {/* Header Section */}
-                <div className="flex items-end justify-between">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-red-500 font-bold tracking-wider uppercase text-sm">
-                            <Youtube className="w-5 h-5"/> Free Resources
+                <div className="flex items-end justify-between flex-col sm:flex-row gap-4">
+                    <div className="space-y-2 w-full sm:w-auto">
+                        <div className="flex items-center gap-2 text-red-500 font-bold tracking-wider uppercase text-xs sm:text-sm">
+                            <Youtube className="w-4 h-4 sm:w-5 sm:h-5"/> Free Resources
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-bold">Learning Free On <b>Youtube</b></h2>
-                        <p className="text-slate-400 max-w-2xl">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">Learning Free On <b>Youtube</b></h2>
+                        <p className="text-sm sm:text-base text-slate-400 dark:text-slate-500 max-w-2xl">
                         A compilation of high-quality tutorial videos from the community, helping you access knowledge quickly and free of charge.
                         </p>
                     </div>
@@ -108,9 +108,9 @@ export function FreeYoutubeCourses(){
                     opts={{align:"start",loop:true}} 
                     className="w-full relative"
                 >
-                    <CarouselContent className="-ml-4">
+                    <CarouselContent className="-ml-2 sm:-ml-4">
                         {youtubeCourses.map((video)=>(
-                            <CarouselItem key={video.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                            <CarouselItem key={video.id} className="pl-2 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                                 {/* MOAL PLAYER START*/}
                                 <Dialog>
                                     <DialogTrigger asChild>
@@ -201,8 +201,8 @@ export function FreeYoutubeCourses(){
                         ))} 
                     </CarouselContent>
                     {/* Nut Previous/Next */}
-                    <CarouselPrevious className="hidden md:flex -left-5 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-600 transition-all text-slate-900 dark:text-white" />
-                    <CarouselNext className="hidden md:flex -right-5 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-600 transition-all text-slate-900 dark:text-white" />
+                    <CarouselPrevious className="hidden sm:flex -left-2 sm:-left-5 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-600 transition-all text-slate-900 dark:text-white" />
+                    <CarouselNext className="hidden sm:flex -right-2 sm:-right-5 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-600 transition-all text-slate-900 dark:text-white" />
                     
                     {/* Dots Navigation */}
                     {count > 0 && (

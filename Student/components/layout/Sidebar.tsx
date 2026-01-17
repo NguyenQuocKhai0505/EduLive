@@ -23,6 +23,7 @@ export function Sidebar({ className }: SidebarProps) {
       className={cn(
         "w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800",
         "h-screen sticky top-0",
+        "hidden lg:block", // Ẩn trên mobile và tablet
         className
       )}
     >

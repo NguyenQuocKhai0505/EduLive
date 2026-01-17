@@ -58,11 +58,11 @@ export function TopicCategories(){
         );
       }
       return (
-        <div className="py-12 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex flex-col lg:flex-row gap-8 items-center">
-              <div className="lg:w-1/4 space-y-4">
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">
+        <div className="py-8 sm:py-12 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start lg:items-center">
+              <div className="w-full lg:w-1/4 space-y-3 sm:space-y-4">
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
                   Learn <span className="italic font-serif text-blue-600 dark:text-blue-400">essential</span>
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 text-sm">
@@ -79,21 +79,21 @@ export function TopicCategories(){
                   }}
                   className="w-full relative"
                 >
-                  <CarouselContent className="-ml-4">
+                  <CarouselContent className="-ml-2 sm:-ml-4">
                     {topics.map((topic) => (
-                      <CarouselItem key={topic.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                      <CarouselItem key={topic.id} className="pl-2 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
                         <Link href={`/search?categoryId=${topic.id}`} className="group block w-full">
-                          <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md h-full">
+                          <div className="relative overflow-hidden rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md h-full">
                             <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                              <span className="text-white text-2xl font-bold text-center px-2">{topic.name}</span>
+                              <span className="text-white text-lg sm:text-xl md:text-2xl font-bold text-center px-2">{topic.name}</span>
                             </div>
-                            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 relative">
+                            <div className="p-3 sm:p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 relative">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="font-bold text-slate-800 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors truncate flex-1">
+                                <span className="font-bold text-sm sm:text-base text-slate-800 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors truncate flex-1">
                                   {topic.name}
                                 </span>
                                 <span className="bg-slate-100 dark:bg-slate-800 p-1 rounded-full group-hover:bg-purple-100 dark:group-hover:bg-purple-900 transition-colors flex-shrink-0">
-                                  <ArrowRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400" />
                                 </span>
                               </div>
                             </div>
@@ -102,9 +102,9 @@ export function TopicCategories(){
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <div className="hidden md:block">
-                    <CarouselPrevious className="-left-4 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white" />
-                    <CarouselNext className="-right-4 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white" />
+                  <div className="hidden sm:block">
+                    <CarouselPrevious className="-left-2 sm:-left-4 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white" />
+                    <CarouselNext className="-right-2 sm:-right-4 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white" />
                   </div>
                   
                   {/* Dots Navigation */}

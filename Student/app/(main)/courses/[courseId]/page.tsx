@@ -130,25 +130,25 @@ export default function CourseDetailPage() {
 
 
   return (
-    <div className="bg-white dark:bg-slate-950 min-h-screen pb-20">
+    <div className="bg-white dark:bg-slate-950 min-h-screen pb-12 sm:pb-20">
       
       {/* --- HEADER SECTION --- */}
       <CourseHeader course={courseForComponent} />
 
-      <div className="max-w-7xl mx-auto px-6 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 sm:mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
           
           {/* --- LEFT COLUMN: CONTENT --- */}
-          <div className="lg:col-span-2 space-y-10">
+          <div className="lg:col-span-2 space-y-6 sm:space-y-8 lg:space-y-10">
             
             {/* What You Will Learn Box */}
-            <div className="border border-slate-200 dark:border-slate-800 p-6 rounded-lg bg-white dark:bg-slate-900">
-               <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">What you'll learn</h2>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border border-slate-200 dark:border-slate-800 p-4 sm:p-6 rounded-lg bg-white dark:bg-slate-900">
+               <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-slate-900 dark:text-white">What you'll learn</h2>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {courseForComponent.whatYouWillLearn?.map((text, index) => (
-                      <div key={index} className="flex gap-3 items-start">
-                          <Check className="w-5 h-5 text-slate-900 dark:text-slate-200 shrink-0 mt-0.5" />
-                          <span className="text-sm text-slate-600 dark:text-slate-300">{text}</span>
+                      <div key={index} className="flex gap-2 sm:gap-3 items-start">
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 dark:text-slate-200 shrink-0 mt-0.5" />
+                          <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">{text}</span>
                       </div>
                   ))}
                </div>
@@ -157,8 +157,8 @@ export default function CourseDetailPage() {
 
             {/* Course Content (Description) */}
              <div>
-                <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">Description</h2>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-slate-900 dark:text-white">Description</h2>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                    {courseForComponent.description}
                    <br/><br/>
                 </p>
@@ -174,7 +174,7 @@ export default function CourseDetailPage() {
         </div>
 
         {/* --- BOTTOM SECTIONS --- */}
-        <div className="mt-20 space-y-16 border-t border-slate-200 dark:border-slate-800 pt-10">
+        <div className="mt-12 sm:mt-16 lg:mt-20 space-y-12 sm:space-y-16 border-t border-slate-200 dark:border-slate-800 pt-8 sm:pt-10">
             
             {/* Component 1: Khóa học tương tự */}
             <SimilarCourses courses={similarCoursesMapped} />

@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 import api from "@/lib/axios";
 import { 
   User, FileText, BookOpen, LogOut, ChevronDown, 
-  ShoppingCart, Moon, Sun, Globe 
+  ShoppingCart, Moon, Sun, Globe
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -101,19 +101,20 @@ export function NavBar() {
     };
 
     return (
-        <nav className="border-b bg-background sticky top-0 z-50 h-16 flex items-center transition-colors">
-            <div className="container mx-auto flex items-center justify-between px-6">
+        <nav className="border-b bg-background sticky top-0 z-50 transition-colors">
+            <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
                 
                 {/* Logo & Search */}
-                <div className="flex items-center gap-6">
-                    <Link href="/" className="text-xl font-bold text-purple-600">Keducation</Link>
-                    <div className="max-w-xs hidden lg:block">
+                <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
+                    <Link href="/" className="text-lg sm:text-xl font-bold text-purple-600 whitespace-nowrap">Keducation</Link>
+                    <div className="max-w-xs hidden md:block flex-1">
                         <SearchInput />
                     </div>
                 </div>
 
                 {/* Right Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+
                     {/* Theme Toggle */}
                     <Button variant="ghost" size="icon" onClick={toggleTheme}>
                         {isDarkMode ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} />}
@@ -125,12 +126,12 @@ export function NavBar() {
                         </Link>
                     </Button>
 
-                    {/* Chuyển đổi ngôn ngữ */}
+                    {/* Chuyển đổi ngôn ngữ - Ẩn trên mobile */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="flex items-center gap-1.5 px-2">
+                            <Button variant="ghost" className="hidden sm:flex items-center gap-1.5 px-2">
                                 <Globe size={18} />
-                                <span className="text-sm font-medium">English</span>
+                                <span className="text-sm font-medium hidden md:inline">English</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -141,15 +142,17 @@ export function NavBar() {
 
                     {!user ? (
                         /* CHƯA LOGIN */
-                        <div className="flex items-center gap-2 ml-1">
-                            <Link href="/login"><Button variant="ghost">Log in</Button></Link>
+                        <div className="flex items-center gap-1 sm:gap-2">
+                            <Link href="/login">
+                                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Log in</Button>
+                            </Link>
                             <Link href="/register">
-                                <Button className="bg-purple-600 hover:bg-purple-700 text-white">Sign Up</Button>
+                                <Button className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm px-3 sm:px-4">Sign Up</Button>
                             </Link>
                         </div>
                     ) : (
                         /* ĐÃ LOGIN */
-                        <div className="flex items-center gap-3 ml-1">
+                        <div className="flex items-center gap-2 sm:gap-3">
                             <DropdownMenu>
                                 <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
                                     <Avatar className="h-9 w-9 border">
@@ -191,6 +194,10 @@ export function NavBar() {
                         </div>
                     )}
                 </div>
+            </div>
+            {/* Mobile Search Input */}
+            <div className="md:hidden px-4 sm:px-6 pb-3">
+                <SearchInput />
             </div>
         </nav>
     );

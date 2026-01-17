@@ -66,11 +66,11 @@ export function BannerSlider() {
   }, [api]);
 
   return (
-    <div className="w-full"> {/* Bỏ max-w nếu muốn full màn hình container */}
+    <div className="w-full px-0 sm:px-2"> 
       <Carousel
-        setApi={setApi} // 👈 Gắn API vào đây
+        setApi={setApi}
         plugins={[plugin.current]}
-        className="w-full relative" // Thêm relative để đặt dots absolute
+        className="w-full relative"
         onMouseEnter={plugin.current.stop}
         onMouseLeave={plugin.current.reset}
       >
@@ -78,18 +78,19 @@ export function BannerSlider() {
           {banners.map((item) => (
             <CarouselItem key={item.id}>
               <div
-                className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${item.gradient} p-6 md:p-12 text-white h-[280px] md:h-[320px] flex items-center`}
+                className={`relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r ${item.gradient} p-4 sm:p-6 md:p-12 text-white h-[240px] sm:h-[280px] md:h-[320px] flex items-center`}
               >
-                <div className="relative z-10 w-full md:w-2/3 space-y-4">
-                  <h2 className="text-2xl md:text-4xl font-bold leading-tight">
+                <div className="relative z-10 w-full md:w-2/3 space-y-2 sm:space-y-4">
+                  <h2 className="text-xl sm:text-2xl md:text-4xl font-bold leading-tight">
                     {item.title}
                   </h2>
-                  <p className="text-sm md:text-lg opacity-90 max-w-[500px]">
+                  <p className="text-xs sm:text-sm md:text-lg opacity-90 max-w-[500px] line-clamp-2 sm:line-clamp-none">
                     {item.description}
                   </p>
                   <Button
                     variant="secondary"
-                    className="font-bold hover:scale-105 transition-transform"
+                    size="sm"
+                    className="font-bold hover:scale-105 transition-transform text-xs sm:text-sm px-3 sm:px-4"
                   >
                     {item.cta}
                   </Button>
@@ -106,8 +107,8 @@ export function BannerSlider() {
           ))}
         </CarouselContent>
         
-        <CarouselPrevious className="hidden md:flex left-4 bg-white/20 border-none hover:bg-white/40 text-white" />
-        <CarouselNext className="hidden md:flex right-4 bg-white/20 border-none hover:bg-white/40 text-white" />
+        <CarouselPrevious className="hidden sm:flex left-2 sm:left-4 bg-white/20 border-none hover:bg-white/40 text-white" />
+        <CarouselNext className="hidden sm:flex right-2 sm:right-4 bg-white/20 border-none hover:bg-white/40 text-white" />
 
         {/* --- 3. Phần DOTS hiển thị ở đây --- */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">

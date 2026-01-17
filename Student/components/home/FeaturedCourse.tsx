@@ -55,29 +55,29 @@ export function FeaturedCourses() {
   }
 
   return (
-    <div className="py-10 space-y-6 bg-transparent text-slate-900 dark:text-white transition-colors duration-300">
+    <div className="py-6 sm:py-10 space-y-4 sm:space-y-6 bg-transparent text-slate-900 dark:text-white transition-colors duration-300">
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
           Skills to transform your career and life
         </h2>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
           From critical skills to technical topics, <b className="text-slate-900 dark:text-white">Keducation</b> supports your professional development.
         </p>
       </div>
 
       {categories.length > 0 && (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start h-auto p-0 bg-transparent dark:bg-transparent border-b border-slate-200 dark:border-slate-800 rounded-none mb-6 overflow-x-auto flex-nowrap scrollbar-hide">
+          <TabsList className="w-full justify-start h-auto p-0 bg-transparent dark:bg-transparent border-b border-slate-200 dark:border-slate-800 rounded-none mb-4 sm:mb-6 overflow-x-auto flex-nowrap scrollbar-hide">
             {categories.map((cat) => (
               <TabsTrigger
                 key={cat.id}
                 value={cat.id.toString()}
-                className="rounded-none border-b-2 border-transparent px-4 py-3 font-bold 
+                className="rounded-none border-b-2 border-transparent px-3 sm:px-4 py-2 sm:py-3 font-bold text-sm sm:text-base
                            text-slate-600 dark:text-slate-400
                            data-[state=active]:border-blue-600 dark:data-[state=active]:border-blue-500
                            data-[state=active]:text-slate-900 dark:data-[state=active]:text-white
                            data-[state=active]:bg-transparent 
-                           hover:text-slate-900 dark:hover:text-white transition-colors"
+                           hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap"
               >
                 {cat.name}
               </TabsTrigger>
@@ -98,7 +98,7 @@ export function FeaturedCourses() {
                     Chưa có khóa học nổi bật cho mục này.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {featuredCourses.map((course) => (
                       <CourseCard 
                         key={course.id} 
