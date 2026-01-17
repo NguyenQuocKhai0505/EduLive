@@ -1,7 +1,6 @@
-"use client"
-
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import {
@@ -10,103 +9,126 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
+import { getAllCategories, CategoryResponse } from "@/services/course.service"
 
-// 1. Dữ liệu giả lập các chủ đề (Mock Data)
-const topics = [
-  {
-    id: 1,
-    title: "Generative AI",
-    slug: "generative-ai",
-    image: "https://s.udemycdn.com/home/top-categories/lohp-category-design-v2.jpg", // Ảnh mẫu Udemy
-  },
-  {
-    id: 2,
-    title: "IT Certifications",
-    slug: "it-certifications",
-    image: "https://s.udemycdn.com/home/top-categories/lohp-category-development-v2.jpg",
-  },
-  {
-    id: 3,
-    title: "Data Science",
-    slug: "data-science",
-    image: "https://s.udemycdn.com/home/top-categories/lohp-category-business-v2.jpg",
-  },
-  {
-    id: 4,
-    title: "Communication",
-    slug: "communication",
-    image: "https://s.udemycdn.com/home/top-categories/lohp-category-personal-development-v2.jpg",
-  },
-  {
-    id: 5,
-    title: "Business Analytics",
-    slug: "business-analytics",
-    image: "https://s.udemycdn.com/home/top-categories/lohp-category-marketing-v2.jpg",
-  },
-];
 export function TopicCategories(){
-    return(
-        <div className="py-12 bg-slate-50">
+    const [topics,setTopics] = useState<CategoryResponse[]>([])
+    const [loading,setLoading] = useState(true)
+    const [api, setApi] = useState<CarouselApi>();
+    const [current, setCurrent] = useState(0);
+    const [count, setCount] = useState(0);
+
+    useEffect(()=>{
+        const fetchCategories = async() =>{
+            try{
+                const categories = await getAllCategories()
+                setTopics(categories)
+            }catch(error){
+                console.log("Error fetching categories",error)
+            }finally{
+                setLoading(false)
+            }
+        }
+        fetchCategories()
+    },[])
+
+    // Carousel API để quản lý dots
+    useEffect(() => {
+        if (!api) {
+            return;
+        }
+
+        setCount(api.scrollSnapList().length);
+        setCurrent(api.selectedScrollSnap() + 1);
+
+        api.on("select", () => {
+            setCurrent(api.selectedScrollSnap() + 1);
+        });
+    }, [api]);
+    if (loading) {
+        return (
+          <div className="py-12 bg-slate-50 dark:bg-slate-950">
             <div className="max-w-7xl mx-auto px-6">
-                <div className="flex flex-col lg:flex-row gap-8 items-center">
-                    {/* Text gioi thieu */}
-                    <div className="lg:w-1/4 space-y-4">
-                        <h2 className="text-3xl font-bold text-slate-900 leading-tight">
-                            Learn <span className="italic font-serif text-blue-600">essential</span>
-                        </h2>
-                        <p className="text-slate-600 text-sm">
-                        EduLive helps you build in-demand skills fast and advance your career in a changing job market.
-                        </p>
-                    </div>
-                    {/* Slider */}
-                    <div className="lg:w-3/4 w-full">
-                        <Carousel
-                            opts={{
-                                align:"start",
-                                loop:true
-                            }}
-                            className="w-full"
-                        >
-                            <CarouselContent className="-ml-4">
-                                {topics.map((topics)=>(
-                                    <CarouselItem key={topics.id} className="pl-4 md:basic-1/2 lg:basis-1/3">
-                                        <Link href={`/topic/${topics.slug}`} className="group block w-full">
-                                        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md h-full">
-                        
-                                        {/* Ảnh nền */}
-                                        <div className="aspect-[4/3] overflow-hidden">
-                                        <img
-                                            src={topics.image}
-                                            alt={topics.title}
-                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                        </div>
-                                        {/* Chu de */}
-                                        <div className="p-4 bg-white border-t relative">
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors">
-                                                    {topics.title}
-                                                </span>
-                                                <span className="bg-slate-100 p-1 rounded-full group-hover:bg-purple-100 transition-colors">
-                                                    <ArrowRight className="w-4 h-4 text-purple-600"/>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        </div>
-                                    </Link>
-                                    </CarouselItem>
-                                ))}
-                            </CarouselContent>   
-                           {/* Nút điều hướng nhỏ gọn */}
-                        <div className="hidden md:block">
-                            <CarouselPrevious className="-left-4 bg-white shadow-md border-slate-200 hover:bg-slate-50" />
-                            <CarouselNext className="-right-4 bg-white shadow-md border-slate-200 hover:bg-slate-50" />
-                        </div>
-                        </Carousel>
-                    </div>
-                </div>
+              <div className="text-center text-slate-600 dark:text-slate-400">Loading categories...</div>
             </div>
+          </div>
+        );
+      }
+      return (
+        <div className="py-12 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="flex flex-col lg:flex-row gap-8 items-center">
+              <div className="lg:w-1/4 space-y-4">
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight">
+                  Learn <span className="italic font-serif text-blue-600 dark:text-blue-400">essential</span>
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
+                  EduLive helps you build in-demand skills fast and advance your career in a changing job market.
+                </p>
+              </div>
+    
+              <div className="lg:w-3/4 w-full">
+                <Carousel
+                  setApi={setApi}
+                  opts={{
+                    align: "start",
+                    loop: true
+                  }}
+                  className="w-full relative"
+                >
+                  <CarouselContent className="-ml-4">
+                    {topics.map((topic) => (
+                      <CarouselItem key={topic.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                        <Link href={`/search?categoryId=${topic.id}`} className="group block w-full">
+                          <div className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md h-full">
+                            <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                              <span className="text-white text-2xl font-bold text-center px-2">{topic.name}</span>
+                            </div>
+                            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 relative">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-bold text-slate-800 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors truncate flex-1">
+                                  {topic.name}
+                                </span>
+                                <span className="bg-slate-100 dark:bg-slate-800 p-1 rounded-full group-hover:bg-purple-100 dark:group-hover:bg-purple-900 transition-colors flex-shrink-0">
+                                  <ArrowRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <div className="hidden md:block">
+                    <CarouselPrevious className="-left-4 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white" />
+                    <CarouselNext className="-right-4 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white" />
+                  </div>
+                  
+                  {/* Dots Navigation */}
+                  {count > 0 && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-2 mt-4 pb-2">
+                      {Array.from({ length: count }).map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => api?.scrollTo(index)}
+                          className={cn(
+                            "h-2 rounded-full transition-all duration-300 ease-in-out",
+                            current === index + 1
+                              ? "w-8 bg-blue-600 dark:bg-blue-500"
+                              : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600"
+                          )}
+                          aria-label={`Go to slide ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </Carousel>
+              </div>
+            </div>
+          </div>
         </div>
-    )
-}
+      );
+    }

@@ -1,44 +1,14 @@
-// --- PHẦN 1: ĐỊNH NGHĨA INTERFACE (Khuôn mẫu) ---
+/**
+ * MOCK DATA: Course Mock Data
+ * 
+ * MỤC ĐÍCH: Dữ liệu giả để phát triển frontend khi chưa có API
+ * 
+ * LƯU Ý: Khi kết nối với API thực, có thể bỏ file này hoặc dùng làm fallback
+ */
 
-export interface Lesson {
-  title: string;
-  time: string;
-  type: "video" | "article" | "quiz";
-  preview: boolean;
-}
+import { Course } from './types/course.types';
 
-export interface Section {
-  id: string;
-  title: string;
-  lessons: Lesson[];
-}
-
-export interface Course {
-  id: number | string; // Chấp nhận cả số và chuỗi cho linh hoạt
-  category: string;
-  title: string;
-  description: string;
-  rating: number;
-  students: number;
-  lastUpdated: string;
-  language: string;
-  price: string;          // "1.299.000đ"
-  originalPrice: string;  // "2.500.000đ"
-  discount: string;       // "48%"
-  thumbnail: string;      // URL ảnh
-  instructor: string;
-  duration: string;
-  lectures: number;
-  level: string;
-  
-  // Mảng các chương học (quan trọng cho trang chi tiết)
-  curriculum: Section[];
-  
-  // Mảng kiến thức đạt được
-  whatYouWillLearn: string[];
-}
-
-// --- PHẦN 2: DỮ LIỆU GIẢ (MOCK DATA) ---
+// --- DỮ LIỆU GIẢ (MOCK DATA) ---
 
 export const ALL_COURSES: Course[] = [
   {

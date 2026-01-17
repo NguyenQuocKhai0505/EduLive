@@ -25,9 +25,9 @@ export default function CourseCard({ item }: CourseCardProps) {
   };
 
   return (
-    <div className="group flex flex-col gap-2 h-full">
+    <div className="group flex flex-col gap-3 h-full bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
       {/* Thumbnail */}
-      <div className="overflow-hidden rounded-lg aspect-video border border-slate-200 dark:border-slate-800 relative">
+      <div className="overflow-hidden rounded-lg aspect-video border border-slate-200 dark:border-slate-700 relative">
         {/* Bọc Link quanh ảnh */}
         <Link href={`/course/${item.id}`} className="block w-full h-full">
             <img
@@ -49,54 +49,61 @@ export default function CourseCard({ item }: CourseCardProps) {
       </div>
 
       {/* Info */}
-      <div className="flex flex-col flex-1 justify-between">
-        <div>
+      <div className="flex flex-col flex-1 justify-between gap-2.5">
+        <div className="space-y-1.5 flex-1">
           {/* Bọc Link quanh tiêu đề */}
-          <Link href={`/course/${item.id}`}>
-            <h4 className="font-bold text-slate-900 dark:text-white line-clamp-2 text-sm leading-snug group-hover:text-blue-600 transition-colors">
+          <Link href={`/courses/${item.id}`}>
+            <h4 className="font-bold text-slate-900 dark:text-white line-clamp-2 text-sm leading-snug min-h-[2.75rem] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {item.title}
             </h4>
           </Link>
 
-          <p className="text-xs text-slate-500 mt-1">{item.instructor}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 truncate">{item.instructor || "Unknown"}</p>
 
-          <div className="flex items-center gap-1 mt-1">
-            <span className="font-bold text-sm text-amber-500">{item.rating}</span>
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-3 h-3 ${
-                    i < Math.floor(item.rating)
-                      ? "fill-amber-500 text-amber-500"
-                      : "fill-slate-200 text-slate-200"
-                  }`}
-                />
-              ))}
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="font-bold text-sm text-amber-500 dark:text-amber-400">{item.rating || 0}</span>
+              <div className="flex items-center gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < Math.floor(item.rating || 0)
+                        ? "fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400"
+                        : "fill-slate-200 text-slate-200 dark:fill-slate-700 dark:text-slate-700"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
             {item.students && (
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
                 ({item.students.toLocaleString()})
+              </span>
+            )}
+            {item.lectures && (
+              <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                {item.lectures} lectures
               </span>
             )}
           </div>
         </div>
 
         {/* Footer: Giá & Nút Add Cart */}
-        <div className="flex items-center justify-between mt-2">
-           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
+           <div className="flex items-baseline gap-1.5 flex-shrink-0 min-w-0">
+            <span className="font-bold text-base text-slate-900 dark:text-white whitespace-nowrap">
                 {item.price}
             </span>
             {item.originalPrice && (
-                <span className="text-xs text-slate-400 line-through">
+                <span className="text-xs text-slate-400 dark:text-slate-500 line-through whitespace-nowrap">
                 {item.originalPrice}
                 </span>
             )}
           </div>
           
           {/* Nút Add To Cart */}
-          <div className="w-32"> {/* Giới hạn chiều rộng nút nếu cần */}
+          <div className="flex-shrink-0">
                 <AddToCartButton course={item} />
             </div>
         </div>

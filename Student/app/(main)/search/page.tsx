@@ -1,64 +1,78 @@
-import { ALL_COURSES } from "@/lib/mock-data";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import CourseCard from "@/components/shared/CourseCard";
 import FilterBar from "./components/FilterBar";
-import { Search } from "lucide-react";
 import Pagination from "./components/Pagination";
+import { Search } from "lucide-react";
+import { searchCourses, CourseResponse } from "@/services/course.service";
 
-interface SearchPageProps {
-  searchParams: {
-    title?: string;
-    categoryId?: string;
-    level?: string;
-    language?: string;
-    price?: string;
-    rating?: string;
-    duration?: string;
-    page?: string;
-  };
-}
 
-export default function SearchPage({ searchParams }: SearchPageProps) {
-  // 1. LẤY THAM SỐ URL
-  const { title, level, language, price, rating, page } = searchParams;
+export default function SearchPage() {
+  const searchParams = useSearchParams()
+  const [course,setCourse] = useState<CourseResponse[]>([])
+  const [loading,setLoading] = useState(true)
+  const [currentPage,setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 8
 
-  const parsePrice = (priceStr: string | number) => {
-    if (typeof priceStr === "number") return priceStr;
-    return parseInt(priceStr.replace(/[^0-9]/g, ""));
-  };
+  useEffect(()=>{
+    const fetchCourses = async() =>{
+      try{
+        setLoading(true)
 
-  // 2. LOGIC FILTER
-  const filteredCourses = ALL_COURSES.filter((item) => {
-    const realPrice = parsePrice(item.price);
+        //Lay params tu URL
+        const title= searchParams.get("title")
+        const categoryId = searchParams.get("categoryId")
+        const level = searchParams.get("level")
+        const language = searchParams.get("language")
+        const rating = searchParams.get("rating")
+        const page = searchParams.get("page")
 
-    if (title && !item.title.toLowerCase().includes(title.toLowerCase())) return false;
-    if (level && level !== "All Levels" && item.level !== level) return false;
-    if (language && item.language !== language) return false;
-    if (price === "Free" && realPrice !== 0) return false;
-    if (price === "Paid" && realPrice === 0) return false;
-    if (rating) {
-      const ratingNum = parseFloat(rating);
-      if (item.rating < ratingNum) return false;
+        //Buid search params
+        const params:any ={}
+        if(title) params.title = title
+        if(categoryId) params.categoryId = parseInt(categoryId)
+        if(level && level !== "All Levels") params.level = level
+        if(language) params.language = language
+        if(rating) params.minRating = parseFloat(rating)
+        
+        if(page) setCurrentPage(parseInt(page))
+
+        //Goi API search
+        const results = await searchCourses(params)
+        //Chi lay course da publish
+        setCourse(results.filter(c=>c.isPublished))
+      }catch(error){
+        console.error("Error searching courses:",error)
+      }finally{
+        setLoading(false)
+      }
     }
-    return true;
-  });
+  },[searchParams])
 
-  // 3. LOGIC PAGINATION
-  const currentPage = parseInt(page || "1", 10);
-  const ITEMS_PER_PAGE = 8;
-  const totalPages = Math.ceil(filteredCourses.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
+  // PAGINATION LOGIC
+  const totalPages = Math.ceil(course.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const displayedCourses = course.slice(startIndex, endIndex)
 
-  const displayedCourses = filteredCourses.slice(startIndex, endIndex);
+  const title = searchParams.get("title")
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+
 
   return (
-    // 👇 Thêm dark:bg-slate-950 để nền tối khi ở Dark Mode
     <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
       <div className="container mx-auto px-6 py-8">
-        
-        {/* HEADER */}
         <div className="mb-8">
-          {/* 👇 Text đổi màu theo mode */}
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             {title ? (
               <>Results for <span className="text-purple-600 dark:text-purple-400">"{title}"</span></>
@@ -67,24 +81,41 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
             )}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2">
-            {filteredCourses.length} result{filteredCourses.length !== 1 && "s"} found
+            {course.length} result{course.length !== 1 && "s"} found
           </p>
         </div>
 
-        {/* FILTER BAR */}
         <FilterBar />
 
-        {/* DANH SÁCH KẾT QUẢ */}
         {displayedCourses.length > 0 ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
               {displayedCourses.map((course) => (
-                <CourseCard key={course.id} item={course} />
+                <CourseCard 
+                  key={course.id} 
+                  item={{
+                    id: course.id,
+                    category: course.category?.name || "",
+                    title: course.title,
+                    thumbnail: course.thumbnail,
+                    price: course.price > 0 
+                      ? `${course.price.toLocaleString('vi-VN')}VND` 
+                      : "Free",
+                    originalPrice: course.originalPrice > 0
+                      ? `${course.originalPrice.toLocaleString('vi-VN')}VND`
+                      : undefined,
+                    discount: course.originalPrice > course.price 
+                      ? `${Math.round((1 - course.price / course.originalPrice) * 100)}%`
+                      : undefined,
+                    rating: course.rating,
+                    lectures: course.lectures,
+                    instructor: course.instructor?.name || "Unknown",
+                    students: course.students,
+                  }} 
+                />
               ))}
             </div>
 
-            {/* Pagination Footer */}
-            {/* 👇 Thêm border dark mode */}
             <div className="mt-12 border-t border-slate-200 dark:border-slate-800 pt-8">
               <Pagination
                 currentPage={currentPage}
@@ -93,9 +124,7 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
             </div>
           </>
         ) : (
-          // EMPTY STATE
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            {/* 👇 Background icon đổi màu */}
             <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-full mb-4">
               <Search className="h-10 w-10 text-slate-400 dark:text-slate-500" />
             </div>

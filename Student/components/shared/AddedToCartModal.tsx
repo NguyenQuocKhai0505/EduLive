@@ -1,8 +1,7 @@
 "use client";
 
 import { CheckCircle, X } from "lucide-react";
-import { Course } from "@/lib/mock-data";
-import Image from "next/image";
+import { Course } from "@/lib/types/course.types";
 import { useRouter } from "next/navigation";
 
 interface AddedToCartModalProps {

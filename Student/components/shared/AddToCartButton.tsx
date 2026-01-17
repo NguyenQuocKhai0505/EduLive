@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { Course } from "@/lib/mock-data";
+import { Course } from "@/lib/types/course.types";
 import AddedToCartModal from "./AddedToCartModal";
 
 export default function AddToCartButton({ course }: { course: Course }) {

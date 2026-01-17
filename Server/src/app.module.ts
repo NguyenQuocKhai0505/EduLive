@@ -8,6 +8,7 @@ import { UsersService } from './modules/users/users.service';
 import { UsersController } from './modules/users/users.controller';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CoursesModule } from './modules/courses/courses.module';
 @Module({
   imports: [
     //Cau hinh de doc env
@@ -17,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module';
     //Users
     UsersModule,
     AuthModule,
+    CoursesModule, // Đăng ký CoursesModule
     //Cau hinh ket noi Postgres
     TypeOrmModule.forRootAsync({
       imports:[ConfigModule],
@@ -35,8 +37,7 @@ import { AuthModule } from './modules/auth/auth.module';
         //true khi local, false khi production
         synchronize:true
       })
-    }),
-    UsersModule
+    })
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { Course } from "../lib/mock-data";
+import { Course } from "@/lib/types/course.types";
 
 export interface CartItem extends Omit<Course, "price" | "originalPrice"> {
   price: number;

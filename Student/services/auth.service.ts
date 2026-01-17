@@ -1,13 +1,17 @@
 import axios from "axios"
 import Cookies from 'js-cookie';
 import api from '@/lib/axios';
-//BACKEND ADDRESS
-const API_URL = 'http://localhost:3000';
 
+/**
+ * Đăng ký user mới
+ * 
+ * @param userData - Dữ liệu user: { fullName, email, password, role? }
+ * @returns User đã được tạo
+ */
 export const registerUser = async(userData:any) =>{
     try{
-        //CALL API
-        const response = await axios.post<any>(`${API_URL}/users/register`,userData)
+        // ⚠️ FIX: Sử dụng api từ lib/axios.ts (đã config đúng port 3001)
+        const response = await api.post('/users/register', userData)
         return response.data
     }catch(error:any){
         if(error.response){

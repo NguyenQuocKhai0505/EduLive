@@ -1,14 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
-import { ALL_COURSES } from "../../../lib/mock-data"; // Import dữ liệu thật
+import { getAllCourses, CourseResponse } from "@/services/course.service";
 import { Trash2, ShoppingCart, Star } from "lucide-react";
 
 export default function CartPage() {
   const { items, removeFromCart, totalPrice, addToCart } = useCart();
+  const [suggestedCourses, setSuggestedCourses] = useState<CourseResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSuggestedCourses = async () => {
+      try {
+        setLoading(true);
+        // Lấy tất cả courses đã publish, lấy 3 courses đầu tiên
+        const courses = await getAllCourses();
+        setSuggestedCourses(courses.filter(c => c.isPublished).slice(0, 3));
+      } catch (error) {
+        console.error("Error fetching suggested courses:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSuggestedCourses();
+  }, []);
 
   // Component hiển thị khi giỏ hàng trống
   const EmptyCartView = () => (
@@ -24,38 +44,70 @@ export default function CartPage() {
         <Button className="bg-purple-600 hover:bg-purple-700">Keep Shopping</Button>
       </Link>
 
-     {/* Hiển thị gợi ý từ dữ liệu ALL_COURSES */}
-     <div className="mt-16 text-left">
-          <h3 className="text-xl font-bold mb-4">Learners are viewing</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {ALL_COURSES.slice(0, 3).map(course => ( // Lấy 3 khóa đầu tiên
-                  <div key={course.id} className="border dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-                      <div className="relative h-40 w-full bg-slate-200">
-                           <Image src={course.thumbnail} alt={course.title} fill className="object-cover" />
-                      </div>
-                      <div className="p-4 flex-1 flex flex-col">
-                          <h4 className="font-bold line-clamp-2 h-12 mb-1 text-sm">{course.title}</h4>
-                          <div className="text-xs text-slate-500 mb-2">{course.instructor}</div>
-                          <div className="flex items-center mb-2">
-                              <span className="font-bold text-amber-500 mr-1 text-sm">{course.rating}</span>
-                              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                          </div>
-                          <div className="flex items-center gap-2 mb-3 mt-auto">
-                              <span className="font-bold">{course.price}</span>
-                              <span className="text-sm text-slate-400 line-through">{course.originalPrice}</span>
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            className="w-full"
-                            onClick={() => addToCart(course)} 
-                          >
-                            Add to cart
-                          </Button>
-                      </div>
-                  </div>
-              ))}
-          </div>
-      </div>
+     {/* Hiển thị gợi ý từ API */}
+     {!loading && suggestedCourses.length > 0 && (
+       <div className="mt-16 text-left">
+            <h3 className="text-xl font-bold mb-4">Learners are viewing</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {suggestedCourses.map(course => (
+                    <div key={course.id} className="border dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+                        <div className="relative h-40 w-full bg-slate-200">
+                             <Image src={course.thumbnail} alt={course.title} fill className="object-cover" />
+                        </div>
+                        <div className="p-4 flex-1 flex flex-col">
+                            <h4 className="font-bold line-clamp-2 h-12 mb-1 text-sm">{course.title}</h4>
+                            <div className="text-xs text-slate-500 mb-2">{course.instructor?.name || "Unknown"}</div>
+                            <div className="flex items-center mb-2">
+                                <span className="font-bold text-amber-500 mr-1 text-sm">{course.rating || 0}</span>
+                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                            </div>
+                            <div className="flex items-center gap-2 mb-3 mt-auto">
+                                <span className="font-bold">
+                                  {course.price > 0 
+                                    ? `${course.price.toLocaleString('vi-VN')}đ` 
+                                    : "Miễn phí"}
+                                </span>
+                                {course.originalPrice > course.price && (
+                                  <span className="text-sm text-slate-400 line-through">
+                                    {course.originalPrice.toLocaleString('vi-VN')}đ
+                                  </span>
+                                )}
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => addToCart({
+                                id: course.id,
+                                title: course.title,
+                                thumbnail: course.thumbnail,
+                                price: course.price > 0 
+                                  ? `${course.price.toLocaleString('vi-VN')}đ` 
+                                  : "Miễn phí",
+                                originalPrice: course.originalPrice > 0
+                                  ? `${course.originalPrice.toLocaleString('vi-VN')}đ`
+                                  : undefined,
+                                rating: course.rating,
+                                instructor: course.instructor?.name || "Unknown",
+                                students: course.students,
+                                lectures: course.lectures,
+                                category: course.category?.name || "",
+                                description: course.description,
+                                level: course.level,
+                                language: course.language,
+                                duration: `${course.duration} hours`,
+                                curriculum: [],
+                                whatYouWillLearn: [],
+                                lastUpdated: new Date(course.updateAt).toLocaleDateString('vi-VN')
+                              })} 
+                            >
+                              Add to cart
+                            </Button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+     )}
     </div>
   );
 

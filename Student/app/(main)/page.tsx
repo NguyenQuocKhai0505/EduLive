@@ -6,7 +6,7 @@ import { FreeYoutubeCourses } from "@/components/home/FreeYoutubeCourse";
 import { Testimonials } from "@/components/home/Testimonials";
 export default function Home() {
   return (
-    <div className="p-6 space-y-6 bg-background"> 
+    <div className="p-6 space-y-6 bg-background text-foreground"> 
       <BannerSlider />
       <TopicCategories />
       <div className="px-6">

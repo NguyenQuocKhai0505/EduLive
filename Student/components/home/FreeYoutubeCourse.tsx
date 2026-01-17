@@ -1,13 +1,16 @@
 "use client"
 
 import * as React from "react";
+import { useState, useEffect } from "react";
 import { 
   Carousel, 
   CarouselContent, 
   CarouselItem, 
   CarouselNext, 
-  CarouselPrevious 
+  CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -67,8 +70,25 @@ const youtubeCourses = [
     },
   ];
 export function FreeYoutubeCourses(){
+    const [api, setApi] = useState<CarouselApi>();
+    const [current, setCurrent] = useState(0);
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        if (!api) {
+            return;
+        }
+
+        setCount(api.scrollSnapList().length);
+        setCurrent(api.selectedScrollSnap() + 1);
+
+        api.on("select", () => {
+            setCurrent(api.selectedScrollSnap() + 1);
+        });
+    }, [api]);
+
     return(
-        <div className="py-16 bg-white-900 text-slate-900 dark:bg-slate-900 dark:text-white ">
+        <div className="py-16 bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-6 space-y-8">
                 {/* Header Section */}
                 <div className="flex items-end justify-between">
@@ -83,7 +103,11 @@ export function FreeYoutubeCourses(){
                     </div>
                 </div>
                 {/* Carousel Video */}
-                <Carousel opts={{align:"start",loop:true}} className="w-full">
+                <Carousel 
+                    setApi={setApi}
+                    opts={{align:"start",loop:true}} 
+                    className="w-full relative"
+                >
                     <CarouselContent className="-ml-4">
                         {youtubeCourses.map((video)=>(
                             <CarouselItem key={video.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
@@ -91,7 +115,7 @@ export function FreeYoutubeCourses(){
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         {/* Card video */}
-                                        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col group cursor-pointer overflow-hidden rounded-xl">
+                                        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col group cursor-pointer overflow-hidden rounded-xl">
                                     
                                         {/* 1. THUMBNAIL AREA */}
                                         <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
@@ -123,23 +147,24 @@ export function FreeYoutubeCourses(){
                                                 {/* Tags */}
                                                 <div className="flex flex-wrap gap-2">
                                                     {video.tags.map(tag => (
-                                                        <Badge key={tag} variant="secondary" className="bg-slate-100 text-slate-600 hover:bg-slate-200 border-none text-[10px] px-2 py-0.5">
+                                                        <Badge key={tag} variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border-none text-[10px] px-2 py-0.5">
                                                             {tag}
                                                         </Badge>
                                                     ))}
                                                 </div>
                                                 
                                                 {/* Title */}
-                                                <h3 className="font-bold text-base leading-snug text-slate-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                                <h3 className="font-bold text-base leading-snug text-slate-900 dark:text-white line-clamp-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                                                     {video.title}
                                                 </h3>
                                                 
                                                 {/* Meta info (Channel & Views) */}
-                                                <div className="mt-auto pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
-                                                    <span className="flex items-center gap-1 font-medium hover:text-slate-800">
-                                                        <Youtube className="w-3 h-3 text-red-500" /> {video.channel}
+                                                <div className="mt-auto pt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
+                                                    <span className="flex items-center gap-1 font-medium hover:text-slate-800 dark:hover:text-slate-200 truncate flex-1 min-w-0">
+                                                        <Youtube className="w-3 h-3 text-red-500 dark:text-red-400 flex-shrink-0" /> 
+                                                        <span className="truncate">{video.channel}</span>
                                                     </span>
-                                                    <span className="flex items-center gap-1">
+                                                    <span className="flex items-center gap-1 flex-shrink-0 ml-2">
                                                         <Eye className="w-3 h-3" /> {video.views}
                                                     </span>
                                                 </div>
@@ -176,8 +201,27 @@ export function FreeYoutubeCourses(){
                         ))} 
                     </CarouselContent>
                     {/* Nut Previous/Next */}
-                    <CarouselPrevious className="hidden md:flex -left-5 bg-white shadow-md border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all" />
-                    <CarouselNext className="hidden md:flex -right-5 bg-white shadow-md border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all" />
+                    <CarouselPrevious className="hidden md:flex -left-5 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-600 transition-all text-slate-900 dark:text-white" />
+                    <CarouselNext className="hidden md:flex -right-5 bg-white dark:bg-slate-900 shadow-md border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-600 transition-all text-slate-900 dark:text-white" />
+                    
+                    {/* Dots Navigation */}
+                    {count > 0 && (
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-2 mt-4 pb-2">
+                            {Array.from({ length: count }).map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => api?.scrollTo(index)}
+                                    className={cn(
+                                        "h-2 rounded-full transition-all duration-300 ease-in-out",
+                                        current === index + 1
+                                            ? "w-8 bg-red-600 dark:bg-red-500"
+                                            : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600"
+                                    )}
+                                    aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </Carousel>
             </div>
         </div>

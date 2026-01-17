@@ -12,7 +12,7 @@ export default function MainLayout({
       <Header />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 bg-slate-50 dark:bg-slate-900/50">
+        <main className="flex-1 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
           {children}
         </main>
       </div>
