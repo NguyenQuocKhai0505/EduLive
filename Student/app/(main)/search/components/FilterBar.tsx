@@ -102,7 +102,7 @@ export default function FilterBar() {
     if (!value || value === "All" || value === "All Levels") delete query[key];
 
     const url = qs.stringifyUrl(
-      { url: "/search", query },
+      { url: "/courses", query },
       { skipNull: true }
     );
     router.push(url);
@@ -180,7 +180,7 @@ export default function FilterBar() {
         {/* NÚT CLEAR ALL */}
         {Array.from(searchParams.keys()).length > 0 && (
           <button
-            onClick={() => router.push("/search")}
+            onClick={() => router.push("/courses")}
             className="text-sm font-bold ml-auto transition-colors
               text-purple-600 hover:text-purple-800 
               dark:text-purple-400 dark:hover:text-purple-300"

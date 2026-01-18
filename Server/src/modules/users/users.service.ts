@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -122,5 +122,18 @@ export class UsersService{
         }
         Object.assign(user, updateData);
         return this.usersRepository.save(user);
+    }
+    // CHANGE PASSWORD 
+    async changePassword(userId:number, currentPassword: string, newPassword: string){
+        const user = await this.findOne(userId)
+        if(!user) throw new BadRequestException("User not found")
+        if(!user.password) throw new BadRequestException("Social login cannot change password")
+        
+        const isMatch = await bcrypt.compare(currentPassword,user.password)
+        if(!isMatch) throw new UnauthorizedException("Current Password Incorrect")
+        
+        user.password = await bcrypt.hash(newPassword,await bcrypt.genSalt())
+        await this.usersRepository.save(user)
+        return {message:"Password updated successfully"}
     }
 }

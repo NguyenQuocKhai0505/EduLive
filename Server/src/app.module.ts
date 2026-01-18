@@ -9,6 +9,7 @@ import { UsersController } from './modules/users/users.controller';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CoursesModule } from './modules/courses/courses.module';
+import { EnrollmentsModule } from './modules/enrollments/enrollments.module';
 @Module({
   imports: [
     //Cau hinh de doc env
@@ -19,6 +20,7 @@ import { CoursesModule } from './modules/courses/courses.module';
     UsersModule,
     AuthModule,
     CoursesModule, // Đăng ký CoursesModule
+    EnrollmentsModule,
     //Cau hinh ket noi Postgres
     TypeOrmModule.forRootAsync({
       imports:[ConfigModule],

@@ -22,6 +22,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "files.fullstack.edu.vn", // 👇 Thêm domain này vào
       },
+      {
+        protocol: 'https',
+        hostname: 'example.com', // Thêm domain này để fix lỗi image loading
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost', // Cho phép localhost (development)
+      },
     ],
   },
 }

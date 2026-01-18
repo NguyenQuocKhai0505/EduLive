@@ -25,7 +25,7 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
     params.set("page", pageNumber.toString());
     
     // 3. Trả về chuỗi URL đầy đủ
-    return `/search?${params.toString()}`;
+    return `/courses?${params.toString()}`;
   };
 
   // Hàm xử lý chuyển trang

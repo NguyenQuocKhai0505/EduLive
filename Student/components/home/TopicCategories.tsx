@@ -82,7 +82,7 @@ export function TopicCategories(){
                   <CarouselContent className="-ml-2 sm:-ml-4">
                     {topics.map((topic) => (
                       <CarouselItem key={topic.id} className="pl-2 sm:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
-                        <Link href={`/search?categoryId=${topic.id}`} className="group block w-full">
+                        <Link href={`/courses?categoryId=${topic.id}`} className="group block w-full">
                           <div className="relative overflow-hidden rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md h-full">
                             <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                               <span className="text-white text-lg sm:text-xl md:text-2xl font-bold text-center px-2">{topic.name}</span>

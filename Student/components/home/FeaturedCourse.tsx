@@ -131,7 +131,7 @@ export function FeaturedCourses() {
                     className="border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white text-slate-700 dark:text-slate-300 font-bold" 
                     asChild
                   >
-                    <Link href={`/search?categoryId=${cat.id}`}>
+                    <Link href={`/courses?categoryId=${cat.id}`}>
                       Show all {cat.name} courses
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>

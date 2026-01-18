@@ -28,6 +28,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   ],
   providers: [AuthService, RedisService,GoogleStrategy,/*FacebookStrategy,*/JwtStrategy], // Tạm thời ẩn FacebookStrategy
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule], // Export JwtModule để các module khác có thể dùng AuthGuard
 })
 export class AuthModule {}

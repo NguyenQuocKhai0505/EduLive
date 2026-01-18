@@ -6,6 +6,10 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('accessToken')?.value;
   const { pathname } = request.nextUrl;
 
+  if (pathname.startsWith('/search')) {
+    return NextResponse.redirect(new URL('/courses', request.url));
+  }
+
   // 2. Danh sách các trang yêu cầu phải đăng nhập (ví dụ: /cart)
   const protectedPaths = ['/cart', '/admin', '/teacher'];
   const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
@@ -24,5 +28,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/cart/:path*', '/admin/:path*', '/teacher/:path*'],
+  matcher: ['/cart/:path*', '/admin/:path*', '/teacher/:path*', '/search/:path*'],
 };

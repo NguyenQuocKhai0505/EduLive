@@ -1,11 +1,12 @@
 
-import { Controller, Get, Post, Body, UseInterceptors, ClassSerializerInterceptor, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseInterceptors, ClassSerializerInterceptor, UseGuards, Req, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthGuard } from '../guards/auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decirator';
 import { UserRole } from './enums/user-role.enum';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('users')
  //USE INTERCEPTOR TO PREVENT RETURNING PASSWORD
@@ -49,5 +50,11 @@ export class UsersController {
     @Get() 
     findAll(){
         return this.usersService.findAll()
+    }
+
+    @Patch("me/password")
+    @UseGuards(AuthGuard)
+    changePassword(@Body() dto: ChangePasswordDto, @Req() req:any){
+        return this.usersService.changePassword(req.user.sub,dto.currentPassword,dto.newPassword)
     }
 }
