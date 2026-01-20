@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Map, FileText } from "lucide-react";
+import { Home, Map, FileText ,MessageCircle} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
@@ -16,6 +16,7 @@ export function Sidebar({ className }: SidebarProps) {
     { href: "/", label: "HOME", icon: Home },
     { href: "/courses", label: "COURSES", icon: Map },
     { href: "/blog", label: "BLOGS", icon: FileText },
+    { href: "/chat", label: "CHAT", icon: MessageCircle },
   ];
 
   return (
