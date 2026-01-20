@@ -20,6 +20,10 @@ export class Order extends BaseEntity{
     @Column()
     paymentMethod:string
 
+    //IdempotencyKey de tranh lap lai giao dich
+    @Column({ unique: true })
+    idempotencyKey: string;
+
     @OneToMany(()=>OrderItem,(item)=>item.order)
     items:OrderItem[]
 }
