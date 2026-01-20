@@ -12,23 +12,31 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com', // Thêm luôn trang này để sau này dùng
+        hostname: 'images.unsplash.com',
       },
       {
         protocol: 'https',
-        hostname: 'frontends.udemycdn.com', // <--- THÊM CÁI MỚI NÀY VÀO
+        hostname: 'frontends.udemycdn.com', 
       },
       {
         protocol: "https",
-        hostname: "files.fullstack.edu.vn", // 👇 Thêm domain này vào
+        hostname: "files.fullstack.edu.vn", 
       },
       {
         protocol: 'https',
-        hostname: 'example.com', // Thêm domain này để fix lỗi image loading
+        hostname: 'example.com', 
       },
       {
         protocol: 'http',
-        hostname: 'localhost', // Cho phép localhost (development)
+        hostname: 'localhost', 
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com', // ✨ Cloudinary images
       },
     ],
   },

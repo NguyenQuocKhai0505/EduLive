@@ -1,5 +1,5 @@
 
-import { Controller, Get, Post, Body, UseInterceptors, ClassSerializerInterceptor, UseGuards, Req, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseInterceptors, ClassSerializerInterceptor, UseGuards, Req, Patch,Param,NotFoundException,ParseIntPipe } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthGuard } from '../guards/auth.guard';
@@ -56,5 +56,23 @@ export class UsersController {
     @UseGuards(AuthGuard)
     changePassword(@Body() dto: ChangePasswordDto, @Req() req:any){
         return this.usersService.changePassword(req.user.sub,dto.currentPassword,dto.newPassword)
+    }
+
+    //ENDPOINT: GET /users/:id
+    @Get(":id")
+    async findOne(@Param("id",ParseIntPipe) id:number){
+        const user = await this.usersService.findOne(id)
+        if(!user){
+            throw new NotFoundException("User not found")
+        }
+        return{
+            id:user.id,
+            email:user.email,
+            name:user.fullName,
+            role:user.role,
+            bio:user.bio,
+            avatar:user.avatar,
+            createdAt:user.createdAt,
+        }
     }
 }

@@ -5,9 +5,11 @@ import type { CourseResponse } from "@/lib/types/api.types";
 export interface UserProfile{
     id:number
     email: string
-    name:string,
-    role:string,
-    avatar?:string,
+    name:string
+    role:string
+    bio?:string
+    avatar?:string
+    createdAt:string
 }
 
 /**
@@ -43,5 +45,11 @@ export const getMyCourses = async():Promise<CourseResponse[]> =>{
  */
 export const enrollCourse = async(courseId:number) =>{
     const response = await api.post(`/enrollments/${courseId}`)
+    return response.data
+}
+
+//Get my profile 
+export const getUserProfile = async(userId:number):Promise<UserProfile> =>{
+    const response = await api.get(`/users/${userId}`)
     return response.data
 }
