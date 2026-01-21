@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useCart } from "@/context/CartContext";
 import { Course } from "@/lib/types/course.types";
 import AddedToCartModal from "./AddedToCartModal";
@@ -13,7 +14,7 @@ export default function AddToCartButton({ course }: { course: Course }) {
 
   const isAdded = isInCart(course.id);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault(); // Ngăn chặn click vào Link bao quanh Card (nếu có)
     e.stopPropagation();
 
@@ -22,8 +23,22 @@ export default function AddToCartButton({ course }: { course: Course }) {
       router.push("/cart");
     } else {
       // Nếu chưa có -> Thêm vào giỏ & Hiện Modal
-      addToCart(course);
-      setShowModal(true);
+      try {
+        await addToCart(Number(course.id));
+        setShowModal(true);
+      } catch (err: any) {
+        const message = err?.response?.data?.message;
+        if (Array.isArray(message)) {
+          toast.error(message.join(", "));
+        } else if (typeof message === "string") {
+          toast.error(message);
+          if (message.toLowerCase().includes("already in cart")) {
+            router.push("/cart");
+          }
+        } else {
+          toast.error("Failed to add to cart");
+        }
+      }
     }
   };
 

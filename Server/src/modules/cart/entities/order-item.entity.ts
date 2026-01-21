@@ -14,6 +14,7 @@ export class OrderItem extends BaseEntity{
     @Column({type:"decimal",precision:10,scale:2})
     priceSnapshot:number
 
+
     @ManyToOne(()=>Order)
     @JoinColumn({name:"orderId"})
     order:Order

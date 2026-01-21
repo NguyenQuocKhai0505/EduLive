@@ -60,6 +60,10 @@ export class Course extends BaseEntity{
     @Column({default:0})
     duration:number
 
+    // So luong slot con lai (nullable = khong gioi han)
+    @Column({ type: "int", nullable: true })
+    availableSlots: number | null
+
     //Quan he voi USER(Teacher/Admin)
     @Column()
     instructorId:number //ID cua user tao khoa hoc 

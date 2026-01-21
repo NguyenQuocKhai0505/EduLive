@@ -4,31 +4,79 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/CartContext";
 import { getAllCourses, CourseResponse } from "@/services/course.service";
 import { Trash2, ShoppingCart, Star } from "lucide-react";
-
+import { toast } from "sonner";
+import { CartItemResponse, addToCart, getCartItems, removeFromCart, checkout } from "@/services/cart.service";
 export default function CartPage() {
-  const { items, removeFromCart, totalPrice, addToCart } = useCart();
-  const [suggestedCourses, setSuggestedCourses] = useState<CourseResponse[]>([]);
+  const [items, setItems] = useState<CartItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [suggestedCourses, setSuggestedCourses] = useState<CourseResponse[]>([]);
 
   useEffect(() => {
-    const fetchSuggestedCourses = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
+
+        const [courses, cartItems] = await Promise.all([
+          getAllCourses(),
+          getCartItems(),
+        ]);
+
         // Lấy tất cả courses đã publish, lấy 3 courses đầu tiên
-        const courses = await getAllCourses();
         setSuggestedCourses(courses.filter(c => c.isPublished).slice(0, 3));
-      } catch (error) {
-        console.error("Error fetching suggested courses:", error);
+        setItems(cartItems);
+      } catch (err: any) {
+        console.error("Error fetching cart data:", err);
+        setError(err.response?.data?.message || "Failed to load cart");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSuggestedCourses();
+    fetchData();
   }, []);
+
+  const totalPrice = items.reduce((sum, item) => sum + Number(item.priceSnapshot), 0);
+
+  const handleAddToCart = async (courseId: number) => {
+    try {
+      await addToCart(courseId);
+      const cartItems = await getCartItems();
+      setItems(cartItems);
+      toast.success("Added to cart");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to add to cart");
+    }
+  };
+
+  const handleRemoveFromCart = async (courseId: number) => {
+    try {
+      await removeFromCart(courseId);
+      setItems(prev => prev.filter(item => item.courseId !== courseId));
+      toast.success("Removed from cart");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to remove");
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (items.length === 0) return;
+    setPaying(true);
+    try {
+      const idempotencyKey = crypto.randomUUID();
+      await checkout(idempotencyKey);
+      setItems([]);
+      toast.success("Payment success!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Checkout failed");
+    } finally {
+      setPaying(false);
+    }
+  };
 
   // Component hiển thị khi giỏ hàng trống
   const EmptyCartView = () => (
@@ -76,29 +124,7 @@ export default function CartPage() {
                             <Button 
                               variant="outline" 
                               className="w-full"
-                              onClick={() => addToCart({
-                                id: course.id,
-                                title: course.title,
-                                thumbnail: course.thumbnail,
-                                price: course.price > 0 
-                                  ? `${course.price.toLocaleString('vi-VN')}đ` 
-                                  : "Miễn phí",
-                                originalPrice: course.originalPrice > 0
-                                  ? `${course.originalPrice.toLocaleString('vi-VN')}đ`
-                                  : undefined,
-                                rating: course.rating,
-                                instructor: course.instructor?.name || "Unknown",
-                                students: course.students,
-                                lectures: course.lectures,
-                                category: course.category?.name || "",
-                                description: course.description,
-                                level: course.level,
-                                language: course.language,
-                                duration: `${course.duration} hours`,
-                                curriculum: [],
-                                whatYouWillLearn: [],
-                                lastUpdated: new Date(course.updateAt).toLocaleDateString('vi-VN')
-                              })} 
+                              onClick={() => handleAddToCart(course.id)} 
                             >
                               Add to cart
                             </Button>
@@ -122,22 +148,21 @@ export default function CartPage() {
           {items.map((item) => (
             <div key={item.id} className="flex gap-3 sm:gap-4 border-t border-slate-200 dark:border-slate-800 py-3 sm:py-4">
               <div className="w-20 h-14 sm:w-24 sm:h-16 md:w-32 md:h-20 bg-slate-200 dark:bg-slate-800 flex-shrink-0 relative rounded overflow-hidden">
-                   <Image src={item.thumbnail} alt={item.title} fill className="object-cover" />
+                   <Image src={item.course.thumbnail} alt={item.course.title} fill className="object-cover" />
               </div>
               
               <div className="flex-1 flex flex-col sm:flex-row sm:justify-between gap-2 min-w-0">
                  <div className="space-y-1 flex-1 min-w-0">
-                    <h3 className="font-bold line-clamp-2 text-xs sm:text-sm md:text-base text-slate-900 dark:text-white">{item.title}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">By {item.instructor}</p>
+                    <h3 className="font-bold line-clamp-2 text-xs sm:text-sm md:text-base text-slate-900 dark:text-white">{item.course.title}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">By {item.course.instructor?.name || "Unknown"}</p>
                  </div>
                  
                  <div className="text-left sm:text-right flex-shrink-0">
-                    <div className="text-purple-600 dark:text-purple-400 font-bold text-sm sm:text-base">{item.priceDisplay}</div>
-                    {item.originalPrice > 0 && (
-                      <div className="text-slate-400 dark:text-slate-500 line-through text-xs">{item.originalPrice.toLocaleString('vi-VN')}đ</div>
-                    )}
+                    <div className="text-purple-600 dark:text-purple-400 font-bold text-sm sm:text-base">
+                      {Number(item.priceSnapshot).toLocaleString('vi-VN')}đ
+                    </div>
                     <button 
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => handleRemoveFromCart(item.courseId)}
                         className="text-red-500 dark:text-red-400 text-xs hover:underline mt-1 sm:mt-2 flex items-center sm:justify-end"
                     >
                        <Trash2 className="w-3 h-3 mr-1" /> Remove
@@ -156,8 +181,12 @@ export default function CartPage() {
             <div className="text-2xl sm:text-3xl font-bold mb-4 text-purple-700 dark:text-purple-400">
                 {totalPrice.toLocaleString('vi-VN')}đ
             </div>
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 h-11 sm:h-12 text-sm sm:text-lg mb-4">
-                Checkout
+            <Button
+              className="w-full bg-purple-600 hover:bg-purple-700 h-11 sm:h-12 text-sm sm:text-lg mb-4"
+              onClick={handleCheckout}
+              disabled={paying}
+            >
+                {paying ? "Processing..." : "Checkout"}
             </Button>
          </div>
       </div>
@@ -166,7 +195,15 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      {items.length === 0 ? <EmptyCartView /> : <FilledCartView />}
+      {loading && (
+        <div className="text-center text-slate-500">Loading cart...</div>
+      )}
+      {error && (
+        <div className="text-center text-red-500">{error}</div>
+      )}
+      {!loading && !error && (
+        items.length === 0 ? <EmptyCartView /> : <FilledCartView />
+      )}
     </div>
   );
 }
