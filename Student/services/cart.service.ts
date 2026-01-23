@@ -34,7 +34,14 @@ export const getCartStatus = async(courseId:number) =>{
     const response = await api.get(`/cart/status/${courseId}`)
     return response.data  //{inCart,purchased}
 }
-export const checkout = async(idempotencyKey:string) =>{
-    const response = await api.post("/cart/checkout",{idempotencyKey})
+export const checkout = async(idempotencyKey:string, courseIds?: number[]) =>{
+    const response = await api.post("/cart/checkout",{idempotencyKey, courseIds})
     return response.data
+}
+
+export const getOrderStatus = async(orderId:number) =>{
+    const response = await api.get(`/cart/order/${orderId}`)
+    return response.data as { status: "PENDING" | "PAID" | "FAILED" }
+
+    
 }

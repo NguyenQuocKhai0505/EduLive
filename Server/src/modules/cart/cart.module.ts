@@ -12,5 +12,6 @@ import { AuthModule } from "../auth/auth.module";
   imports: [TypeOrmModule.forFeature([CartItem, Order, OrderItem, Course]), AuthModule],
   providers: [CartService],
   controllers: [CartController],
+  exports: [CartService],
 })
 export class CartModule {}
