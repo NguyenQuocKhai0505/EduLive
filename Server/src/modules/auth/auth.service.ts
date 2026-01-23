@@ -50,27 +50,35 @@ export class AuthService {
               throw new UnauthorizedException(`The information is incorrect. You have ${5 - count} attempts remaining.`);
           }
   
-          const payload = { sub: user?.id, email: user?.email, role: user?.role };
-          const token = await this.jwtService.signAsync(payload);
-          
-          return { access_token: token,
+          const payload = { sub: user.id, email: user.email, role: user.role };
+          const {accessToken,refreshToken} = await this.getTokens(payload)
+
+          const refreshHash = await bcrypt.hash(refreshToken,10)
+          await this.usersService.update(user.id,{refreshTokenHash: refreshHash})
+          return{
+            access_token: accessToken,
+            refresh_token: refreshToken,
             user:{
-                id:user?.id,
-                email: user?.email,
-                name: user?.fullName,
-                role:user?.role,
-                avatar:user?.avatar
+              id:user.id,
+              email:user.email,
+              name:user.fullName,
+              role:user.role,
+              avatar:user.avatar
             }
-           };
+          }
   
       } catch (error) {
           
           throw error;
       }
-  }
-    async logout(token:string,userEmail:string){
-            await this.redis.set(`blacklist:${token}`,"true",86400)
-            return {message:"Logout Successfully"}
+    }
+    async logout(token: string, userEmail: string) {
+            await this.redis.set(`blacklist:${token}`, "true", 86400);
+            const user = await this.usersService.findByEmail(userEmail);
+            if (user) {
+                await this.usersService.update(user.id, { refreshTokenHash: undefined });
+            }
+            return { message: "Logout Successfully" };
     }
     async validateSocialUser(profile:any){
         const {email,socialId, provider,fullName,avatar}= profile
@@ -108,9 +116,16 @@ export class AuthService {
           throw new BadRequestException("User not found after authentication");
         }
         const payload ={email: user.email,sub:user.id,role:user.role}
-        const access_token = await this.jwtService.signAsync(payload);
+        const { accessToken, refreshToken } = await this.getTokens({
+          sub: user.id,
+          email: user.email,
+          role: user.role
+        });
+        const refreshHash = await bcrypt.hash(refreshToken,10)
+        await this.usersService.update(user.id,{refreshTokenHash: refreshHash})
         return{
-            access_token,
+            access_token: accessToken,
+            refresh_token: refreshToken,
             user: {
                 id: user.id,
                 email: user.email,
@@ -120,7 +135,6 @@ export class AuthService {
             }
         }
     }
-
     // Lấy thông tin user hiện tại
     async getCurrentUser(email: string) {
         const user = await this.usersService.findByEmail(email);
@@ -128,6 +142,45 @@ export class AuthService {
             throw new UnauthorizedException("User not found");
         }
         return user;
+    }
+
+    //GENERATE REFRESH TOKEN
+    async getTokens(payload: { sub: number; email: string; role: string }) {
+      const accessToken = await this.jwtService.signAsync<typeof payload>(payload, {
+        secret: process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET,
+        expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES) || 15 * 60,
+      });
+      const refreshToken = await this.jwtService.signAsync<typeof payload>(payload,{
+        secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES) || 7 * 24 * 60 * 60,
+      })
+      return { accessToken, refreshToken };
+    }
+
+    //HASH REFRESH TOKEN
+    async refreshToken(refreshToken: string) {
+      if (!refreshToken) throw new UnauthorizedException("No refresh token");
+    
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+    
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user || !user.refreshTokenHash) throw new UnauthorizedException();
+    
+      const isMatch = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+      if (!isMatch) throw new UnauthorizedException();
+    
+      const { accessToken, refreshToken: newRefresh } = await this.getTokens({
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      });
+    
+      const newHash = await bcrypt.hash(newRefresh, 10);
+      await this.usersService.update(user.id, { refreshTokenHash: newHash });
+    
+      return { accessToken, refreshToken: newRefresh };
     }
   
 }

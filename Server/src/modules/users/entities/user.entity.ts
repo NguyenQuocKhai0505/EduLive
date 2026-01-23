@@ -28,6 +28,9 @@ export class User extends BaseEntity{
     })
     role:UserRole
 
+    @Column({ type: "text", nullable: true })
+    refreshTokenHash: string; 
+
     @Column({default:true})
     isActive: boolean
 

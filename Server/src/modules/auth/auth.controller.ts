@@ -6,20 +6,46 @@ import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 export class AuthController {
     constructor(private authService: AuthService){}
 
-    @HttpCode(HttpStatus.OK)
+
     @Post("login")
-    signIn(@Body() signInDto: Record<string,any>){
-        return this.authService.signIn(signInDto.email, signInDto.password)
+    @HttpCode(HttpStatus.OK)
+    async signIn(@Body() signInDto: Record<string,any>, @Res() res){
+        // 1) Xac thuc email + password, service se tao access/refresh token
+        const result = await this.authService.signIn(signInDto.email, signInDto.password)
+
+        // 2) Luu access token vao cookie (ngan han)
+        res.cookie("accessToken", result.access_token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false, // set true khi deploy https
+            maxAge: 15 * 60 * 1000,
+        })
+
+        // 3) Luu refresh token vao cookie (dai han)
+        //    Refresh token duoc tao trong service (getTokens),
+        //    sau do hash va luu DB. O day chi set cookie ban goc.
+        res.cookie("refreshToken", result.refresh_token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: false, // set true khi deploy https
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+
+        // 4) Tra ve user (khong tra token raw)
+        return res.json({ user: result.user })
     }   
     @Post("logout")
     @UseGuards(AuthGuard)
-    async logout(@Req() req:any)
+    async logout(@Req() req:any, @Res() res)
     {
         const token = req.cookies["accessToken"]
         const email=req.user.email
-        return this.authService.logout(token,email)
+        const result = await this.authService.logout(token,email)
+        // clear cookies client-side
+        res.clearCookie("accessToken")
+        res.clearCookie("refreshToken")
+        return res.json(result)
     }
-    
    // 1. Route kích hoạt đăng nhập Google
     @Get('google')
     @UseGuards(PassportAuthGuard('google'))
@@ -29,18 +55,27 @@ export class AuthController {
     @Get('google/callback')
     @UseGuards(PassportAuthGuard('google'))
     async googleAuthRedirect(@Req() req, @Res() res) {
-    // Gọi service đã sửa ở trên
+    // Gọi service: tao access + refresh token cho user social
     const result = await this.authService.validateSocialUser(req.user);
     
-    // Trả token về cho Client qua Cookie để Frontend dễ lấy
+    // Luu access token vao cookie (ngan han)
     res.cookie('accessToken', result.access_token, { 
-        httpOnly: false,
+        httpOnly: true,
         sameSite: 'lax',
         secure: false, // Set true nếu dùng HTTPS
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 15 * 60 * 1000
+    });
+
+    // Luu refresh token vao cookie (dai han)
+    // Refresh token duoc tao trong service, hash luu DB de bao mat
+    res.cookie('refreshToken', result.refresh_token, { 
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false, // Set true nếu dùng HTTPS
+        maxAge: 7 * 24 * 60 * 60 * 1000
     });
     
-    // Lưu user info vào cookie để frontend có thể lấy ngay
+    // Luu user info vao cookie de frontend lay ngay (tuy chon)
     res.cookie('userInfo', JSON.stringify(result.user), {
         httpOnly: false,
         sameSite: 'lax',
@@ -48,8 +83,7 @@ export class AuthController {
         maxAge: 24 * 60 * 60 * 1000
     });
     
-    // Redirect về frontend callback page (trong popup)
-    // Callback page sẽ lấy token từ cookie và gửi về parent window
+    // Redirect ve frontend callback page
     return res.redirect('http://localhost:3000/auth/google/callback'); 
 }
 
@@ -66,5 +100,27 @@ export class AuthController {
             role: user.role,
             avatar: user.avatar
         };
+    }
+
+    @Post("refresh")
+    @HttpCode(HttpStatus.OK)
+    async refresh(@Req() req, @Res() res) {
+    const refreshToken = req.cookies["refreshToken"];
+    const result = await this.authService.refreshToken(refreshToken);
+
+    res.cookie("accessToken", result.accessToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false, // set true khi deploy https
+        maxAge: 15 * 60 * 1000,
+    });
+    res.cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false, // set true khi deploy https
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({ accessToken: result.accessToken });
     }
 }
