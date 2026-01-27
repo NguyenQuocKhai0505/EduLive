@@ -20,6 +20,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
 
+  //COURSES ROUTE
   const isCoursesRoute =
     pathname === "/courses" ||
     pathname.startsWith("/courses/");
@@ -30,7 +31,8 @@ export function Sidebar({ className }: SidebarProps) {
       setIsCoursesOpen(true);
     }
   }, [isCoursesRoute]);
-
+  
+  //SECTION ROUTE
   const isSectionRoute = 
   pathname === "/section" ||
   pathname.startsWith("/section/");
@@ -40,6 +42,17 @@ export function Sidebar({ className }: SidebarProps) {
       setIsSectionOpen(true);
     }
   },[isSectionRoute]);
+  
+  //LESSONS ROUTE
+  const isLessonRoute = 
+  pathname === "/lessons" ||
+  pathname.startsWith("/lessons/");
+  const [isLessonOpen,setIsLessonOpen] = useState(isLessonRoute);
+  useEffect(()=>{
+    if(isLessonRoute){
+      setIsLessonOpen(true);
+    }
+  },[isLessonRoute]);
   return (
     <aside
       className={cn(
@@ -65,6 +78,7 @@ export function Sidebar({ className }: SidebarProps) {
             <span className="font-medium">DASHBOARD</span>
           </Link>
 
+          {/* COURSES BUTTON */}
           <button
             type="button"
             className={cn(
@@ -124,6 +138,7 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
           )}
 
+          {/* SECTIONS BUTTON */}
             <button
             type="button"
             className={cn(
@@ -161,19 +176,54 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
           )}
 
-          <Link
-            href="/lessons"
+        {/* LESSONS BUTTON */}
+        <button
+            type="button"
             className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+              "flex w-full items-center gap-3 px-4 py-3 rounded-lg transition-colors",
               "hover:bg-slate-100 dark:hover:bg-slate-900",
-              pathname === "/lessons"
+              isLessonRoute
                 ? "bg-sky-50 dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
+            onClick={() => setIsLessonOpen((prev) => !prev)}
           >
-            <GraduationCap className="h-5 w-5" />
+            <BookOpen className="h-5 w-5" />
             <span className="font-medium">LESSONS</span>
-          </Link>
+            <ChevronDown
+              className={cn(
+                "ml-auto h-4 w-4 transition-transform",
+                isLessonOpen && "rotate-180"
+              )}
+            />
+          </button>
+
+          {isLessonOpen && (
+            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200 pl-4 dark:border-slate-800">
+              <Link
+                href="/lesson/create"
+                className={cn(
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  pathname === "/lesson/create"
+                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                )}
+              >
+                Create Lesson
+              </Link>
+              <Link
+                href="/lesson"
+                className={cn(
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  pathname === "/lesson/edit"
+                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                )}
+              >
+                Edit Lesson
+              </Link>
+            </div>
+          )}
 
           <Link
             href="/chat"
