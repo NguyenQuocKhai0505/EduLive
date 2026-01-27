@@ -31,6 +31,15 @@ export function Sidebar({ className }: SidebarProps) {
     }
   }, [isCoursesRoute]);
 
+  const isSectionRoute = 
+  pathname === "/section" ||
+  pathname.startsWith("/section/");
+  const [isSectionOpen,setIsSectionOpen] = useState(isSectionRoute);
+  useEffect(()=>{
+    if(isSectionRoute){
+      setIsSectionOpen(true);
+    }
+  },[isSectionRoute]);
   return (
     <aside
       className={cn(
@@ -115,19 +124,42 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
           )}
 
-          <Link
-            href="/sessions"
+            <button
+            type="button"
             className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+              "flex w-full items-center gap-3 px-4 py-3 rounded-lg transition-colors",
               "hover:bg-slate-100 dark:hover:bg-slate-900",
-              pathname === "/sessions"
+              isSectionRoute
                 ? "bg-sky-50 dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
+            onClick={() => setIsSectionOpen((prev) => !prev)}
           >
-            <Layers className="h-5 w-5" />
-            <span className="font-medium">SESSIONS</span>
-          </Link>
+            <BookOpen className="h-5 w-5" />
+            <span className="font-medium">SECTIONS</span>
+            <ChevronDown
+              className={cn(
+                "ml-auto h-4 w-4 transition-transform",
+                isSectionOpen && "rotate-180"
+              )}
+            />
+          </button>
+
+          {isSectionOpen && (
+            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200 pl-4 dark:border-slate-800">
+              <Link
+                href="/section/create"
+                className={cn(
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  pathname === "/courses/create"
+                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                )}
+              >
+                Create Course
+              </Link>
+            </div>
+          )}
 
           <Link
             href="/lessons"
