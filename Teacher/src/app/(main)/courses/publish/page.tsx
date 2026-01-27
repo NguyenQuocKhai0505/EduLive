@@ -61,7 +61,7 @@ const mockCourses = [
                 key={course.id}
                 className="overflow-hidden border-slate-200 shadow-sm dark:border-slate-800"
               >
-                <div className="relative h-40 w-full">
+              <div className="relative h-32 w-full">
                   <Image
                     src={course.thumbnail}
                     alt={course.title}
@@ -70,10 +70,19 @@ const mockCourses = [
                   />
                 </div>
     
-                <div className="p-4 space-y-2">
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <Image
+                    src={course.thumbnail}
+                    alt={course.title}
+                    width={44}
+                    height={44}
+                    className="h-11 w-11 rounded-md object-cover"
+                  />
                   <h3 className="font-semibold text-slate-900 dark:text-white">
                     {course.title}
                   </h3>
+                </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Duration: {course.duration} hours
                   </p>
