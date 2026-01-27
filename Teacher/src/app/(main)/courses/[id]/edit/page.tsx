@@ -1,8 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Controller, type Resolver, type SubmitHandler, useForm } from "react-hook-form";
+import { useParams } from "next/navigation";
+import {
+  Controller,
+  type Resolver,
+  type SubmitHandler,
+  useForm,
+} from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link2, Trash2 } from "lucide-react";
@@ -18,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Zod schema for form validation
 const courseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
@@ -41,7 +46,6 @@ const courseSchema = z.object({
 
 type CourseFormValues = z.output<typeof courseSchema>;
 
-// Mock data
 const categories = [
   { id: 1, name: "Web Development" },
   { id: 2, name: "Design" },
@@ -51,7 +55,36 @@ const categories = [
 
 const levels = ["Beginner", "Intermediate", "Advanced"];
 const languages = ["English", "Vietnamese", "Japanese"];
-export default function CreateCoursePage() {
+
+const mockCourses: Array<CourseFormValues & { id: number }> = [
+  {
+    id: 1,
+    title: "Lập trình ReactJS từ cơ bản đến nâng cao",
+    description: "Khóa học ReactJS thực chiến từ zero đến production.",
+    categoryId: 1,
+    thumbnail:
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop",
+    level: "Intermediate",
+    language: "Vietnamese",
+    price: 1200000,
+    originalPrice: 1500000,
+    students: 120,
+    lectures: 42,
+    rating: 4.6,
+    duration: 28,
+    availableSlots: null,
+    instructorId: 1,
+  },
+];
+
+export default function EditCoursePage() {
+  const params = useParams<{ id: string }>();
+  const courseId = Number(Array.isArray(params.id) ? params.id[0] : params.id);
+  const course = useMemo(
+    () => mockCourses.find((item) => item.id === courseId),
+    [courseId]
+  );
+
   const [urlInput, setUrlInput] = useState("");
   const [localPreview, setLocalPreview] = useState<string | null>(null);
 
@@ -61,6 +94,7 @@ export default function CreateCoursePage() {
     control,
     setValue,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema) as unknown as Resolver<CourseFormValues>,
@@ -81,6 +115,14 @@ export default function CreateCoursePage() {
       instructorId: 1,
     },
   });
+
+  useEffect(() => {
+    if (!course) return;
+    const { id, ...formValues } = course;
+    reset(formValues);
+    setLocalPreview(null);
+    setUrlInput("");
+  }, [course, reset]);
 
   const thumbnailValue = watch("thumbnail");
   const thumbnailPreview = useMemo(
@@ -108,17 +150,33 @@ export default function CreateCoursePage() {
   };
 
   const onSubmit: SubmitHandler<CourseFormValues> = (values) => {
-    console.log("Create course payload", values);
+    console.log("Update course payload", { id: courseId, ...values });
   };
+
+  if (!course) {
+    return (
+      <div className="px-6 py-8">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          Course not found
+        </h1>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          Không tìm thấy khóa học với ID: {courseId}
+        </p>
+        <Button asChild className="mt-4" variant="outline">
+          <Link href="/courses">Back to Courses</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Create Course
+          Edit Course
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Điền đầy đủ thông tin khóa học theo cấu trúc database.
+          Cập nhật thông tin khóa học theo dữ liệu hiện có.
         </p>
       </div>
 
@@ -281,7 +339,6 @@ export default function CreateCoursePage() {
               </div>
             </div>
           </Card>
-
         </div>
 
         <div className="space-y-6">
@@ -349,7 +406,7 @@ export default function CreateCoursePage() {
             <Link href="/courses">Cancel</Link>
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Create Course"}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>
