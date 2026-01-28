@@ -3,9 +3,9 @@ import {
     IsString, 
     IsNumber, 
     IsOptional, 
-    IsArray, 
     IsEnum, 
-    Min 
+    Min,
+    Max
 } from 'class-validator';
 
 /**
@@ -53,7 +53,29 @@ export class CreateCourseDto{
     originalPrice?: number
 
     @IsOptional()
-    @IsArray()
-    whatYouWillLean?:string[]
+    @IsNumber()
+    @Min(0)
+    students?:number
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    lectures?:number
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    @Max(5)
+    rating?:number
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    duration?:number
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    availableSlots?:number
 
 }

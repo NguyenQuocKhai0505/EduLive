@@ -1,10 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import {
-  MoreHorizontal,
   Pencil,
   Trash2,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   Code2,
@@ -21,6 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+const formatCurrency = (value: number) => {
+  if (value === 0) return "Miễn phí";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(value);
+};
 
 const courses = [
   {
@@ -61,14 +66,6 @@ const courses = [
     },
   },
 ];
-
-const formatCurrency = (value: number) => {
-  if (value === 0) return "Miễn phí";
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value);
-};
 
 export const CourseList = () => {
   return (

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 
 type Course = {
     id:number
@@ -29,10 +31,11 @@ type Lesson = {
     title:string
     type:"video" | "article" | "quiz"
     videoUrl?:string
+    content?:string
+    time?:string
     preview:boolean
     order:number
 }
-
 
 const mockCourses: Course[] = [
     { id: 1, title: "ReactJS from Zero to Hero" },
@@ -46,9 +49,9 @@ const mockCourses: Course[] = [
   ];
   
   const mockLessons: Lesson[] = [
-    { id: 1, sectionId: 1, title: "What is React?", type: "video", preview: true, order: 1 },
-    { id: 2, sectionId: 2, title: "useState Hook", type: "video", preview: false, order: 1 },
-    { id: 3, sectionId: 3, title: "Figma Setup", type: "article", preview: false, order: 1 },
+    { id: 1, sectionId: 1, title: "What is React?", type: "video", preview: true, order: 1, time: "05:30" },
+    { id: 2, sectionId: 2, title: "useState Hook", type: "video", preview: false, order: 1, time: "08:10" },
+    { id: 3, sectionId: 3, title: "Figma Setup", type: "article", preview: false, order: 1, content: "Intro to Figma tools." },
   ];
   
 export default function LessonCreatePage(){
@@ -61,6 +64,8 @@ export default function LessonCreatePage(){
     const [title,setTitle] = useState("")
     const [type,setType] = useState<"video" | "article" | "quiz">("video")
     const [videoUrl,setVideoUrl] = useState("")
+    const [content,setContent] = useState("")
+    const [time,setTime] = useState("")
     const [preview,setPreview] = useState(false)
     const [order,setOrder] = useState<number|"">("")
 
@@ -80,15 +85,18 @@ export default function LessonCreatePage(){
             title:title.trim(),
             type,
             videoUrl: type==="video" ? videoUrl.trim() : undefined,
+            content: type === "video" ? undefined : content.trim(),
+            time: time.trim() || undefined,
             preview,
             order: order === "" ? 0 : Number(order),
         }
         setLessons((prev)=>[...prev,newLesson])
         setTitle("")
         setVideoUrl("")
+        setContent("")
+        setTime("")
         setPreview(false)
         setOrder("")
-        setSelectedSectionId(null)
     }
     return (
         <div className="px-6 py-8 space-y-6">
@@ -183,7 +191,28 @@ export default function LessonCreatePage(){
                   />
                 </div>
               )}
+
+              {type !== "video" && (
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium">Content</label>
+                  <Textarea
+                    rows={4}
+                    value={content}
+                    placeholder="Lesson content"
+                    onChange={(e) => setContent(e.target.value)}
+                  />
+                </div>
+              )}
     
+              <div>
+                <label className="text-sm font-medium">Time (mm:ss)</label>
+                <Input
+                  value={time}
+                  placeholder="05:00"
+                  onChange={(e) => setTime(e.target.value)}
+                />
+              </div>
+
               <div>
                 <label className="text-sm font-medium">Order</label>
                 <Input
@@ -238,6 +267,7 @@ export default function LessonCreatePage(){
                       </div>
                       <div className="text-xs text-slate-500">
                         Type: {lesson.type} | Order: {lesson.order}
+                        {lesson.time ? ` | Time: ${lesson.time}` : ""}
                       </div>
                     </div>
                     <span className="text-xs text-slate-400">

@@ -12,6 +12,7 @@ import {
     Query,
     HttpCode,
     HttpStatus,
+    BadRequestException,
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { SectionsService } from './sections.service';
@@ -152,9 +153,14 @@ export class CoursesController{
      */
     @Get(":courseId/sections/:sectionId")
     async getSectionById(
+        @Param("courseId", ParseIntPipe) courseId: number,
         @Param("sectionId", ParseIntPipe) sectionId: number
     ) {
-        return await this.sectionsService.findOne(sectionId);
+        const section = await this.sectionsService.findOne(sectionId);
+        if (section.courseId !== courseId) {
+            throw new BadRequestException("Section does not belong to this course");
+        }
+        return section;
     }
 
     /**
@@ -168,12 +174,17 @@ export class CoursesController{
     @UseGuards(AuthGuard, RolesGuard)
     @Roles(UserRole.TEACHER, UserRole.ADMIN)
     async createLesson(
+        @Param("courseId", ParseIntPipe) courseId: number,
         @Param("sectionId", ParseIntPipe) sectionId: number,
         @Body() createLessonDto: Omit<CreateLessonDto, 'sectionId'>,
         @Req() req: any
     ) {
         const userId = req.user.sub;
         const userRole = req.user.role;
+        const section = await this.sectionsService.findOne(sectionId);
+        if (section.courseId !== courseId) {
+            throw new BadRequestException("Section does not belong to this course");
+        }
         // Tự động set sectionId từ URL param
         return await this.lessonsService.create(
             { ...createLessonDto, sectionId },
@@ -203,9 +214,15 @@ export class CoursesController{
      */
     @Get(":courseId/sections/:sectionId/lessons/:lessonId")
     async getLessonById(
+        @Param("courseId", ParseIntPipe) courseId: number,
+        @Param("sectionId", ParseIntPipe) sectionId: number,
         @Param("lessonId", ParseIntPipe) lessonId: number
     ) {
-        return await this.lessonsService.findOne(lessonId);
+        const lesson = await this.lessonsService.findOne(lessonId);
+        if (lesson.sectionId !== sectionId || lesson.section.courseId !== courseId) {
+            throw new BadRequestException("Lesson does not belong to this section/course");
+        }
+        return lesson;
     }
 
     /**
@@ -219,12 +236,17 @@ export class CoursesController{
     @UseGuards(AuthGuard, RolesGuard)
     @Roles(UserRole.TEACHER, UserRole.ADMIN)
     async updateSection(
+        @Param("courseId", ParseIntPipe) courseId: number,
         @Param("sectionId", ParseIntPipe) sectionId: number,
         @Body() updateSectionDto: UpdateSectionDto,
         @Req() req: any
     ) {
         const userId = req.user.sub;
         const userRole = req.user.role;
+        const section = await this.sectionsService.findOne(sectionId);
+        if (section.courseId !== courseId) {
+            throw new BadRequestException("Section does not belong to this course");
+        }
         return await this.sectionsService.update(sectionId, updateSectionDto, userId, userRole);
     }
 
@@ -240,11 +262,16 @@ export class CoursesController{
     @Roles(UserRole.TEACHER, UserRole.ADMIN)
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteSection(
+        @Param("courseId", ParseIntPipe) courseId: number,
         @Param("sectionId", ParseIntPipe) sectionId: number,
         @Req() req: any
     ) {
         const userId = req.user.sub;
         const userRole = req.user.role;
+        const section = await this.sectionsService.findOne(sectionId);
+        if (section.courseId !== courseId) {
+            throw new BadRequestException("Section does not belong to this course");
+        }
         await this.sectionsService.remove(sectionId, userId, userRole);
     }
 
@@ -259,12 +286,18 @@ export class CoursesController{
     @UseGuards(AuthGuard, RolesGuard)
     @Roles(UserRole.TEACHER, UserRole.ADMIN)
     async updateLesson(
+        @Param("courseId", ParseIntPipe) courseId: number,
+        @Param("sectionId", ParseIntPipe) sectionId: number,
         @Param("lessonId", ParseIntPipe) lessonId: number,
         @Body() updateLessonDto: UpdateLessonDto,
         @Req() req: any
     ) {
         const userId = req.user.sub;
         const userRole = req.user.role;
+        const lesson = await this.lessonsService.findOne(lessonId);
+        if (lesson.sectionId !== sectionId || lesson.section.courseId !== courseId) {
+            throw new BadRequestException("Lesson does not belong to this section/course");
+        }
         return await this.lessonsService.update(lessonId, updateLessonDto, userId, userRole);
     }
 
@@ -280,11 +313,17 @@ export class CoursesController{
     @Roles(UserRole.TEACHER, UserRole.ADMIN)
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteLesson(
+        @Param("courseId", ParseIntPipe) courseId: number,
+        @Param("sectionId", ParseIntPipe) sectionId: number,
         @Param("lessonId", ParseIntPipe) lessonId: number,
         @Req() req: any
     ) {
         const userId = req.user.sub;
         const userRole = req.user.role;
+        const lesson = await this.lessonsService.findOne(lessonId);
+        if (lesson.sectionId !== sectionId || lesson.section.courseId !== courseId) {
+            throw new BadRequestException("Lesson does not belong to this section/course");
+        }
         await this.lessonsService.remove(lessonId, userId, userRole);
     }
 

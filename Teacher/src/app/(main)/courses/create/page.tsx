@@ -36,7 +36,6 @@ const courseSchema = z.object({
     .union([z.coerce.number().int().min(1), z.literal("")])
     .optional()
     .transform((v) => (v === "" ? null : v)),
-  instructorId: z.coerce.number().min(1),
 });
 
 type CourseFormValues = z.output<typeof courseSchema>;
@@ -78,7 +77,6 @@ export default function CreateCoursePage() {
       rating: 0,
       duration: 0,
       availableSlots: null,
-      instructorId: 1,
     },
   });
 
@@ -235,10 +233,6 @@ export default function CreateCoursePage() {
                     </Select>
                   )}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Instructor ID</label>
-                <Input type="number" {...register("instructorId")} />
               </div>
               <div>
                 <label className="text-sm font-medium">Available Slots</label>
