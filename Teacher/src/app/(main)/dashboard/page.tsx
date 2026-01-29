@@ -3,7 +3,7 @@ import { CourseList } from "../../components/courses/CourseList";
 
 export default function DashboardPage() {
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">
@@ -13,13 +13,13 @@ export default function DashboardPage() {
             Chào mừng trở lại! Đây là tình hình các khóa học của bạn.
           </p>
         </div>
-        <button className="bg-sky-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-sky-700 transition">
+        <button className="soft-gradient bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-md hover:shadow-xl transition-all hover:-translate-y-0.5">
           + Tạo khóa học mới
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <div className="glass-card hover-lift p-6 rounded-2xl">
           <div className="flex items-center justify-between space-y-0 pb-2">
             <h3 className="tracking-tight text-sm font-medium text-slate-500">
               Tổng số khóa học
@@ -36,7 +36,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <div className="glass-card hover-lift p-6 rounded-2xl">
           <div className="flex items-center justify-between space-y-0 pb-2">
             <h3 className="tracking-tight text-sm font-medium text-slate-500">
               Tổng số học viên
@@ -53,7 +53,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition">
+        <div className="glass-card hover-lift p-6 rounded-2xl">
           <div className="flex items-center justify-between space-y-0 pb-2">
             <h3 className="tracking-tight text-sm font-medium text-slate-500">
               Tổng doanh thu
@@ -72,8 +72,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-xl shadow-sm">
-          <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+        <div className="glass-card rounded-2xl">
+          <div className="p-6 border-b border-slate-100/70 dark:border-slate-800/60">
             <h3 className="font-semibold text-slate-800 dark:text-white">
               Khóa học gần đây
             </h3>

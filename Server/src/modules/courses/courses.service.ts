@@ -127,7 +127,7 @@ export class CoursesService{
      * PERMISSION:
      * - Chỉ owner (instructor) hoặc ADMIN được update
      */
-    async update(id:number, updateCourseDto:UpdateCourseDto, userId: number, userRole: UserRole):Promise<UpdateCourseDto>{
+    async update(id:number, updateCourseDto:UpdateCourseDto, userId: number, userRole: UserRole):Promise<Course>{
         const course = await this.findOne(id); // Kiểm tra course tồn tại
 
         //Kiem tra quyen: Chi OWMER VA ADMIN moi co the sua 

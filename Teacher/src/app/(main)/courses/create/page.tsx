@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Controller, type Resolver, type SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,6 +17,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { createCourse, uploadCourseThumbnail } from "../../../../services/course.service";
+import { getCategories } from "../../../../services/category.service";
+import { toast } from "sonner";
+
+type Category = {
+  id: number;
+  name: string;
+};
+
+const levels = ["Beginner", "Intermediate", "Advanced"];
+const languages = ["English", "Vietnamese", "Japanese"];
 
 // Zod schema for form validation
 const courseSchema = z.object({
@@ -39,20 +51,13 @@ const courseSchema = z.object({
 });
 
 type CourseFormValues = z.output<typeof courseSchema>;
-
-// Mock data
-const categories = [
-  { id: 1, name: "Web Development" },
-  { id: 2, name: "Design" },
-  { id: 3, name: "Language" },
-  { id: 4, name: "Data Science" },
-];
-
-const levels = ["Beginner", "Intermediate", "Advanced"];
-const languages = ["English", "Vietnamese", "Japanese"];
 export default function CreateCoursePage() {
   const [urlInput, setUrlInput] = useState("");
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [localFile, setLocalFile] = useState<File | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(true);
+  const router = useRouter();
 
   const {
     register,
@@ -66,7 +71,7 @@ export default function CreateCoursePage() {
     defaultValues: {
       title: "",
       description: "",
-      categoryId: categories[0]?.id ?? 0,
+      categoryId: 0,
       thumbnail: "",
       level: "Beginner",
       language: "English",
@@ -88,25 +93,97 @@ export default function CreateCoursePage() {
 
   const handleLocalImage = (file?: File | null) => {
     if (!file) return;
+    if (localPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(localPreview);
+    }
     const previewUrl = URL.createObjectURL(file);
     setLocalPreview(previewUrl);
+    setLocalFile(file);
     setValue("thumbnail", previewUrl, { shouldValidate: true });
   };
 
   const handleAddUrl = () => {
     if (!urlInput.trim()) return;
+    if (localPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(localPreview);
+    }
     setLocalPreview(null);
+    setLocalFile(null);
     setValue("thumbnail", urlInput.trim(), { shouldValidate: true });
     setUrlInput("");
   };
 
   const handleRemoveThumbnail = () => {
+    if (localPreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(localPreview);
+    }
     setLocalPreview(null);
+    setLocalFile(null);
     setValue("thumbnail", "", { shouldValidate: true });
   };
 
-  const onSubmit: SubmitHandler<CourseFormValues> = (values) => {
-    console.log("Create course payload", values);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setCategoryLoading(true);
+        const response = await getCategories();
+        const list = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data ?? [];
+        setCategories(list);
+        if (list.length > 0) {
+          setValue("categoryId", list[0].id, { shouldValidate: true });
+        }
+      } catch (error) {
+        console.error("Error fetching categories", error);
+        toast.error("Không thể tải danh mục");
+      } finally {
+        setCategoryLoading(false);
+      }
+    };
+    fetchCategories();
+  }, [setValue]);
+
+  useEffect(() => {
+    return () => {
+      if (localPreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(localPreview);
+      }
+    };
+  }, [localPreview]);
+
+  const onSubmit: SubmitHandler<CourseFormValues> = async (values) => {
+    try {
+      const trimmedThumbnail = values.thumbnail?.trim() ?? "";
+      const payload = {
+        ...values,
+        thumbnail:
+          trimmedThumbnail && !trimmedThumbnail.startsWith("blob:")
+            ? trimmedThumbnail
+            : null,
+      };
+
+      const response = await createCourse(payload);
+      const courseId =
+        response?.data?.id ?? response?.data?.course?.id ?? response?.data?.data?.id;
+
+      if (localFile && courseId) {
+        try {
+          await uploadCourseThumbnail(courseId, localFile);
+          toast.success("Course created & thumbnail uploaded");
+        } catch (uploadError) {
+          console.error("Error uploading thumbnail", uploadError);
+          toast.error("Tạo khóa học thành công nhưng upload thumbnail thất bại");
+        }
+      } else {
+        toast.success("Course created successfully");
+      }
+
+      router.push("/courses");
+    } catch (error) {
+      console.error("Error creating course", error);
+      toast.error("Failed to create course");
+    }
   };
 
   return (
@@ -161,9 +238,18 @@ export default function CreateCoursePage() {
                     <Select
                       value={field.value ? String(field.value) : ""}
                       onValueChange={(value) => field.onChange(Number(value))}
+                      disabled={categoryLoading || categories.length === 0}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue
+                          placeholder={
+                            categoryLoading
+                              ? "Loading..."
+                              : categories.length === 0
+                                ? "No categories"
+                                : "Select category"
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (

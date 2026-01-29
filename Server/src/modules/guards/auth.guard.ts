@@ -17,7 +17,8 @@ export class AuthGuard implements CanActivate{
 
         try{
             const payload = await this.jwtService.verifyAsync(token,{
-                secret: this.configeService.get<string>("JWT_SECRET")
+                secret: this.configeService.get<string>("JWT_ACCESS_SECRET") 
+                    || this.configeService.get<string>("JWT_SECRET")
             })
             //Gan thong tin user vao request de RolesGuard su dung 
             request["user"] = payload

@@ -15,6 +15,7 @@ import { Category } from './entities/category.entity';
 import { Section } from './entities/section.entity';
 import { Lesson } from './entities/lesson.entity';
 import { UsersModule } from '../users/users.module';
+import { CloudinaryService } from '../../common/services/cloudinary.service';
 
 @Module({
     // IMPORTS: Import cac module khac 
@@ -51,7 +52,7 @@ import { UsersModule } from '../users/users.module';
         }),
     ],
         controllers:[CoursesController, CategoriesController, SectionsController, LessonsController],
-        providers:[CoursesService, CategoriesService, SectionsService, LessonsService],
+        providers:[CoursesService, CategoriesService, SectionsService, LessonsService, CloudinaryService],
         exports:[CoursesService, CategoriesService, SectionsService, LessonsService]
 })
 export class CoursesModule{}

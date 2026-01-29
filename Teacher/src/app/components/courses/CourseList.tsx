@@ -1,13 +1,8 @@
+"use client";
+
 import Image from "next/image";
-import {
-  Pencil,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Code2,
-  Palette,
-  Languages,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,56 +13,56 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getMyCourses } from "../../../services/course.service";
 
-const formatCurrency = (value: number) => {
-  if (value === 0) return "Miễn phí";
+type CourseCategory = {
+  id: number;
+  name: string;
+  image?: string | null;
+};
+
+type Course = {
+  id: number;
+  title: string;
+  thumbnail?: string | null;
+  price: number | string;
+  students?: number | null;
+  isPublished?: boolean;
+  isActive?: boolean;
+  category?: CourseCategory | null;
+};
+
+const formatCurrency = (value: number | string) => {
+  const numeric = typeof value === "string" ? Number(value) : value;
+  if (!numeric) return "Miễn phí";
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-  }).format(value);
+  }).format(numeric);
 };
 
-const courses = [
-  {
-    id: 1,
-    title: "Lập trình ReactJS từ cơ bản đến nâng cao",
-    price: 1200000,
-    status: "Published",
-    sales: 120,
-    thumbnail: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop",
-    category: {
-      name: "Web Development",
-      icon: Code2,
-    },
-  },
-  {
-    id: 2,
-    title: "Thành thạo Tiếng Anh giao tiếp trong 30 ngày",
-    price: 899000,
-    status: "Draft",
-    sales: 0,
-    thumbnail: "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?q=80&w=800&auto=format&fit=crop",
-    category: {
-      name: "Language",
-      icon: Languages,
-    },
-  },
-  {
-    id: 3,
-    title: "Thiết kế UI/UX với Figma cho người mới",
-    price: 0,
-    status: "Published",
-    sales: 850,
-    thumbnail: "https://images.unsplash.com/photo-1559028012-481c04fa702d?q=80&w=800&auto=format&fit=crop",
-    category: {
-      name: "Design",
-      image: "https://images.unsplash.com/photo-1522199710521-72d69614c702?q=80&w=200&auto=format&fit=crop",
-      icon: Palette,
-    },
-  },
-];
-
 export const CourseList = () => {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const response = await getMyCourses();
+        const list = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data ?? [];
+        setCourses(list);
+      } catch (error) {
+        console.error("Error fetching courses", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
       <div className="w-full overflow-x-auto">
@@ -83,18 +78,37 @@ export const CourseList = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {courses.map((course) => (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">
+                  Đang tải dữ liệu...
+                </TableCell>
+              </TableRow>
+            ) : courses.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">
+                  Chưa có khóa học nào.
+                </TableCell>
+              </TableRow>
+            ) : (
+              courses.map((course) => (
               <TableRow key={course.id}>
                 <TableCell className="min-w-[240px]">
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-20 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                      <Image
-                        src={course.thumbnail}
-                        alt={course.title}
-                        width={80}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
+                      {course.thumbnail ? (
+                        <Image
+                          src={course.thumbnail}
+                          alt={course.title}
+                          width={80}
+                          height={48}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-slate-100 text-xs text-slate-500 dark:bg-slate-900">
+                          No Image
+                        </div>
+                      )}
                     </div>
                     <div>
                       <div className="font-medium text-slate-800 dark:text-white">
@@ -109,7 +123,7 @@ export const CourseList = () => {
                 <TableCell className="hidden lg:table-cell">
                   <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                     <div className="h-7 w-7 overflow-hidden rounded-full border border-slate-200 dark:border-slate-800">
-                      {course.category.image ? (
+                      {course.category?.image ? (
                         <Image
                           src={course.category.image}
                           alt={course.category.name}
@@ -119,18 +133,22 @@ export const CourseList = () => {
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
-                          <course.category.icon className="h-4 w-4 text-slate-500" />
+                          <span className="text-[10px] font-semibold text-slate-500">
+                            {course.category?.name?.[0] ?? "C"}
+                          </span>
                         </div>
                       )}
                     </div>
-                    <span>{course.category.name}</span>
+                    <span>{course.category?.name ?? "Chưa phân loại"}</span>
                   </div>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell text-slate-600 dark:text-slate-300">
                   {formatCurrency(course.price)}
                 </TableCell>
                 <TableCell>
-                  {course.status === "Published" ? (
+                  {!course.isActive ? (
+                    <Badge variant="secondary">Chờ duyệt</Badge>
+                  ) : course.isPublished ? (
                     <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">
                       Đã xuất bản
                     </Badge>
@@ -139,7 +157,7 @@ export const CourseList = () => {
                   )}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-slate-600 dark:text-slate-300">
-                  {course.sales}
+                  {course.students ?? 0}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex items-center gap-2">
@@ -157,7 +175,8 @@ export const CourseList = () => {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

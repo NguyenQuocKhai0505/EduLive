@@ -13,7 +13,11 @@ import {
     HttpCode,
     HttpStatus,
     BadRequestException,
+    UseInterceptors,
+    UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { CoursesService } from './courses.service';
 import { SectionsService } from './sections.service';
 import { LessonsService } from './lessons.service';
@@ -27,6 +31,8 @@ import { AuthGuard } from '../guards/auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decirator';
 import { UserRole } from '../users/enums/user-role.enum';
+import { CloudinaryService } from '../../common/services/cloudinary.service';
+import { imageFileFilter } from '../../common/utils/file-upload.util';
 
 // TẤT CẢ ROUTES:
 //  * - POST   /courses                    - Tạo course mới (TEACHER/ADMIN)
@@ -46,7 +52,8 @@ export class CoursesController{
     constructor(
         private readonly coursesService:CoursesService,
         private readonly sectionsService:SectionsService,
-        private readonly lessonsService:LessonsService
+        private readonly lessonsService:LessonsService,
+        private readonly cloudinaryService: CloudinaryService
     ){}
 
     //ENDPOINT 1: POST /courses
@@ -92,6 +99,40 @@ export class CoursesController{
     async getMyCourse(@Req() req:any){
         const instructorId= req.user.sub //lay id cua teacher tu JWT
         return await this.coursesService.findByInstructor(instructorId)
+    }
+
+    /**
+     * POST /courses/:id/thumbnail
+     *
+     * Upload thumbnail lên Cloudinary và cập nhật course
+     *
+     * PERMISSION: TEACHER (owner) hoặc ADMIN
+     */
+    @Post(":id/thumbnail")
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(UserRole.TEACHER, UserRole.ADMIN)
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: memoryStorage(),
+            fileFilter: imageFileFilter,
+            limits: { fileSize: 5 * 1024 * 1024 },
+        })
+    )
+    async uploadThumbnail(
+        @Param("id", ParseIntPipe) id: number,
+        @UploadedFile() file: Express.Multer.File,
+        @Req() req: any
+    ) {
+        if (!file) {
+            throw new BadRequestException("Thumbnail file is required");
+        }
+
+        const url = await this.cloudinaryService.uploadImage(file, "courses");
+        const userId = req.user.sub;
+        const userRole = req.user.role;
+        const course = await this.coursesService.update(id, { thumbnail: url }, userId, userRole);
+
+        return { thumbnail: url, course };
     }
 
     //END POINT 5: GET /courses/category/:categoryId

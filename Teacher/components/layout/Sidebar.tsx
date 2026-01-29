@@ -56,21 +56,21 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800",
-        "h-screen sticky top-0",
-        "hidden lg:block",
+        "hidden h-screen w-64 lg:block sticky top-0",
+        "border-r border-white/40 dark:border-white/10",
+        "bg-white/80 dark:bg-slate-950/80 backdrop-blur-lg",
         className
       )}
     >
-      <div className="p-4 flex flex-col h-full">
+      <div className="flex h-full flex-col p-4">
         <nav className="flex-1 space-y-2">
           <Link
             href="/dashboard"
             className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              "hover:bg-slate-100 dark:hover:bg-slate-900",
+              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              "hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-sm dark:hover:bg-slate-900/80",
               pathname === "/dashboard"
-                ? "bg-sky-50 dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-semibold"
+                ? "bg-gradient-to-r from-sky-500/15 to-indigo-500/10 text-sky-700 dark:text-sky-300 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
           >
@@ -82,10 +82,10 @@ export function Sidebar({ className }: SidebarProps) {
           <button
             type="button"
             className={cn(
-              "flex w-full items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              "hover:bg-slate-100 dark:hover:bg-slate-900",
+              "flex w-full items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              "hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-sm dark:hover:bg-slate-900/80",
               isCoursesRoute
-                ? "bg-sky-50 dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-semibold"
+                ? "bg-gradient-to-r from-sky-500/15 to-indigo-500/10 text-sky-700 dark:text-sky-300 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
             onClick={() => setIsCoursesOpen((prev) => !prev)}
@@ -101,14 +101,14 @@ export function Sidebar({ className }: SidebarProps) {
           </button>
 
           {isCoursesOpen && (
-            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200 pl-4 dark:border-slate-800">
+            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200/70 pl-4 dark:border-slate-800/70">
               <Link
                 href="/courses"
                 className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
                   pathname === "/courses"
-                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
                 )}
               >
                 View All Courses
@@ -116,10 +116,10 @@ export function Sidebar({ className }: SidebarProps) {
               <Link
                 href="/courses/create"
                 className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
                   pathname === "/courses/create"
-                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
                 )}
               >
                 Create Course
@@ -127,10 +127,10 @@ export function Sidebar({ className }: SidebarProps) {
               <Link
                 href="/courses/publish"
                 className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
                   pathname === "/courses/publish"
-                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
                 )}
               >
                 Publish/Unpublish
@@ -142,10 +142,10 @@ export function Sidebar({ className }: SidebarProps) {
             <button
             type="button"
             className={cn(
-              "flex w-full items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              "hover:bg-slate-100 dark:hover:bg-slate-900",
+              "flex w-full items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              "hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-sm dark:hover:bg-slate-900/80",
               isSectionRoute
-                ? "bg-sky-50 dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-semibold"
+                ? "bg-gradient-to-r from-sky-500/15 to-indigo-500/10 text-sky-700 dark:text-sky-300 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
             onClick={() => setIsSectionOpen((prev) => !prev)}
@@ -161,14 +161,14 @@ export function Sidebar({ className }: SidebarProps) {
           </button>
 
           {isSectionOpen && (
-            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200 pl-4 dark:border-slate-800">
+            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200/70 pl-4 dark:border-slate-800/70">
               <Link
                 href="/section/create"
                 className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
                   pathname === "/courses/create"
-                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
                 )}
               >
                 Create Course
@@ -180,10 +180,10 @@ export function Sidebar({ className }: SidebarProps) {
         <button
             type="button"
             className={cn(
-              "flex w-full items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              "hover:bg-slate-100 dark:hover:bg-slate-900",
+              "flex w-full items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              "hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-sm dark:hover:bg-slate-900/80",
               isLessonRoute
-                ? "bg-sky-50 dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-semibold"
+                ? "bg-gradient-to-r from-sky-500/15 to-indigo-500/10 text-sky-700 dark:text-sky-300 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
             onClick={() => setIsLessonOpen((prev) => !prev)}
@@ -199,14 +199,14 @@ export function Sidebar({ className }: SidebarProps) {
           </button>
 
           {isLessonOpen && (
-            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200 pl-4 dark:border-slate-800">
+            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200/70 pl-4 dark:border-slate-800/70">
               <Link
                 href="/lesson/create"
                 className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
                   pathname === "/lesson/create"
-                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
                 )}
               >
                 Create Lesson
@@ -214,10 +214,10 @@ export function Sidebar({ className }: SidebarProps) {
               <Link
                 href="/lesson"
                 className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap",
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
                   pathname === "/lesson/edit"
-                    ? "bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
                 )}
               >
                 Edit Lesson
@@ -228,10 +228,10 @@ export function Sidebar({ className }: SidebarProps) {
           <Link
             href="/chat"
             className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              "hover:bg-slate-100 dark:hover:bg-slate-900",
+              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              "hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-sm dark:hover:bg-slate-900/80",
               pathname === "/chat"
-                ? "bg-sky-50 dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-semibold"
+                ? "bg-gradient-to-r from-sky-500/15 to-indigo-500/10 text-sky-700 dark:text-sky-300 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
           >
