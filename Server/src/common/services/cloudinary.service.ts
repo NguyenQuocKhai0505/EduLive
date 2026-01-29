@@ -64,6 +64,48 @@ export class CloudinaryService {
     }
 
     /**
+     * Upload một video lên Cloudinary
+     * @param file File object từ Multer
+     * @param folder Folder trong Cloudinary (ví dụ: 'lessons')
+     * @returns Promise với URL video đã upload (secure_url)
+     */
+    async uploadVideo(file: Express.Multer.File, folder: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: folder,
+                    resource_type: 'video',
+                },
+                (error, result) => {
+                    if (error) {
+                        reject(error);
+                    } else if (!result || !result.secure_url) {
+                        reject(new Error('Upload failed: No result or secure_url from Cloudinary'));
+                    } else {
+                        resolve(result.secure_url);
+                    }
+                }
+            );
+
+            uploadStream.end(file.buffer);
+        });
+    }
+
+    /**
+     * Upload nhiều videos lên Cloudinary
+     * @param files Array of files từ Multer
+     * @param folder Folder trong Cloudinary
+     * @returns Promise với array of URLs
+     */
+    async uploadMultipleVideos(
+        files: Express.Multer.File[],
+        folder: string
+    ): Promise<string[]> {
+        const uploadPromises = files.map((file) => this.uploadVideo(file, folder));
+        return Promise.all(uploadPromises);
+    }
+
+    /**
      * Xóa ảnh khỏi Cloudinary bằng URL
      * @param imageUrl URL của ảnh cần xóa
      */

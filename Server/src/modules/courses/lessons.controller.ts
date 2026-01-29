@@ -11,7 +11,12 @@ import {
     ParseIntPipe,
     HttpCode,
     HttpStatus,
+    BadRequestException,
+    UseInterceptors,
+    UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
@@ -19,6 +24,8 @@ import { AuthGuard } from '../guards/auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decirator';
 import { UserRole } from '../users/enums/user-role.enum';
+import { CloudinaryService } from '../../common/services/cloudinary.service';
+import { videoFileFilter } from '../../common/utils/file-upload.util';
 
 /**
  * CONTROLLER: LessonsController
@@ -36,7 +43,10 @@ import { UserRole } from '../users/enums/user-role.enum';
  */
 @Controller('lessons')
 export class LessonsController {
-    constructor(private readonly lessonsService: LessonsService) {}
+    constructor(
+        private readonly lessonsService: LessonsService,
+        private readonly cloudinaryService: CloudinaryService
+    ) {}
 
     /**
      * POST /lessons
@@ -52,6 +62,34 @@ export class LessonsController {
         const userId = req.user.sub;
         const userRole = req.user.role;
         return await this.lessonsService.create(createLessonDto, userId, userRole);
+    }
+
+    /**
+     * POST /lessons/upload/videos
+     * 
+     * Upload nhiều video lên Cloudinary và trả về secure_url
+     * 
+     * PERMISSION: TEACHER hoặc ADMIN
+     */
+    @Post('upload/videos')
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(UserRole.TEACHER, UserRole.ADMIN)
+    @UseInterceptors(
+        FilesInterceptor('videos', 5, {
+            storage: memoryStorage(),
+            fileFilter: videoFileFilter,
+            limits: {
+                fileSize: 200 * 1024 * 1024, // 200MB per file
+            },
+        })
+    )
+    async uploadVideos(@UploadedFiles() files: Express.Multer.File[]) {
+        if (!files || files.length === 0) {
+            throw new BadRequestException('Video files are required');
+        }
+
+        const urls = await this.cloudinaryService.uploadMultipleVideos(files, 'lessons');
+        return { urls };
     }
 
     /**

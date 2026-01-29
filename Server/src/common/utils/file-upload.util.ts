@@ -22,3 +22,13 @@ export const imageFileFilter = (req, file, callback) => {
     }
     callback(null, true);
 };
+
+/**
+ * Filter chỉ cho phép file video
+ */
+export const videoFileFilter = (req, file, callback) => {
+    if (!file.originalname.match(/\.(mp4|mov|m4v|webm|mkv)$/i)) {
+        return callback(new Error('Only video files are allowed!'), false);
+    }
+    callback(null, true);
+};
