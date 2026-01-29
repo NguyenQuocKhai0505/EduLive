@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import {getMyCourses} from "../../../../services/course.service"
+import {getSectionsByCourse, createSection, updateSection} from "../../../../services/section.service"
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { DndContext } from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 type Course = {
   id: number;
   title: string;
@@ -24,58 +32,109 @@ type Section = {
   order: number;
 };
 
-const mockCourses: Course[] = [
-  { id: 1, title: "ReactJS from Zero to Hero" },
-  { id: 2, title: "UI/UX Design with Figma" },
-  { id: 3, title: "English Communication" },
-];
-
-const mockSections: Section[] = [
-  { id: 1, courseId: 1, title: "Giới thiệu khóa học", order: 1 },
-  { id: 2, courseId: 1, title: "React Core Concepts", order: 2 },
-  { id: 3, courseId: 2, title: "Figma Basics", order: 1 },
-];
-
 export default function SectionPage() {
-  const [courses] = useState<Course[]>(mockCourses);
-  const [sections, setSections] = useState<Section[]>(mockSections);
-  const [selectedCourseId, setSelectedCourseId] = useState<number>(
-    mockCourses[0]?.id ?? 0
-  );
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<number>(0);
   const [title, setTitle] = useState("");
   const [order, setOrder] = useState<number | "">("");
   const [creating, setCreating] = useState(false);
 
-  const activeSections = useMemo(
-    () => sections.filter((section) => section.courseId === selectedCourseId),
-    [sections, selectedCourseId]
-  );
-
-  const handleCreateSection = () => {
-    if (!title.trim() || !selectedCourseId) return;
-
-    setCreating(true);
-    const nextId =
-      sections.length > 0 ? Math.max(...sections.map((s) => s.id)) + 1 : 1;
-
-    const newSection: Section = {
-      id: nextId,
-      courseId: selectedCourseId,
-      title: title.trim(),
-      order: order === "" ? 0 : Number(order),
+  //Load courses
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await getMyCourses();
+        setCourses(res.data);
+        if (res.data.length > 0) {
+          setSelectedCourseId(res.data[0].id);
+        }
+      } catch (error) {
+        toast.error("Failed to load courses");
+      }
     };
-
-    setSections((prev) => [...prev, newSection]);
-    setTitle("");
-    setOrder("");
-    setCreating(false);
+    fetchCourses();
+  }, []);
+  //Load section
+  useEffect(() => {
+    if (!selectedCourseId) return;
+    const fetchSections = async () => {
+      try {
+        const res = await getSectionsByCourse(selectedCourseId);
+        setSections(res.data);
+      } catch (error) {
+        toast.error("Failed to load sections");
+      }
+    };
+    fetchSections();
+  }, [selectedCourseId]);
+  // Create Section 
+  const handleCreateSection = async () => {
+    if (!title.trim() || !selectedCourseId) return;
+    setCreating(true);
+    try {
+      await createSection(selectedCourseId, {
+        title: title.trim(),
+        order: order === "" ? 0 : Number(order),
+      });
+      setTitle("");
+      setOrder("");
+      const res = await getSectionsByCourse(selectedCourseId);
+      setSections(res.data);
+      toast.success("Section created successfully");
+    } catch (error) {
+      toast.error("Failed to create section");
+    } finally {
+      setCreating(false);
+    }
   };
 
+  const SortableItem = ({ id, children }: { id: number; children: ReactNode }) => {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+  
+    return (
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        {children}
+      </div>
+    );
+  };
+  //Drag and drop 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const reordered = arrayMove(
+      sections,
+      sections.findIndex((s) => s.id === active.id),
+      sections.findIndex((s) => s.id === over.id)
+    );
+    if (!selectedCourseId) return;
+    const withOrder = reordered.map((section, index) => ({
+      ...section,
+      order: index + 1,
+    }));
+    setSections(withOrder);
+
+    try {
+      await Promise.all(
+        withOrder.map((section) =>
+          updateSection(selectedCourseId, section.id, { order: section.order })
+        )
+      );
+      toast.success("Order updated");
+    } catch (error) {
+      toast.error("Failed to update order");
+    }
+  };
   return (
     <div className="px-6 py-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Sessions / Sections (Mock)
+          Sessions / Sections
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Chọn khóa học để thêm section.
@@ -87,7 +146,7 @@ export default function SectionPage() {
           <div>
             <label className="text-sm font-medium">Select Course</label>
             <Select
-              value={String(selectedCourseId)}
+              value={selectedCourseId ? String(selectedCourseId) : ""}
               onValueChange={(value) => setSelectedCourseId(Number(value))}
             >
               <SelectTrigger>
@@ -147,27 +206,33 @@ export default function SectionPage() {
         <h2 className="text-base font-semibold text-slate-900 dark:text-white">
           Sections List
         </h2>
-        {activeSections.length === 0 ? (
+        {sections.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">No sections yet.</p>
         ) : (
-          <div className="mt-4 space-y-3">
-            {activeSections.map((section) => (
-              <div
-                key={section.id}
-                className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 text-sm dark:border-slate-800"
-              >
-                <div>
-                  <div className="font-medium text-slate-900 dark:text-white">
-                    {section.title}
-                  </div>
-                  <div className="text-xs text-slate-500">
-                    Order: {section.order}
-                  </div>
-                </div>
-                <span className="text-xs text-slate-400">ID: {section.id}</span>
+          <DndContext onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={sections.map((section) => section.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="mt-4 space-y-3">
+                {sections.map((section) => (
+                  <SortableItem key={section.id} id={section.id}>
+                    <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 text-sm dark:border-slate-800">
+                      <div>
+                        <div className="font-medium text-slate-900 dark:text-white">
+                          {section.title}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Order: {section.order}
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-400">ID: {section.id}</span>
+                    </div>
+                  </SortableItem>
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
       </Card>
     </div>
