@@ -16,7 +16,7 @@ export default async function MainLayout({
     redirect("/auth/login");
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
   const res = await fetch(`${baseUrl}/auth/me`, {
     headers: {
       cookie: cookieStore.toString(),

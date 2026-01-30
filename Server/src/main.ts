@@ -8,8 +8,15 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  const allowedOrigins = [
+    process.env.TEACHER_APP_URL,
+    process.env.STUDENT_APP_URL,
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: allowedOrigins,
     credentials: true
   });
 

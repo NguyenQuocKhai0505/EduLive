@@ -11,8 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-
+import {useEffect} from "react"
+import { getMyCourses } from "../../../../services/course.service";
+import { getSectionsByCourse } from "../../../../services/section.service";
+import{getLessonsBySection,createLesson,uploadLessonVideos}from "../../../../services/lesson.service";
+import { toast } from "sonner";
 type Course = {
     id:number
     title:string
@@ -37,37 +40,23 @@ type Lesson = {
     order:number
 }
 
-const mockCourses: Course[] = [
-    { id: 1, title: "ReactJS from Zero to Hero" },
-    { id: 2, title: "UI/UX Design with Figma" },
-  ];
-  
-  const mockSections: Section[] = [
-    { id: 1, courseId: 1, title: "Intro React", order: 1 },
-    { id: 2, courseId: 1, title: "Hooks", order: 2 },
-    { id: 3, courseId: 2, title: "Figma Basics", order: 1 },
-  ];
-  
-  const mockLessons: Lesson[] = [
-    { id: 1, sectionId: 1, title: "What is React?", type: "video", preview: true, order: 1, time: "05:30" },
-    { id: 2, sectionId: 2, title: "useState Hook", type: "video", preview: false, order: 1, time: "08:10" },
-    { id: 3, sectionId: 3, title: "Figma Setup", type: "article", preview: false, order: 1, content: "Intro to Figma tools." },
-  ];
-  
 export default function LessonCreatePage(){
-    const [courses] = useState<Course[]>(mockCourses);
-    const [sections] = useState<Section[]>(mockSections);
-    const [lessons,setLessons] = useState<Lesson[]>(mockLessons);
+    const [courses,setCourses] = useState<Course[]>([]);
+    const [sections,setSections] = useState<Section[]>([]);
+    const [lessons,setLessons] = useState<Lesson[]>([]);
 
-    const [selectedCourseId,setSelectedCourseId]=useState<number>(mockCourses[0]?.id ??0)
+    const [selectedCourseId,setSelectedCourseId]=useState<number>()
     const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
     const [title,setTitle] = useState("")
     const [type,setType] = useState<"video" | "article" | "quiz">("video")
-    const [videoUrl,setVideoUrl] = useState("")
     const [content,setContent] = useState("")
     const [time,setTime] = useState("")
     const [preview,setPreview] = useState(false)
     const [order,setOrder] = useState<number|"">("")
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [creating, setCreating] = useState(false);
+    const [expandedCourseId, setExpandedCourseId] = useState<number | null>(null);
+    const [expandedSectionId, setExpandedSectionId] = useState<number | null>(null);
 
     const filteredSections = useMemo(() => sections.filter((s) => s.courseId === selectedCourseId),
     [sections,selectedCourseId]    
@@ -75,38 +64,106 @@ export default function LessonCreatePage(){
 
     const filteredLessons = useMemo(() => lessons.filter((l)=>l.sectionId === selectedSectionId),[lessons,selectedSectionId])
 
-    const handleCreateLesson = () =>{
-        if(!selectedSectionId || !title.trim()) return
-        const nextId = lessons.length >0 ? Math.max(...lessons.map((l)=>l.id)) + 1 : 1
-
-        const newLesson: Lesson = {
-            id:nextId,
-            sectionId: selectedSectionId,
-            title:title.trim(),
-            type,
-            videoUrl: type==="video" ? videoUrl.trim() : undefined,
-            content: type === "video" ? undefined : content.trim(),
-            time: time.trim() || undefined,
-            preview,
-            order: order === "" ? 0 : Number(order),
+    //Load courses 
+    useEffect(()=>{
+      const fetchCourses = async() =>{
+        try{
+          const res = await getMyCourses();
+          setCourses(res.data)
+          if(res.data.length > 0){
+            setSelectedCourseId(res.data[0].id)
+          }
+        }catch(error){
+          toast.error("Failed to load courses")
         }
-        setLessons((prev)=>[...prev,newLesson])
+      }
+      fetchCourses()
+    },[])
+
+    // Load Sections
+    useEffect(()=>{
+      if(!selectedCourseId) return 
+      const fetchSections = async()=>{
+        try{
+          const res = await getSectionsByCourse(selectedCourseId)
+          setSections(res.data)
+          const firstSectionId = res.data.length > 0 ? res.data[0].id : null
+          setSelectedSectionId(firstSectionId)
+          setExpandedSectionId(firstSectionId)
+          setLessons([])
+        }catch(error){
+          toast.error("Failed to load sections")
+        }
+      }
+      fetchSections()
+    },[selectedCourseId])
+
+    //Load lessons
+    useEffect(()=>{
+      if(!selectedCourseId || !selectedSectionId) return 
+      const fetchLessons = async() =>{
+        try{
+          const res = await getLessonsBySection(selectedCourseId,selectedSectionId)
+          setLessons(res.data)
+        }catch(error){
+          toast.error("Failed to load lessons")
+        }
+      }
+      fetchLessons()
+    },[selectedCourseId,selectedSectionId])
+
+    //Handle create lessons
+    const handleCreateLesson = async () =>{
+      if(!selectedCourseId || !selectedSectionId || !title.trim()) return 
+      if(type==="video" && !videoFile){
+        toast.error("Please select a video file")
+        return
+      }
+      setCreating(true)
+
+      try{
+        let uploadedVideoUrl: string | undefined 
+        
+        if(type==="video"){
+          const uploadRes = await uploadLessonVideos([videoFile!])
+          uploadedVideoUrl = uploadRes.data.urls?.[0]
+          if(!uploadedVideoUrl){
+            toast.error("Failed to upload video")
+            return
+          }
+        }
+
+        await createLesson(selectedCourseId,selectedSectionId,{
+          title:title.trim(),
+          type,
+          videoUrl: type === "video" ? uploadedVideoUrl : undefined,
+          content:type !== "video" ? content.trim() : undefined,
+          time: time.trim() || undefined,
+          preview,
+          order: order === "" ? 0 : Number(order)
+        })
         setTitle("")
-        setVideoUrl("")
         setContent("")
-        setTime("")
-        setPreview(false)
+        setVideoFile(null),
+        setTime(""),
+        setPreview(false),
         setOrder("")
+
+        const res = await getLessonsBySection(selectedCourseId,selectedSectionId)
+        setLessons(res.data)
+        toast.success("Lesson created successfully")
+      }catch(error){
+        toast.error("Failed to create lesson")
+      }finally{
+        setCreating(false)
+      }
     }
     return (
         <div className="px-6 py-8 space-y-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Lessons (Mock)
+              Lessons
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Chọn khóa học → chọn section → thêm lesson.
-            </p>
           </div>
     
           {/* Select Course */}
@@ -183,11 +240,11 @@ export default function LessonCreatePage(){
     
               {type === "video" && (
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium">Video URL</label>
+                  <label className="text-sm font-medium">Video File</label>
                   <Input
-                    value={videoUrl}
-                    placeholder="https://..."
-                    onChange={(e) => setVideoUrl(e.target.value)}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
                   />
                 </div>
               )}
@@ -240,9 +297,9 @@ export default function LessonCreatePage(){
             <Button
               className="mt-4"
               onClick={handleCreateLesson}
-              disabled={!selectedSectionId || !title.trim()}
+              disabled={creating || !selectedSectionId || !title.trim()}
             >
-              Add Lesson
+              {creating ? "Creating..." : "Add Lesson"}
             </Button>
           </Card>
     
@@ -251,32 +308,97 @@ export default function LessonCreatePage(){
             <h2 className="text-base font-semibold text-slate-900 dark:text-white">
               Lesson List
             </h2>
-    
-            {filteredLessons.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">No lessons yet.</p>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {filteredLessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 text-sm dark:border-slate-800"
+            <div className="mt-4 space-y-3">
+              {courses.length === 0 ? (
+                <p className="text-sm text-slate-500">No courses yet.</p>
+              ) : (
+                courses.map((course) => (
+                  <details
+                    key={course.id}
+                    open={expandedCourseId === course.id}
+                    className="rounded-md border border-slate-200 dark:border-slate-800"
                   >
-                    <div>
-                      <div className="font-medium text-slate-900 dark:text-white">
-                        {lesson.title}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        Type: {lesson.type} | Order: {lesson.order}
-                        {lesson.time ? ` | Time: ${lesson.time}` : ""}
-                      </div>
+                    <summary
+                      className={`cursor-pointer select-none px-3 py-2 text-sm ${
+                        selectedCourseId === course.id
+                          ? "text-slate-100"
+                          : "text-slate-300"
+                      }`}
+                      onClick={() => {
+                        setSelectedCourseId(course.id);
+                        setExpandedCourseId((prev) =>
+                          prev === course.id ? null : course.id
+                        );
+                        setExpandedSectionId(null);
+                      }}
+                    >
+                      {course.title}
+                    </summary>
+
+                    <div className="space-y-2 px-4 pb-3 pt-1">
+                      {sections.filter((s) => s.courseId === course.id).length === 0 ? (
+                        <p className="text-sm text-slate-500">No sections in this course.</p>
+                      ) : (
+                        sections
+                          .filter((s) => s.courseId === course.id)
+                          .map((section) => (
+                            <details
+                              key={section.id}
+                              open={expandedSectionId === section.id}
+                              className="rounded-md border border-slate-200 dark:border-slate-800"
+                            >
+                              <summary
+                                className={`cursor-pointer select-none px-3 py-2 text-sm ${
+                                  selectedSectionId === section.id
+                                    ? "text-slate-100"
+                                    : "text-slate-300"
+                                }`}
+                                onClick={() => {
+                                  setSelectedSectionId(section.id);
+                                  setExpandedSectionId((prev) =>
+                                    prev === section.id ? null : section.id
+                                  );
+                                }}
+                              >
+                                {section.title}
+                              </summary>
+
+                              <div className="space-y-2 px-4 pb-3 pt-1">
+                                {expandedSectionId === section.id &&
+                                filteredLessons.length === 0 ? (
+                                  <p className="text-sm text-slate-500">No lessons yet.</p>
+                                ) : (
+                                  filteredLessons
+                                    .filter((lesson) => lesson.sectionId === section.id)
+                                    .map((lesson) => (
+                                      <div
+                                        key={lesson.id}
+                                        className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-800"
+                                      >
+                                        <div>
+                                          <div className="font-medium text-slate-900 dark:text-white">
+                                            {lesson.title}
+                                          </div>
+                                          <div className="text-xs text-slate-500">
+                                            Type: {lesson.type} | Order: {lesson.order}
+                                            {lesson.time ? ` | Time: ${lesson.time}` : ""}
+                                          </div>
+                                        </div>
+                                        <span className="text-xs text-slate-400">
+                                          {lesson.preview ? "Preview" : "Private"}
+                                        </span>
+                                      </div>
+                                    ))
+                                )}
+                              </div>
+                            </details>
+                          ))
+                      )}
                     </div>
-                    <span className="text-xs text-slate-400">
-                      {lesson.preview ? "Preview" : "Private"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </details>
+                ))
+              )}
+            </div>
           </Card>
         </div>
       );
