@@ -9,10 +9,13 @@ export class ChatRoom extends BaseEntity{
     courseId:number
 
     @Column()
-    techerId:number 
+    teacherId:number 
+
+    @Column({ unique: true })
+    joinToken: string;
 
     @Column({type:"timestamp",nullable:true})
-    joinTokenExpriesAt:Date | null
+    joinTokenExpiresAt:Date | null
 
     @Column({default:true})
     isActive:boolean

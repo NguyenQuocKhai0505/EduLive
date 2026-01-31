@@ -14,6 +14,7 @@ import { BlogsModule } from './modules/blogs/blogs.module';
 import { CartModule } from './modules/cart/cart.module';
 import { VoucherModule } from './modules/voucher/voucher.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { ChatModule } from './modules/chat/chat.module';
 @Module({
   imports: [
     //Cau hinh de doc env
@@ -29,6 +30,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     CartModule,
     VoucherModule,
     PaymentModule,
+    ChatModule,
     //Cau hinh ket noi Postgres
     TypeOrmModule.forRootAsync({
       imports:[ConfigModule],
