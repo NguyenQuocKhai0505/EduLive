@@ -1,13 +1,11 @@
 "use client";
-
+ 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   BookOpen,
-  Layers,
-  GraduationCap,
   MessageCircle,
   ChevronDown,
 } from "lucide-react";
@@ -53,6 +51,17 @@ export function Sidebar({ className }: SidebarProps) {
       setIsLessonOpen(true);
     }
   },[isLessonRoute]);
+
+
+  //CHAT ROUTE
+  const isChatRoute = pathname === "/chat" || pathname.startsWith("/chat/");
+  const [isChatOpen,setIsChatOpen] = useState(isChatRoute);
+  useEffect(()=>{
+    if(isChatRoute){
+      setIsChatOpen(true);
+    }
+  },[isChatRoute]);
+
   return (
     <aside
       className={cn(
@@ -225,19 +234,54 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
           )}
 
-          <Link
-            href="/chat"
+        {/* CHAT BUTTON */}
+        <button
+            type="button"
             className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              "flex w-full items-center gap-3 px-4 py-3 rounded-xl transition-all",
               "hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-sm dark:hover:bg-slate-900/80",
-              pathname === "/chat"
+              isChatRoute
                 ? "bg-gradient-to-r from-sky-500/15 to-indigo-500/10 text-sky-700 dark:text-sky-300 font-semibold"
                 : "text-slate-700 dark:text-slate-300"
             )}
+            onClick={() => setIsChatOpen((prev) => !prev)}
           >
             <MessageCircle className="h-5 w-5" />
             <span className="font-medium">CHAT</span>
-          </Link>
+            <ChevronDown
+              className={cn(
+                "ml-auto h-4 w-4 transition-transform",
+                isChatOpen && "rotate-180"
+              )}
+            />
+          </button>
+
+          {isChatOpen && (
+            <div className="ml-10 flex flex-col gap-1 border-l border-slate-200/70 pl-4 dark:border-slate-800/70">
+              <Link
+                href="/chat/create"
+                className={cn(
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
+                  pathname === "/chat/create"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
+                )}
+              >
+                Create Chat
+              </Link>
+              <Link
+                href="/chat"
+                className={cn(
+                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
+                  pathname === "/chat"
+                    ? "bg-white/80 dark:bg-slate-900 text-slate-900 dark:text-white"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-900"
+                )}
+              >
+               My Chats
+              </Link>
+            </div>
+          )}
         </nav>
       </div>
     </aside>
