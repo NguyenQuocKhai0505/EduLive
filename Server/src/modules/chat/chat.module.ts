@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { JwtModule } from "@nestjs/jwt";
 import { ChatRoom } from "./entities/chat-room.entity";
 import { ChatMessage } from "./entities/chat-message.entity";
 import { Course } from "../courses/entities/course.entity";
@@ -19,6 +20,7 @@ import { ChatGateway } from "./chat.gateway";
       Enrollment,
       User,
     ]),
+    JwtModule.register({}),
   ],
   providers: [ChatService, ChatGateway],
   controllers: [ChatController],
