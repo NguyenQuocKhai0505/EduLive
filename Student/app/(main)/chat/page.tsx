@@ -1,212 +1,251 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { MOCK_CONTACTS, MOCK_MESSAGES, ChatMessage } from "@/lib/data";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
-import { Search, Phone, Video, MoreVertical, Send, Smile, Paperclip, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Search, Send, Smile, Paperclip, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import {
+  ChatMessage,
+  ChatRoom,
+  getMyChatRooms,
+  getRoomMessages,
+} from "@/services/chat.service";
+import { getMyProfile } from "@/services/user.service";
+
 export default function ChatPage() {
-    // STATE QUAN LI
-    const [selectedContact,setSelectedContact] = useState(MOCK_CONTACTS[0])
-    //Danh sach tin nhan 
-    const [messages,setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES)
-    
-    //TEXT O NHAP LIEU
-    const [inputText,setInputText] = useState("")
-    // 4. Ref để tự động cuộn xuống tin nhắn mới nhất
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const prevCountRef = useRef(MOCK_MESSAGES.length);
+    const searchParams = useSearchParams();
+    const [rooms, setRooms] = useState<ChatRoom[]>([]);
+    const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [inputText, setInputText] = useState("");
+    const [search, setSearch] = useState("");
+    const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+    const socketRef = useRef<Socket | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const hasOpenedRoomFromUrlRef = useRef(false);
 
-    // Tự động cuộn xuống cuối khi có tin nhắn mới
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    const selectedRoom = rooms.find((r) => r.id === selectedRoomId) ?? null;
+
     useEffect(() => {
-        const prevCount = prevCountRef.current;
-        if (messages.length > prevCount) {
-            scrollToBottom();
-        }
-        prevCountRef.current = messages.length;
-    }, [messages])
+        const fetchRooms = async () => {
+            try {
+                const res = await getMyChatRooms();
+                setRooms(res.data);
+            } catch {
+                toast.error("Failed to load chat rooms");
+            }
+        };
+        fetchRooms();
+    }, []);
 
-    //Gui tin nhan 
-    const handleSendMessage = (e:React.FormEvent) =>{ 
-        e.preventDefault()
-        if(!inputText.trim()) return
-        const newMessage: ChatMessage = {
-            id: Date.now(),
-            senderId:"me",
-            text:inputText,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    // Mở phòng từ URL khi redirect từ trang Join (vd /chat?roomId=5)
+    useEffect(() => {
+        if (rooms.length === 0 || hasOpenedRoomFromUrlRef.current) return;
+        const roomIdParam = searchParams.get("roomId");
+        if (!roomIdParam) return;
+        const roomId = Number(roomIdParam);
+        if (!Number.isFinite(roomId) || !rooms.some((r) => r.id === roomId)) return;
+        hasOpenedRoomFromUrlRef.current = true;
+        handleSelectRoom(roomId);
+    }, [rooms, searchParams]);
+
+    // Lấy user hiện tại (chạy 1 lần khi mount)
+    useEffect(() => {
+        getMyProfile()
+            .then((profile) => setCurrentUserId(profile.id))
+            .catch(() => setCurrentUserId(null));
+    }, []);
+
+    // Socket: kết nối 1 lần khi mount; lắng nghe "message" và "chatError"; cleanup khi rời trang
+    useEffect(() => {
+        const socketUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        const socket = io(socketUrl, { withCredentials: true });
+        socketRef.current = socket;
+        socket.on("message", (message: ChatMessage) => {
+            setMessages((prev) => [...prev, message]);
+        });
+        socket.on("chatError", (payload: { action: string; message: string }) => {
+            toast.error(payload.message);
+        });
+        return () => {
+            socket.disconnect();
+        };
+    }, []);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, [messages]);
+
+    //SELECT ROOM 
+    const handleSelectRoom = async (roomId:number) =>{
+        setSelectedRoomId(roomId)
+        try{
+            const res = await getRoomMessages(roomId)
+            setMessages(Array.isArray(res.data) ? res.data : [])
+        } catch {
+            toast.error("Failed to load messages")
+            return
         }
-        setMessages([...messages,newMessage])
-        setInputText("")
-        // Giả lập người kia trả lời sau 1 giây
-        setTimeout(() => {
-            const reply: ChatMessage = {
-                id: Date.now() + 1,
-                senderId: selectedContact.id,
-                text: "Đây là tin nhắn trả lời tự động ạ ^^",
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
-            setMessages(prev => [...prev, reply]);
-        }, 1500);
+        socketRef.current?.emit("joinRoom",{roomId})
     }
+    //SEND MESSAGE 
+    const handleSendMessage = (e:React.FormEvent) =>{
+        e.preventDefault()
+        if(!selectedRoomId || !inputText.trim()) return
+        socketRef.current?.emit("sendMessage",{
+            roomId:selectedRoomId,
+            content:inputText.trim()
+        })
+        setInputText("")
+    }
+
+    //FILTER ROOMS 
+    const filteredRooms = useMemo(()=>{
+        const keyword = search.trim().toLowerCase()
+        if(!keyword) return rooms 
+        return rooms.filter((room) => (room.course?.title || `Room #${room.id}`).toLowerCase().includes(keyword))
+    },[rooms,search])
+
+    const isMe = (msg:ChatMessage) =>msg.senderId === currentUserId
+
+
     return (
-        <div className="flex h-full min-h-full w-full bg-white dark:bg-slate-950 border-t dark:border-slate-800">
-          
-          {/* --- 1. SIDEBAR TRÁI (DANH SÁCH USER) --- */}
-          <div className="w-80 border-r dark:border-slate-800 flex flex-col bg-slate-50 dark:bg-slate-900/50">
-            
-            {/* Header Sidebar */}
-            <div className="p-4 border-b dark:border-slate-800">
-                <Link className="text-xl font-bold mb-4" href={"/"}>Back to Home<ArrowLeft className="w-4 h-4" /></Link>
+        <div className="px-4 pb-8 pt-6 sm:px-6">
+          <div className="grid min-h-[70vh] grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-950/70 text-gray-900 dark:text-white lg:grid-cols-12">
+          <aside className="border-b border-gray-200 dark:border-white/10 bg-white dark:bg-slate-950/70 lg:col-span-4 lg:border-b-0 lg:border-r">
+            <div className="p-4">
+                <Link className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white" href={"/"}>
+                    <ArrowLeft className="inline-block h-4 w-4" /> Back to Home
+                </Link>
+                <div className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">My Chats</div>
+                <div className="text-xs text-gray-500 dark:text-slate-400">Select a room to chat.</div>
+            </div>
+            <div className="px-4 pb-4">
                 <div className="relative">
-                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                    <input 
-                        type="text" 
-                        placeholder="Tìm kiếm..." 
-                        className="w-full bg-white dark:bg-slate-950 border dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 dark:text-slate-400" />
+                    <Input
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search a course..."
+                        className="border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-slate-900 pl-9 text-sm text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-400"
                     />
                 </div>
             </div>
-    
-            {/* List Users (Scrollable) */}
-            <div className="flex-1 overflow-y-auto">
-                {MOCK_CONTACTS.map(contact => (
-                    <div 
-                        key={contact.id}
-                        onClick={() => {
-                            setSelectedContact(contact);
-                            // Khi đổi người, reset tin nhắn về mặc định (demo)
-                            setMessages(MOCK_MESSAGES); 
-                        }}
-                        className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
-                            selectedContact.id === contact.id ? "bg-purple-50 dark:bg-slate-800 border-l-4 border-purple-600" : ""
-                        }`}
-                    >
-                        <div className="relative">
-                            <div className="w-12 h-12 rounded-full overflow-hidden border dark:border-slate-700">
-                                 <Image src={contact.avatar} alt={contact.name} width={48} height={48} className="object-cover h-full w-full" />
-                            </div>
-                            {contact.status === 'online' && (
-                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-baseline mb-1">
-                                <h3 className={`text-sm font-semibold truncate ${selectedContact.id === contact.id ? 'text-purple-700 dark:text-purple-400' : ''}`}>
-                                    {contact.name}
-                                </h3>
-                                <span className="text-xs text-slate-500">{contact.time}</span>
-                            </div>
-                            <p className={`text-xs truncate ${contact.unread > 0 ? 'font-bold text-slate-800 dark:text-slate-200' : 'text-slate-500'}`}>
-                                {contact.lastMessage}
-                            </p>
-                        </div>
+            <div className="max-h-[70vh] space-y-1 overflow-y-auto px-2 pb-4">
+                {filteredRooms.length === 0 ? (
+                    <div className="px-4 py-6 text-sm text-gray-500 dark:text-slate-400">
+                        Chưa có phòng. Mua/đăng ký khóa học hoặc dùng link từ giáo viên (Join Chat).
                     </div>
-                ))}
+                ) : (
+                    filteredRooms.map((room) => (
+                        <button
+                            key={room.id}
+                            type="button"
+                            onClick={() => handleSelectRoom(room.id)}
+                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
+                                selectedRoomId === room.id
+                                    ? "bg-gray-200 dark:bg-slate-800/80 text-gray-900 dark:text-white"
+                                    : "text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-900/70"
+                            }`}
+                        >
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-gray-300 dark:border-slate-700 bg-gray-200 dark:bg-slate-700 text-sm font-semibold text-gray-700 dark:text-slate-200">
+                                {(room.course?.title || "R").charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                                    {room.course?.title || `Room #${room.id}`}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-slate-400">Room #{room.id}</div>
+                            </div>
+                        </button>
+                    ))
+                )}
             </div>
-          </div>
-    
-          {/* --- 2. KHUNG CHAT CHÍNH (BÊN PHẢI) --- */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
-            
-            {/* Chat Header */}
-            <div className="h-16 border-b dark:border-slate-800 flex items-center justify-between px-6 bg-white dark:bg-slate-950 z-10">
+          </aside>
+
+          <section className="flex min-h-[70vh] flex-col bg-gray-50 dark:bg-slate-950/70 lg:col-span-8">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/10 px-6 py-4 bg-white dark:bg-slate-950/80">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border relative">
-                        <Image src={selectedContact.avatar} alt="Active" fill className="object-cover" />
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-gray-300 dark:border-slate-700 bg-gray-200 dark:bg-slate-700 text-sm font-semibold text-gray-700 dark:text-slate-200">
+                        {(selectedRoom?.course?.title || "C").charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <h3 className="font-bold text-sm">{selectedContact.name}</h3>
-                        <p className="text-xs text-green-500 flex items-center gap-1">
-                            ● Đang hoạt động
-                        </p>
+                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {selectedRoom?.course?.title || "Chọn một phòng"}
+                        </div>
+                        <div className="text-xs text-emerald-500 dark:text-emerald-400">● Online</div>
                     </div>
                 </div>
-                <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="text-slate-400"><Phone className="w-5 h-5" /></Button>
-                    <Button variant="ghost" size="icon" className="text-slate-400"><Video className="w-5 h-5" /></Button>
-                    <Button variant="ghost" size="icon" className="text-slate-400"><MoreVertical className="w-5 h-5" /></Button>
-                </div>
             </div>
-    
-            {/* Chat Messages Area (Cuộn ở đây) */}
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-black/20 space-y-6">
-                <div className="text-center text-xs text-slate-400 my-4">Hôm nay, 10:00 AM</div>
-                
-                {messages.map((msg) => {
-                    const isMe = msg.senderId === 'me';
-                    return (
-                        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`flex gap-2 max-w-[70%] ${isMe ? 'flex-row-reverse' : ''}`}>
-                                {/* Avatar nhỏ bên cạnh tin nhắn */}
-                                {!isMe && (
-                                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border mt-1">
-                                        <Image src={selectedContact.avatar} alt="Sender" width={32} height={32} />
+
+            <div className="flex-1 space-y-6 overflow-y-auto bg-gray-100/50 dark:bg-slate-950/60 px-6 py-6">
+                {!selectedRoomId ? (
+                    <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-slate-400">
+                        Chọn một phòng để bắt đầu chat.
+                    </div>
+                ) : messages.length === 0 ? (
+                    <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-slate-400">
+                        Chưa có tin nhắn.
+                    </div>
+                ) : (
+                    <>
+                        {messages.map((msg) => {
+                            const me = isMe(msg);
+                            return (
+                                <div key={msg.id} className={`flex ${me ? "justify-end" : "justify-start"}`}>
+                                    <div className={`max-w-[70%] ${me ? "text-right" : ""}`}>
+                                        <div
+                                            className={`inline-block rounded-2xl px-4 py-2 text-sm shadow ${
+                                                me
+                                                    ? "bg-indigo-500 text-white"
+                                                    : "bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700"
+                                            }`}
+                                        >
+                                            {msg.content}
+                                        </div>
+                                        <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                                            {me ? "Bạn" : (msg.senderName || "Unknown")} •{" "}
+                                            {new Date(msg.createdAt).toLocaleTimeString()}
+                                        </div>
                                     </div>
-                                )}
-                                
-                                {/* Bong bóng chat */}
-                                <div>
-                                    <div className={`p-3 rounded-2xl text-sm shadow-sm ${
-                                        isMe 
-                                        ? 'bg-purple-600 text-white rounded-tr-none' 
-                                        : 'bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-tl-none'
-                                    }`}>
-                                        {msg.text}
-                                    </div>
-                                    <span className={`text-[10px] text-slate-400 mt-1 block ${isMe ? 'text-right' : 'text-left'}`}>
-                                        {msg.timestamp}
-                                    </span>
                                 </div>
-                            </div>
-                        </div>
-                    )
-                })}
-                {/* Element ảo để cuộn xuống đáy */}
-                <div ref={messagesEndRef} />
+                            );
+                        })}
+                        <div ref={messagesEndRef} />
+                    </>
+                )}
             </div>
-    
-            {/* Chat Input Footer */}
-            <div className="p-4 bg-white dark:bg-slate-950 border-t dark:border-slate-800">
-                <form onSubmit={handleSendMessage} className="flex gap-2 items-end bg-slate-100 dark:bg-slate-900 p-2 rounded-xl">
-                    <Button type="button" variant="ghost" size="icon" className="text-slate-400 hover:text-purple-600 rounded-full">
-                        <Paperclip className="w-5 h-5" />
+
+            <div className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-slate-950/70 px-6 py-4">
+                <form onSubmit={handleSendMessage} className="flex items-center gap-2 rounded-2xl bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 px-4 py-2">
+                    <Button type="button" variant="ghost" size="icon" className="text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400">
+                        <Paperclip className="h-5 w-5" />
                     </Button>
-                    
-                    <textarea 
-                        rows={1}
-                        className="flex-1 bg-transparent border-none focus:ring-0 resize-none py-3 text-sm max-h-32"
-                        placeholder="Nhập tin nhắn..."
+                    <Input
                         value={inputText}
+                        placeholder="Nhập tin nhắn..."
                         onChange={(e) => setInputText(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSendMessage(e);
-                            }
-                        }}
+                        disabled={!selectedRoomId}
+                        className="border-0 bg-transparent text-sm text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-60"
                     />
-    
-                    <Button type="button" variant="ghost" size="icon" className="text-slate-400 hover:text-yellow-500 rounded-full">
-                        <Smile className="w-5 h-5" />
+                    <Button type="button" variant="ghost" size="icon" className="text-gray-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-yellow-500">
+                        <Smile className="h-5 w-5" />
                     </Button>
-                    
-                    <Button 
-                        type="submit" 
-                        size="icon" 
-                        disabled={!inputText.trim()}
-                        className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-md transition-all"
+                    <Button
+                        type="submit"
+                        size="icon"
+                        disabled={!selectedRoomId || !inputText.trim()}
+                        className="rounded-xl"
                     >
-                        <Send className="w-4 h-4" />
+                        <Send className="h-4 w-4" />
                     </Button>
                 </form>
             </div>
-    
-          </div>
+          </section>
+        </div>
         </div>
       );
 }
