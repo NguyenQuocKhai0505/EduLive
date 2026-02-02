@@ -7,8 +7,8 @@ declare module "axios" {
 }
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
-  withCredentials: true, // Quan trọng: Cho phép gửi và nhận Cookie
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
+  withCredentials: true, // Gửi/nhận cookie (accessToken) — Server chạy port 3001
 });
 
 api.interceptors.response.use(
