@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
+import { AiChatBox } from "@/components/chatbox/AiChatBox";
 
 export default function MainLayout({
   children,
@@ -17,6 +18,7 @@ export default function MainLayout({
         </main>
       </div>
       <Footer />
+      <AiChatBox />
     </div>
   );
 }

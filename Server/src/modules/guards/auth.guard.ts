@@ -12,7 +12,11 @@ export class AuthGuard implements CanActivate{
 
     async canActivate(context: ExecutionContext):Promise<boolean>{
         const request = context.switchToHttp().getRequest()
-        const token = request.cookies['accessToken'];
+        // Chấp nhận token từ cookie (cùng origin) hoặc header Authorization (cross-origin, ví dụ Student 3000 → API 3001)
+        let token = request.cookies['accessToken'];
+        if (!token && request.headers?.authorization?.startsWith?.('Bearer ')) {
+            token = request.headers.authorization.slice(7);
+        }
         if(!token) throw new UnauthorizedException("Can not found token")
 
         try{

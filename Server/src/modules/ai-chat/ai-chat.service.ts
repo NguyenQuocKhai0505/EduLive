@@ -2,13 +2,14 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GoogleGenerativeAI, Content } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { AiConversation } from './entity/AiConversation.entity';
 import { AiChatMessage } from './entity/AiChatMessage.entity';
 
 @Injectable()
 export class AiChatService {
-  private model: ReturnType<GoogleGenerativeAI['getGenerativeModel']>;
+  private ai: GoogleGenAI;
+  private modelName: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -19,8 +20,9 @@ export class AiChatService {
   ) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
     if (!apiKey) throw new Error('GEMINI_API_KEY is not set in .env');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    this.model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    this.ai = new GoogleGenAI({ apiKey });
+    // gemini-1.5-flash đã 404 trên API hiện tại; dùng gemini-2.0-flash. Có thể set GEMINI_MODEL trong .env
+    this.modelName = this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.0-flash';
   }
 
   /** Lấy hoặc tạo conversation cho user (mỗi user một conversation đang dùng). */
@@ -60,15 +62,24 @@ export class AiChatService {
       });
       const history = historyRows.reverse();
 
-      const contents: Content[] = history.map((msg) => ({
+      // SDK mới: contents là mảng { role, parts: [{ text }] }
+      const contents = history.map((msg) => ({
         role: msg.role as 'user' | 'model',
         parts: [{ text: msg.content }],
       }));
 
-      const result = await this.model.generateContent({ contents });
-      const reply = result.response.text();
+      const result = await this.ai.models.generateContent({
+        model: this.modelName,
+        contents,
+      });
 
-      // Lưu reply AI vào DB
+      let reply: string = result.text ?? '';
+      if (typeof reply !== 'string') reply = String(reply ?? '');
+      if (!reply.trim()) {
+        reply = 'Xin lỗi, tôi chưa có câu trả lời. Bạn thử hỏi lại nhé.';
+      }
+
+      // Lưu reply AI vào DB (theo đoạn chat: conversationId)
       const modelMsg = this.messageRepo.create({
         conversationId: conv.id,
         role: 'model',
@@ -78,7 +89,13 @@ export class AiChatService {
 
       return { reply, conversationId: conv.id };
     } catch (err: any) {
-      throw new BadRequestException(err?.message || 'Gemini request failed');
+      const raw = err?.message || err?.toString?.() || '';
+      if (raw.includes('429') || raw.includes('quota') || raw.includes('Too Many Requests')) {
+        throw new BadRequestException(
+          'Hết hạn mức sử dụng miễn phí của Gemini. Bạn thử lại sau vài phút.',
+        );
+      }
+      throw new BadRequestException(raw || 'Gemini request failed');
     }
   }
 
