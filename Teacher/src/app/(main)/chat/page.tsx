@@ -5,11 +5,14 @@ import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Paperclip } from "lucide-react";
 import {
+  ChatAttachment,
   ChatMessage,
   ChatRoom,
   getMyChatRooms,
   getRoomMessages,
+  uploadChatAttachment,
 } from "../../../services/chat.service";
 
 export default function MyChatPage() {
@@ -18,7 +21,10 @@ export default function MyChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+  const [uploading, setUploading] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredRooms = rooms.filter((room) =>
     (room.course?.title || `Room #${room.id}`)
@@ -72,12 +78,39 @@ export default function MyChatPage() {
 
   const handleSendMessage = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedRoomId || !input.trim()) return;
+    if (!selectedRoomId) return;
+    const text = input.trim();
+    if (!text && !pendingAttachments.length) return;
     socketRef.current?.emit("sendMessage", {
       roomId: selectedRoomId,
-      content: input.trim(),
+      content: text || "",
+      attachments: pendingAttachments.length ? pendingAttachments : undefined,
     });
     setInput("");
+    setPendingAttachments([]);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length || !selectedRoomId) return;
+    setUploading(true);
+    try {
+      const results: ChatAttachment[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const res = await uploadChatAttachment(selectedRoomId, files[i]);
+        results.push({ url: res.data.url, name: res.data.name, type: res.data.type });
+      }
+      setPendingAttachments((prev) => [...prev, ...results]);
+    } catch {
+      toast.error("Upload failed. Images only (jpg, png, gif, webp), max 5MB.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const removePendingAttachment = (index: number) => {
+    setPendingAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -161,13 +194,28 @@ export default function MyChatPage() {
                 >
                   <div className={`max-w-[70%] ${isTeacher ? "text-right" : ""}`}>
                     <div
-                      className={`inline-block rounded-2xl px-4 py-2 text-sm shadow ${
+                      className={`inline-block max-w-full rounded-2xl px-4 py-2 text-sm shadow ${
                         isTeacher
                           ? "bg-indigo-500 text-white"
                           : "bg-slate-800 text-slate-100"
                       }`}
                     >
-                      {message.content}
+                      {message.content && <p className="break-words">{message.content}</p>}
+                      {message.attachments?.length ? (
+                        <div className="mt-2 space-y-2">
+                          {message.attachments.map((att, i) =>
+                            att.type?.startsWith("image/") ? (
+                              <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="block">
+                                <img src={att.url} alt={att.name} className="max-h-48 rounded-lg object-cover" />
+                              </a>
+                            ) : (
+                              <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="block text-xs underline">
+                                {att.name}
+                              </a>
+                            )
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="mt-1 text-xs text-slate-400">
                       {message.senderName || "Unknown"} •{" "}
@@ -180,11 +228,48 @@ export default function MyChatPage() {
           )}
         </div>
 
-        <form
-          onSubmit={handleSendMessage}
-          className="border-t border-white/10 bg-slate-950/70 px-6 py-4"
-        >
-          <div className="flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2">
+        <div className="border-t border-white/10 bg-slate-950/70 px-6 py-4">
+          {pendingAttachments.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-2">
+              {pendingAttachments.map((att, i) => (
+                <div key={i} className="relative inline-block">
+                  {att.type?.startsWith("image/") ? (
+                    <img src={att.url} alt={att.name} className="h-16 w-16 rounded object-cover" />
+                  ) : (
+                    <span className="rounded bg-slate-700 px-2 py-1 text-xs">{att.name}</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removePendingAttachment(i)}
+                    className="absolute -right-1 -top-1 rounded-full bg-red-500 p-0.5 text-white"
+                    aria-label="Remove"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <form onSubmit={handleSendMessage} className="flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={!selectedRoomId || uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="text-slate-400 hover:text-indigo-400"
+              title="Attach image"
+            >
+              <Paperclip className="h-5 w-5" />
+            </Button>
             <Input
               value={input}
               placeholder="Type a message..."
@@ -194,17 +279,13 @@ export default function MyChatPage() {
             />
             <Button
               type="submit"
-              disabled={!selectedRoomId || !input.trim()}
+              disabled={!selectedRoomId || (!input.trim() && !pendingAttachments.length) || uploading}
               className="rounded-xl"
             >
               Send
             </Button>
-          </div>
-          <div className="mt-2 text-xs text-slate-500">
-            File upload is UI-only for now. Backend upload endpoint is not
-            implemented yet.
-          </div>
-        </form>
+          </form>
+        </div>
       </section>
     </div>
   );

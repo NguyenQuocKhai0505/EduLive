@@ -14,6 +14,12 @@ export type ChatRoom = {
   joinUrl?: string;
 };
 
+export type ChatAttachment = {
+  url: string;
+  name: string;
+  type?: string;
+};
+
 export type ChatMessage = {
   id: number;
   roomId: number;
@@ -21,6 +27,7 @@ export type ChatMessage = {
   senderRole: string;
   content: string;
   createdAt: string;
+  attachments?: ChatAttachment[];
   senderName?: string;
   senderAvatar?: string;
 };
@@ -32,3 +39,12 @@ export const createChatRoom = (courseId: number) =>
 
 export const getRoomMessages = (roomId: number) =>
   api.get(`/chat/rooms/${roomId}/messages`);
+
+/** Upload ảnh đính kèm (POST multipart). Chỉ ảnh, tối đa 5MB. */
+export const uploadChatAttachment = (roomId: number, file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post<ChatAttachment>(`/chat/rooms/${roomId}/upload`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};

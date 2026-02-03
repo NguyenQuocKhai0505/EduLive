@@ -17,11 +17,16 @@ api.interceptors.response.use(
     const original = err.config;
     const status = err.response?.status;
 
+    // Không thử refresh khi request là login/register (chưa có token) — tránh toast "No refresh token"
+    const isAuthRequest =
+      original?.url?.includes("/auth/login") ||
+      original?.url?.includes("/auth/register");
     if (
       status === 401 &&
       original &&
       !original._retry &&
-      !original.url?.includes("/auth/refresh")
+      !original.url?.includes("/auth/refresh") &&
+      !isAuthRequest
     ) {
       original._retry = true;
       try {

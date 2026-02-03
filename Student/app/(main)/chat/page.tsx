@@ -9,10 +9,12 @@ import { Search, Send, Smile, Paperclip, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
+  ChatAttachment,
   ChatMessage,
   ChatRoom,
   getMyChatRooms,
   getRoomMessages,
+  uploadChatAttachment,
 } from "@/services/chat.service";
 import { getMyProfile } from "@/services/user.service";
 
@@ -24,8 +26,11 @@ export default function ChatPage() {
     const [inputText, setInputText] = useState("");
     const [search, setSearch] = useState("");
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+    const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+    const [uploading, setUploading] = useState(false);
     const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const hasOpenedRoomFromUrlRef = useRef(false);
 
     const selectedRoom = rooms.find((r) => r.id === selectedRoomId) ?? null;
@@ -91,16 +96,45 @@ export default function ChatPage() {
         }
         socketRef.current?.emit("joinRoom",{roomId})
     }
-    //SEND MESSAGE 
-    const handleSendMessage = (e:React.FormEvent) =>{
-        e.preventDefault()
-        if(!selectedRoomId || !inputText.trim()) return
-        socketRef.current?.emit("sendMessage",{
-            roomId:selectedRoomId,
-            content:inputText.trim()
-        })
-        setInputText("")
-    }
+    // Gửi tin (có thể kèm ảnh đã upload)
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedRoomId) return;
+        const text = inputText.trim();
+        if (!text && !pendingAttachments.length) return;
+        socketRef.current?.emit("sendMessage", {
+            roomId: selectedRoomId,
+            content: text || "",
+            attachments: pendingAttachments.length ? pendingAttachments : undefined,
+        });
+        setInputText("");
+        setPendingAttachments([]);
+    };
+
+    // Chọn ảnh -> upload lên server -> thêm vào pending, gửi kèm khi bấm Send
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files?.length || !selectedRoomId) return;
+        setUploading(true);
+        try {
+            const results: ChatAttachment[] = [];
+            for (let i = 0; i < files.length; i++) {
+                const res = await uploadChatAttachment(selectedRoomId, files[i]);
+                const data = res.data;
+                results.push({ url: data.url, name: data.name, type: data.type });
+            }
+            setPendingAttachments((prev) => [...prev, ...results]);
+        } catch {
+            toast.error("Tải ảnh lên thất bại. Chỉ hỗ trợ ảnh (jpg, png, gif, webp), tối đa 5MB.");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
+    };
+
+    const removePendingAttachment = (index: number) => {
+        setPendingAttachments((prev) => prev.filter((_, i) => i !== index));
+    };
 
     //FILTER ROOMS 
     const filteredRooms = useMemo(()=>{
@@ -198,13 +232,28 @@ export default function ChatPage() {
                                 <div key={msg.id} className={`flex ${me ? "justify-end" : "justify-start"}`}>
                                     <div className={`max-w-[70%] ${me ? "text-right" : ""}`}>
                                         <div
-                                            className={`inline-block rounded-2xl px-4 py-2 text-sm shadow ${
+                                            className={`inline-block max-w-full rounded-2xl px-4 py-2 text-sm shadow ${
                                                 me
                                                     ? "bg-indigo-500 text-white"
                                                     : "bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700"
                                             }`}
                                         >
-                                            {msg.content}
+                                            {msg.content && <p className="break-words">{msg.content}</p>}
+                                            {msg.attachments?.length ? (
+                                                <div className="mt-2 space-y-2">
+                                                    {msg.attachments.map((att, i) =>
+                                                        att.type?.startsWith("image/") ? (
+                                                            <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="block">
+                                                                <img src={att.url} alt={att.name} className="max-h-48 rounded-lg object-cover" />
+                                                            </a>
+                                                        ) : (
+                                                            <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="block text-xs underline">
+                                                                {att.name}
+                                                            </a>
+                                                        )
+                                                    )}
+                                                </div>
+                                            ) : null}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">
                                             {me ? "Bạn" : (msg.senderName || "Unknown")} •{" "}
@@ -220,8 +269,45 @@ export default function ChatPage() {
             </div>
 
             <div className="border-t border-gray-200 dark:border-white/10 bg-white dark:bg-slate-950/70 px-6 py-4">
+                {pendingAttachments.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-2">
+                        {pendingAttachments.map((att, i) => (
+                            <div key={i} className="relative inline-block">
+                                {att.type?.startsWith("image/") ? (
+                                    <img src={att.url} alt={att.name} className="h-16 w-16 rounded object-cover" />
+                                ) : (
+                                    <span className="rounded bg-gray-200 px-2 py-1 text-xs dark:bg-slate-700">{att.name}</span>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => removePendingAttachment(i)}
+                                    className="absolute -right-1 -top-1 rounded-full bg-red-500 p-0.5 text-white"
+                                    aria-label="Xóa"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
                 <form onSubmit={handleSendMessage} className="flex items-center gap-2 rounded-2xl bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 px-4 py-2">
-                    <Button type="button" variant="ghost" size="icon" className="text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={!selectedRoomId || uploading}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400"
+                        title="Đính kèm ảnh"
+                    >
                         <Paperclip className="h-5 w-5" />
                     </Button>
                     <Input
@@ -237,7 +323,7 @@ export default function ChatPage() {
                     <Button
                         type="submit"
                         size="icon"
-                        disabled={!selectedRoomId || !inputText.trim()}
+                        disabled={!selectedRoomId || (!inputText.trim() && !pendingAttachments.length) || uploading}
                         className="rounded-xl"
                     >
                         <Send className="h-4 w-4" />

@@ -26,26 +26,29 @@ export const registerUser = async(userData:any) =>{
 export const login = async (email: string, pass: string) => {
     try {
       const response = await api.post('/auth/login', { email, password: pass });
-      
-      // Log này cực kỳ quan trọng để xác định vị trí 'user'
-      console.log("Kiểm tra response:", response.data);
-  
-      // Thay đổi dòng này tùy theo kết quả console.log ở trên
-      const { access_token, user } = response.data; 
-  
-      if (access_token && user) {
-        // Lưu Token vào Cookie
-        Cookies.set('accessToken', access_token, { expires: 1, path: '/' });
-        
-        // Chỉ lưu vào localStorage khi user chắc chắn không undefined
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        // Ép tải lại trang để NavBar nhận dữ liệu mới
-        window.location.href = "/"; 
-      } else {
-        console.error("Backend không trả về user hoặc token!");
+      // Backend chỉ trả về { user }; token nằm trong httpOnly cookie (backend đã set)
+      let user = response.data?.user ?? null;
+
+      if (!user) {
+        // Fallback: lấy user từ /auth/me (cookie đã được set từ response login)
+        try {
+          const meRes = await api.get('/auth/me');
+          user = meRes.data
+            ? { id: meRes.data.id, email: meRes.data.email, name: meRes.data.name, role: meRes.data.role, avatar: meRes.data.avatar }
+            : null;
+        } catch (e) {
+          console.error("Backend không trả user và /auth/me thất bại:", e);
+        }
       }
-  
+
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+        // Cập nhật NavBar ngay (nếu cùng trang) và khi chuyển trang
+        window.dispatchEvent(new Event('userUpdated'));
+        // Redirect để trang mới đọc localStorage và ẩn Log in / Sign Up
+        window.location.href = "/";
+      }
+
       return response.data;
     } catch (error: any) {
       throw error.response?.data?.message || 'Fail to login';

@@ -16,6 +16,9 @@ import {
   import { Enrollment } from "../enrollments/entities/enrollment.entity";
   import { User } from "../users/entities/user.entity";
   import { UserRole } from "../users/enums/user-role.enum";
+  import { CloudinaryService } from "../../common/services/cloudinary.service";
+
+  export type ChatAttachment = { url: string; name: string; type?: string };
 
   @Injectable()
   export class ChatService{
@@ -33,7 +36,8 @@ import {
         private readonly enrollmentRepo: Repository<Enrollment>,
         @InjectRepository(User)
         private readonly userRepo: Repository<User>,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly cloudinaryService: CloudinaryService
     ){}
 
     private buildJoinUrl(token:string){
@@ -143,43 +147,61 @@ import {
             senderId:message.senderId,
             senderRole:message.senderRole,
             content:message.content,
+            attachments: message.attachments ?? undefined,
             createdAt:message.createdAt,
             senderName:message.sender?.fullName,
             senderAvatar:message.sender?.avatar,
         }))
     }
 
+    /** Upload ảnh/file lên Cloudinary (folder "chat"). Cần quyền truy cập phòng. */
+    async uploadChatFile(
+        roomId: number,
+        userId: number,
+        file: Express.Multer.File,
+        role?: UserRole
+    ): Promise<{ url: string; name: string; type?: string }> {
+        await this.ensureAccess(roomId, userId, role);
+        const url = await this.cloudinaryService.uploadImage(file, "chat");
+        return { url, name: file.originalname || "file", type: file.mimetype };
+    }
+
     async createMessage(
         roomId:number,
         userId:number,
         content:string,
-        role?:UserRole
+        role?:UserRole,
+        attachments?: ChatAttachment[]
     ){
-        if(!content?.trim()){
-            throw new BadRequestException("Message content cannot be empty")
+        const hasContent = content?.trim();
+        const hasAttachments = attachments?.length;
+        if (!hasContent && !hasAttachments) {
+            throw new BadRequestException("Message must have content or at least one attachment");
         }
-        await this.ensureAccess(roomId,userId,role)
-        
-        const user = await this.userRepo.findOne({where:{id:userId}})
-        if(!user) throw new NotFoundException("User not found")
+        await this.ensureAccess(roomId, userId, role);
+
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException("User not found");
 
         const message = this.messageRepo.create({
             roomId,
-            senderId:userId,
-            senderRole:user.role,
-            content:content.trim(),
-        })
-        const saved = await this.messageRepo.save(message)
-        return{
-            id:saved.id,
-            roomId:saved.roomId,
-            senderId:saved.senderId,
-            senderRole:saved.senderRole,
-            content:saved.content,
-            createdAt:saved.createdAt,
+            senderId: userId,
+            senderRole: user.role,
+            content: (content?.trim() ?? "") || "",
+            attachments: attachments?.length ? attachments : null,
+        });
+        const saved = await this.messageRepo.save(message);
+        return {
+            id: saved.id,
+            roomId: saved.roomId,
+            senderId: saved.senderId,
+            senderRole: saved.senderRole,
+            content: saved.content,
+            attachments: saved.attachments ?? undefined,
+            createdAt: saved.createdAt,
             senderName: user.fullName,
             senderAvatar: user.avatar,
-        }
+        };
     }
     async ensureAccess(roomId: number, userId: number, role?: UserRole) {
         const room = await this.roomRepo.findOne({ where: { id: roomId } });

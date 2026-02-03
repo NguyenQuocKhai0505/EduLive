@@ -81,30 +81,31 @@ export class ChatGateway implements OnGatewayConnection {
 
     @SubscribeMessage("sendMessage")
     async handleSendMessage(
-        @ConnectedSocket() client:Socket,
-        @MessageBody() payload:{roomId:number,content:string}
-    ){
-        const user = client.data.user as SocketUser | undefined
-        if(!user) return 
+        @ConnectedSocket() client: Socket,
+        @MessageBody() payload: { roomId: number; content?: string; attachments?: { url: string; name: string; type?: string }[] }
+    ) {
+        const user = client.data.user as SocketUser | undefined;
+        if (!user) return;
         this.metrics.sendAttempts += 1;
-        if(!this.checkRateLimit(user.sub.toString())){
+        if (!this.checkRateLimit(user.sub.toString())) {
             this.metrics.sendRejected += 1;
             client.emit("chatError", { action: "sendMessage", message: "Too many messages. Please slow down." });
             return;
         }
-        try{
+        try {
             const message = await this.chatService.createMessage(
                 payload.roomId,
                 user.sub,
-                payload.content,
-                user.role as any
-            )
-            this.server.to(payload.roomId.toString()).emit("message",message)
-        }catch(error:any){
+                payload.content ?? "",
+                user.role as any,
+                payload.attachments
+            );
+            this.server.to(payload.roomId.toString()).emit("message", message);
+        } catch (error: any) {
             this.metrics.sendErrors += 1;
-            const message = error?.message || "Failed to send message";
-            client.emit("chatError", { action: "sendMessage", message });
-            this.logger.warn(`Send failed user=${user.sub} room=${payload.roomId} ${message}`);
+            const msg = error?.message || "Failed to send message";
+            client.emit("chatError", { action: "sendMessage", message: msg });
+            this.logger.warn(`Send failed user=${user.sub} room=${payload.roomId} ${msg}`);
         }
     }
 

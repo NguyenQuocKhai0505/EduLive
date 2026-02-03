@@ -10,6 +10,8 @@ import { User } from "../users/entities/user.entity";
 import { ChatService } from "./chat.service";
 import { ChatController } from "./chat.controller";
 import { ChatGateway } from "./chat.gateway";
+import { CloudinaryService } from "../../common/services/cloudinary.service";
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -22,7 +24,7 @@ import { ChatGateway } from "./chat.gateway";
     ]),
     JwtModule.register({}),
   ],
-  providers: [ChatService, ChatGateway],
+  providers: [ChatService, ChatGateway, CloudinaryService],
   controllers: [ChatController],
 })
 export class ChatModule {}

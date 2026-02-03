@@ -15,6 +15,10 @@ export class ChatMessage extends BaseEntity{
     @Column({type:"text"})
     content:string
 
+    /** Đính kèm file/ảnh: [{ url, name, type? }] — lưu JSON */
+    @Column({ type: "jsonb", nullable: true })
+    attachments: { url: string; name: string; type?: string }[] | null
+
     @Column({type:"enum",enum:UserRole})
     senderRole:UserRole
 
