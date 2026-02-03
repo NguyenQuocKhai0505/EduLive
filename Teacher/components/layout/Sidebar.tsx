@@ -8,6 +8,7 @@ import {
   BookOpen,
   MessageCircle,
   ChevronDown,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -233,6 +234,21 @@ export function Sidebar({ className }: SidebarProps) {
               </Link>
             </div>
           )}
+
+        {/* BLOG */}
+        <Link
+          href="/blog"
+          className={cn(
+            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+            "hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-sm dark:hover:bg-slate-900/80",
+            pathname === "/blog" || pathname.startsWith("/blog/")
+              ? "bg-gradient-to-r from-sky-500/15 to-indigo-500/10 text-sky-700 dark:text-sky-300 font-semibold"
+              : "text-slate-700 dark:text-slate-300"
+          )}
+        >
+          <FileText className="h-5 w-5" />
+          <span className="font-medium">BLOG</span>
+        </Link>
 
         {/* CHAT BUTTON */}
         <button
