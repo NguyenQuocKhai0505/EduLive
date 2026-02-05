@@ -5,7 +5,7 @@ import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Paperclip } from "lucide-react";
+import { Paperclip, PanelLeft, PanelLeftClose } from "lucide-react";
 import {
   ChatAttachment,
   ChatMessage,
@@ -23,6 +23,8 @@ export default function MyChatPage() {
   const [search, setSearch] = useState("");
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
+  /** Đóng/mở sidebar danh sách phòng: true = hiện, false = ẩn; nút PanelLeftClose thu gọn, PanelLeft mở lại */
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const socketRef = useRef<Socket | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -115,11 +117,29 @@ export default function MyChatPage() {
 
   return (
     <div className="grid min-h-[70vh] grid-cols-1 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/70 text-white lg:grid-cols-12">
-      <aside className="border-b border-white/10 bg-slate-950/70 lg:col-span-4 lg:border-b-0 lg:border-r">
+      <aside
+        className={`border-b border-white/10 bg-slate-950/70 lg:border-b-0 lg:border-r ${
+          sidebarOpen ? "block lg:col-span-4" : "hidden"
+        }`}
+      >
         <div className="p-4">
-          <div className="text-lg font-semibold">My Chat</div>
-          <div className="text-xs text-slate-400">
-            Select a room to chat with students.
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-lg font-semibold">My Chat</div>
+              <div className="text-xs text-slate-400">
+                Select a room to chat with students.
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 text-slate-400 hover:text-white"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Thu gọn danh sách phòng"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         <div className="px-4 pb-4">
@@ -162,9 +182,21 @@ export default function MyChatPage() {
         </div>
       </aside>
 
-      <section className="flex min-h-[70vh] flex-col lg:col-span-8">
+      <section className={`flex min-h-[70vh] flex-col ${sidebarOpen ? "lg:col-span-8" : "lg:col-span-12"}`}>
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div className="flex items-center gap-3">
+            {!sidebarOpen && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0 text-slate-400 hover:text-white"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Mở danh sách phòng"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </Button>
+            )}
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-700 text-sm font-semibold">
               {(selectedRoom?.course?.title || "C").slice(0, 1).toUpperCase()}
             </div>

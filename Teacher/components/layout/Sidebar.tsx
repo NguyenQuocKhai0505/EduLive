@@ -9,6 +9,8 @@ import {
   MessageCircle,
   ChevronDown,
   FileText,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -63,17 +65,45 @@ export function Sidebar({ className }: SidebarProps) {
     }
   },[isChatRoute]);
 
+  /** Đóng/mở toàn bộ sidebar: true = rộng 64, false = thu về chỉ còn nút mở */
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <aside
       className={cn(
-        "hidden h-screen w-64 lg:block sticky top-0",
+        "hidden h-screen lg:block sticky top-0 shrink-0 transition-[width] duration-200 ease-in-out",
         "border-r border-white/40 dark:border-white/10",
         "bg-white/80 dark:bg-slate-950/80 backdrop-blur-lg",
+        sidebarOpen ? "w-64" : "w-14",
         className
       )}
     >
       <div className="flex h-full flex-col p-4">
-        <nav className="flex-1 space-y-2">
+        {/* Nút đóng/mở sidebar */}
+        <div className="flex items-center justify-between mb-3 min-h-10">
+          {sidebarOpen && (
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+              Wellcome,Teacher !
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors",
+              "text-slate-500 hover:bg-slate-200/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white",
+              !sidebarOpen && "mx-auto"
+            )}
+            aria-label={sidebarOpen ? "Thu gọn sidebar" : "Mở rộng sidebar"}
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="h-5 w-5" />
+            ) : (
+              <PanelLeft className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+        <nav className={cn("flex-1 space-y-2 min-w-0 overflow-hidden", !sidebarOpen && "hidden")}>
           <Link
             href="/dashboard"
             className={cn(

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Map, FileText, MessageCircle, ChevronDown } from "lucide-react";
+import { Home, Map, FileText, MessageCircle, ChevronDown, PanelLeft, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -28,17 +28,45 @@ export function Sidebar({ className }: SidebarProps) {
     }
   }, [isChatRoute]);
 
+  /** Đóng/mở toàn bộ sidebar: true = rộng 64, false = thu về chỉ còn nút mở */
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <aside
       className={cn(
-        "w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800",
-        "h-screen sticky top-0",
+        "h-screen sticky top-0 shrink-0 transition-[width] duration-200 ease-in-out",
+        "bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800",
         "hidden lg:block",
+        sidebarOpen ? "w-64" : "w-14",
         className
       )}
     >
       <div className="p-4 flex flex-col h-full">
-        <nav className="flex-1 space-y-2">
+        {/* Nút đóng/mở sidebar */}
+        <div className="flex items-center justify-between mb-3 min-h-10">
+          {sidebarOpen && (
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
+              Wellcome,Student !
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors",
+              "text-gray-500 hover:bg-gray-200 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white",
+              !sidebarOpen && "mx-auto"
+            )}
+            aria-label={sidebarOpen ? "Thu gọn sidebar" : "Mở rộng sidebar"}
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="h-5 w-5" />
+            ) : (
+              <PanelLeft className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+        <nav className={cn("flex-1 space-y-2 min-w-0 overflow-hidden", !sidebarOpen && "hidden")}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;

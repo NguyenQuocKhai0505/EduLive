@@ -25,6 +25,7 @@ import {
  */
 export function AiChatBox() {
   const [open, setOpen] = useState(false);
+  /** Đóng/mở sidebar "Lịch sử": true = rộng 140px, false = thu về 0; nút trong header sidebar toggle */
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [messages, setMessages] = useState<AiChatMessageItem[]>([]);
   const [inputText, setInputText] = useState("");

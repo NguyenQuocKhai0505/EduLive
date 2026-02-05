@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Send, Smile, Paperclip, ArrowLeft } from "lucide-react";
+import { Search, Send, Smile, Paperclip, ArrowLeft, PanelLeft, PanelLeftClose } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -28,6 +28,8 @@ export default function ChatPage() {
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
     const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
     const [uploading, setUploading] = useState(false);
+    /** Đóng/mở sidebar danh sách phòng: true = hiện, false = ẩn; nút PanelLeftClose thu gọn, PanelLeft mở lại */
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const socketRef = useRef<Socket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -149,13 +151,27 @@ export default function ChatPage() {
     return (
         <div className="px-4 pb-8 pt-6 sm:px-6">
           <div className="grid min-h-[70vh] grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-950/70 text-gray-900 dark:text-white lg:grid-cols-12">
-          <aside className="border-b border-gray-200 dark:border-white/10 bg-white dark:bg-slate-950/70 lg:col-span-4 lg:border-b-0 lg:border-r">
+          <aside className={`border-b border-gray-200 dark:border-white/10 bg-white dark:bg-slate-950/70 lg:border-b-0 lg:border-r ${sidebarOpen ? "block lg:col-span-4" : "hidden"}`}>
             <div className="p-4">
-                <Link className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white" href={"/"}>
-                    <ArrowLeft className="inline-block h-4 w-4" /> Back to Home
-                </Link>
-                <div className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">My Chats</div>
-                <div className="text-xs text-gray-500 dark:text-slate-400">Select a room to chat.</div>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <Link className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white" href={"/"}>
+                        <ArrowLeft className="inline-block h-4 w-4" /> Back to Home
+                    </Link>
+                    <div className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">My Chats</div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400">Select a room to chat.</div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
+                    onClick={() => setSidebarOpen(false)}
+                    aria-label="Thu gọn danh sách phòng"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </Button>
+                </div>
             </div>
             <div className="px-4 pb-4">
                 <div className="relative">
@@ -200,9 +216,21 @@ export default function ChatPage() {
             </div>
           </aside>
 
-          <section className="flex min-h-[70vh] flex-col bg-gray-50 dark:bg-slate-950/70 lg:col-span-8">
+          <section className={`flex min-h-[70vh] flex-col bg-gray-50 dark:bg-slate-950/70 ${sidebarOpen ? "lg:col-span-8" : "lg:col-span-12"}`}>
             <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/10 px-6 py-4 bg-white dark:bg-slate-950/80">
                 <div className="flex items-center gap-3">
+                    {!sidebarOpen && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
+                        onClick={() => setSidebarOpen(true)}
+                        aria-label="Mở danh sách phòng"
+                      >
+                        <PanelLeft className="h-4 w-4" />
+                      </Button>
+                    )}
                     <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-gray-300 dark:border-slate-700 bg-gray-200 dark:bg-slate-700 text-sm font-semibold text-gray-700 dark:text-slate-200">
                         {(selectedRoom?.course?.title || "C").charAt(0).toUpperCase()}
                     </div>
