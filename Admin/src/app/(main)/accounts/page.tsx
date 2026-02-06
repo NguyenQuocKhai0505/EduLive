@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getUsersByRole } from "../../../services/user.service";
+import { getUsersByRole, toggleUserActiveStatus } from "../../../services/user.service";
+import { toast } from "sonner";
 
 export type UserInfo = {
   id: number;
@@ -10,6 +11,7 @@ export type UserInfo = {
   email: string;
   role: string;
   isActive: boolean;
+  provider: string | null; // ✅ Có thể null (Local account) hoặc "google", "facebook", etc.
   avatar?: string;
   createdAt?: string;
 };
@@ -34,22 +36,23 @@ function AccountTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-              <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Tên</th>
+              <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Full Name</th>
               <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Email</th>
               <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Role</th>
-              <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">Thao tác</th>
+              <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Provider</th>
+              <th className="px-4 py-3 text-right font-medium text-slate-600 dark:text-slate-300">Action</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
                   Đang tải...
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
                   Chưa có dữ liệu
                 </td>
               </tr>
@@ -67,6 +70,13 @@ function AccountTable({
                     <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs dark:bg-slate-700 dark:text-slate-300">
                       {row.role}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                    {row.provider ? (
+                      <span className="capitalize">{row.provider}</span>
+                    ) : (
+                      <span className="text-slate-500">Local</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Button
@@ -105,15 +115,23 @@ export default function ManageAccountPage() {
 
         // Map data từ API response (có fullName và isActive)
         const mapUserData = (users: any[]): UserInfo[] => {
-          return users.map((user) => ({
-            id: user.id,
-            fullName: user.fullName || user.name || "N/A",
-            email: user.email,
-            role: user.role,
-            isActive: user.isActive !== undefined ? user.isActive : true,
-            avatar: user.avatar,
-            createdAt: user.createdAt,
-          }));
+          return users.map((user) => {
+            // Debug: Log để kiểm tra provider có trong response không
+            console.log("Raw user data:", user);
+            console.log("Provider value:", user.provider, "Type:", typeof user.provider);
+            
+            return {
+              id: user.id,
+              fullName: user.fullName || user.name || "N/A",
+              email: user.email,
+              role: user.role,
+              isActive: user.isActive !== undefined ? user.isActive : true,
+              // ✅ Xử lý provider: có thể là string, null, hoặc undefined
+              provider: user.provider ?? null, // Sử dụng ?? để xử lý cả null và undefined
+              avatar: user.avatar,
+              createdAt: user.createdAt,
+            };
+          });
         };
 
         setStudents(mapUserData(studentRes.data));
@@ -129,15 +147,31 @@ export default function ManageAccountPage() {
     fetchUsers();
   }, []);
 
-  const handleToggle = (
+  const handleToggle = async (
     id: number,
     isActive: boolean,
     setter: React.Dispatch<React.SetStateAction<UserInfo[]>>
   ) => {
-    setter((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, isActive: !isActive } : a))
-    );
-    // TODO: Gọi API để update isActive trên server
+    try {
+      // Gọi API để toggle trạng thái trên server
+      await toggleUserActiveStatus(id);
+
+      // Cập nhật UI sau khi API thành công
+      setter((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, isActive: !isActive } : a))
+      );
+
+      // Hiển thị thông báo thành công
+      toast.success(
+        `Đã ${!isActive ? "mở khóa" : "khóa"} tài khoản thành công`
+      );
+    } catch (error: any) {
+      console.error("Error toggling user status:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Không thể thay đổi trạng thái tài khoản";
+      toast.error(errorMessage);
+    }
   };
 
   return (
