@@ -104,6 +104,13 @@ export class UsersService{
     async findAll():Promise<User[]>{
         return this.usersRepository.find()
     }
+    
+    //FIND USERS BY ROLE
+    async findByRole(role: UserRole): Promise<User[]> {
+        return this.usersRepository.find({
+            where: { role }
+        });
+    }
     //FIND USER BY ID
     async findOne(id: number): Promise<User | null> { 
         return this.usersRepository.findOneBy({ id });

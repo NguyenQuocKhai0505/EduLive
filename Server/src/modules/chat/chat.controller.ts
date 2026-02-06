@@ -27,6 +27,14 @@ export class ChatController {
         return this.chatService.getMyRooms(req.user.sub, req.user.role);
     }
 
+    /** Admin only: lấy tất cả phòng chat (giám sát). */
+    @Get("rooms/all")
+    @UseGuards(RolesGuard)
+    @Roles(UserRole.ADMIN)
+    getAllRooms(@Req() req: any) {
+        return this.chatService.getAllRoomsForAdmin();
+    }
+
     @Post("join")
     joinRoom(@Body() dto: JoinRoomDto, @Req() req: any) {
         return this.chatService.joinRoomByToken(dto.token, req.user.sub);

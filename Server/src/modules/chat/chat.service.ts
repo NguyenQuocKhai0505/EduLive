@@ -110,13 +110,25 @@ import {
 
     }
 
+    /** Admin only: lấy tất cả phòng chat (để giám sát). */
+    async getAllRoomsForAdmin(): Promise<ChatRoom[]> {
+        return this.roomRepo.find({
+            where: { isActive: true },
+            relations: ["course"],
+            order: { createdAt: "DESC" },
+        });
+    }
+
     async getMyRooms(userId:number,role:UserRole){
-        if(role === UserRole.TEACHER || role === UserRole.ADMIN){
+        if(role === UserRole.TEACHER){
             return this.roomRepo.find({
                 where:{teacherId: userId,isActive:true},
                 relations:["course"],
                 order:{createdAt:"DESC"}
             })
+        }
+        if(role === UserRole.ADMIN){
+            return this.getAllRoomsForAdmin();
         } 
         const purchased = await this.cartRepo.find({
             where:{userId,status:CartStatus.PURCHASED}

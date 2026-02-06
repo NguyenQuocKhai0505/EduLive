@@ -1,5 +1,5 @@
 
-import { Controller, Get, Post, Body, UseInterceptors, ClassSerializerInterceptor, UseGuards, Req, Patch,Param,NotFoundException,ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseInterceptors, ClassSerializerInterceptor, UseGuards, Req, Patch,Param,NotFoundException,ParseIntPipe, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthGuard } from '../guards/auth.guard';
@@ -48,7 +48,10 @@ export class UsersController {
     
     //ENDPOINT: GET/users
     @Get() 
-    findAll(){
+    findAll(@Query('role') role?: string){
+        if (role) {
+            return this.usersService.findByRole(role as UserRole);
+        }
         return this.usersService.findAll()
     }
 
