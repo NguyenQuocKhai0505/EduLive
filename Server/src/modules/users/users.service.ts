@@ -143,4 +143,44 @@ export class UsersService{
         await this.usersRepository.save(user)
         return {message:"Password updated successfully"}
     }
+    
+    /**
+     * Toggle trạng thái active của user (CHỈ ADMIN)
+     * 
+     * ⚠️ BẢO MẬT: 
+     * - Chỉ ADMIN mới được phép toggle
+     * - ADMIN không thể tự khóa chính mình
+     * 
+     * @param userId - ID của user cần toggle
+     * @param adminId - ID của admin đang thực hiện (từ JWT)
+     * @param adminRole - Role của admin (phải là ADMIN)
+     * @returns User đã được cập nhật
+     */
+    async toggleActiveStatus(
+        userId: number, 
+        adminId: number, 
+        adminRole: UserRole
+    ): Promise<User> {
+        // 1. Kiểm tra quyền: chỉ ADMIN mới được toggle
+        if (adminRole !== UserRole.ADMIN) {
+            throw new ForbiddenException("Chỉ Admin mới được phép thay đổi trạng thái tài khoản");
+        }
+
+        // 2. Tìm user cần toggle
+        const user = await this.findOne(userId);
+        if (!user) {
+            throw new BadRequestException("User not found");
+        }
+
+        // 3. Bảo mật: ADMIN không thể tự khóa chính mình
+        if (userId === adminId) {
+            throw new ForbiddenException("Bạn không thể khóa chính tài khoản của mình");
+        }
+
+        // 4. Toggle trạng thái
+        user.isActive = !user.isActive;
+
+        // 5. Lưu vào database
+        return await this.usersRepository.save(user);
+    }
 }

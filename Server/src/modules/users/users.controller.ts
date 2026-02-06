@@ -78,4 +78,26 @@ export class UsersController {
             createdAt:user.createdAt,
         }
     }
+
+    /**
+     * PATCH /users/:id/toggle-active
+     * 
+     * Toggle trạng thái active của user (CHỈ ADMIN)
+     * 
+     * PERMISSION: ADMIN only
+     * 
+     * ⚠️ BẢO MẬT: Admin không thể tự khóa chính mình
+     */
+    @Patch(":id/toggle-active")
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    async toggleActiveStatus(
+        @Param("id", ParseIntPipe) userId: number,
+        @Req() req: any
+    ) {
+        const adminId = req.user.sub; // ID của admin đang thực hiện
+        const adminRole = req.user.role; // Role của admin (phải là ADMIN)
+        
+        return await this.usersService.toggleActiveStatus(userId, adminId, adminRole);
+    }
 }
