@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getUsersByRole, toggleUserActiveStatus } from "../../../services/user.service";
+import { Input } from "@/components/ui/input";
+import { getUsersByRole, toggleUserActiveStatus, createNewUser } from "../../../services/user.service";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 
 export type UserInfo = {
   id: number;
@@ -97,11 +99,22 @@ function AccountTable({
   );
 }
 
+type RoleOption = "admin" | "teacher" | "student";
+
 export default function ManageAccountPage() {
   const [students, setStudents] = useState<UserInfo[]>([]);
   const [teachers, setTeachers] = useState<UserInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Dialog Create New User
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createFullName, setCreateFullName] = useState("");
+  const [createEmail, setCreateEmail] = useState("");
+  const [createPassword, setCreatePassword] = useState("");
+  const [createRole, setCreateRole] = useState<RoleOption>("student");
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -147,6 +160,64 @@ export default function ManageAccountPage() {
     fetchUsers();
   }, []);
 
+  const openCreateDialog = () => {
+    setCreateOpen(true);
+    setCreateFullName("");
+    setCreateEmail("");
+    setCreatePassword("");
+    setCreateRole("student");
+    setCreateError(null);
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateError(null);
+    setCreateSubmitting(true);
+    try {
+      await createNewUser({
+        fullName: createFullName.trim(),
+        email: createEmail.trim(),
+        password: createPassword,
+        role: createRole,
+      });
+      toast.success("Tạo tài khoản thành công");
+      setCreateOpen(false);
+      setCreateFullName("");
+      setCreateEmail("");
+      setCreatePassword("");
+      setCreateRole("student");
+      // Refetch danh sách theo role vừa tạo
+      const res = await getUsersByRole(createRole);
+      const mapUserData = (users: any[]): UserInfo[] =>
+        users.map((u) => ({
+          id: u.id,
+          fullName: u.fullName || u.name || "N/A",
+          email: u.email,
+          role: u.role,
+          isActive: u.isActive !== undefined ? u.isActive : true,
+          provider: u.provider ?? null,
+          avatar: u.avatar,
+          createdAt: u.createdAt,
+        }));
+      if (createRole === "student") setStudents(mapUserData(res.data));
+      else if (createRole === "teacher") setTeachers(mapUserData(res.data));
+      else {
+        const [sRes, tRes] = await Promise.all([
+          getUsersByRole("student"),
+          getUsersByRole("teacher"),
+        ]);
+        setStudents(mapUserData(sRes.data));
+        setTeachers(mapUserData(tRes.data));
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Không thể tạo tài khoản";
+      setCreateError(msg);
+      toast.error(msg);
+    } finally {
+      setCreateSubmitting(false);
+    }
+  };
+
   const handleToggle = async (
     id: number,
     isActive: boolean,
@@ -176,12 +247,19 @@ export default function ManageAccountPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
-        Quản lý tài khoản
-      </h1>
-      <p className="text-slate-600 dark:text-slate-400 text-sm">
-        Bật/tắt trạng thái hoạt động của tài khoản.
-      </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
+            Quản lý tài khoản
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+            Bật/tắt trạng thái hoạt động của tài khoản.
+          </p>
+        </div>
+        <Button onClick={openCreateDialog} className="shrink-0">
+          Create New User
+        </Button>
+      </div>
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
           {error}
@@ -199,6 +277,106 @@ export default function ManageAccountPage() {
         loading={loading}
         onToggle={(id, isActive) => handleToggle(id, isActive, setTeachers)}
       />
+
+      {/* Dialog Create New User */}
+      {createOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !createSubmitting && setCreateOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full border border-slate-200 dark:border-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-white">
+                Tạo tài khoản mới
+              </h2>
+              <button
+                type="button"
+                onClick={() => !createSubmitting && setCreateOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateUser} className="p-4 space-y-4">
+              {createError && (
+                <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">
+                  {createError}
+                </p>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Full Name
+                </label>
+                <Input
+                  value={createFullName}
+                  onChange={(e) => setCreateFullName(e.target.value)}
+                  placeholder="Nguyễn Văn A"
+                  required
+                  className="dark:bg-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  value={createEmail}
+                  onChange={(e) => setCreateEmail(e.target.value)}
+                  placeholder="email@example.com"
+                  required
+                  className="dark:bg-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Password
+                </label>
+                <Input
+                  type="password"
+                  value={createPassword}
+                  onChange={(e) => setCreatePassword(e.target.value)}
+                  placeholder="Ít nhất 6 ký tự"
+                  required
+                  minLength={6}
+                  className="dark:bg-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Role
+                </label>
+                <select
+                  value={createRole}
+                  onChange={(e) => setCreateRole(e.target.value as RoleOption)}
+                  className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                >
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => !createSubmitting && setCreateOpen(false)}
+                  disabled={createSubmitting}
+                >
+                  Hủy
+                </Button>
+                <Button type="submit" className="flex-1" disabled={createSubmitting}>
+                  {createSubmitting ? "Đang tạo..." : "Tạo tài khoản"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

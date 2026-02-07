@@ -18,3 +18,6 @@ export const getUsersByRole = (role: "student" | "teacher" | "admin") =>
 /** Toggle trạng thái active của user (CHỈ ADMIN) */
 export const toggleUserActiveStatus = (userId: number) =>
   api.patch(`/users/${userId}/toggle-active`);
+
+//Create new user 
+export const createNewUser = (data:{fullName:string,email:string,password:string,role:string}) => api.post("/users/create",data)
