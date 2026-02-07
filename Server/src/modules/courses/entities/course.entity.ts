@@ -69,7 +69,7 @@ export class Course extends BaseEntity{
     instructorId:number //ID cua user tao khoa hoc 
 
     @ManyToOne(()=>User)
-    @JoinColumn({name:"istructorId"})
+    @JoinColumn({name:"instructorId"})
     instructor:User
 
     @Column({default:true})

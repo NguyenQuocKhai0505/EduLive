@@ -252,7 +252,7 @@ export class CoursesService{
             where: { 
                 isActive: false // Chưa được duyệt
             },
-            relations: ['instructor', 'category'],
+            relations: ['instructor', 'category', 'sections', 'sections.lessons'],
             order: { createdAt: 'ASC' }, // Cũ nhất trước (để duyệt theo thứ tự)
         });
     }
