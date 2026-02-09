@@ -79,7 +79,19 @@ export class CategoriesController {
         return await this.categoriesService.findAll(include);
     }
 
-    /**image.png
+    /**
+     * GET /categories/slug/:slug
+     * 
+     * Lấy category theo slug (phải khai báo trước :id để tránh "slug" bị match là id)
+     * 
+     * PERMISSION: PUBLIC
+     */
+    @Get('slug/:slug')
+    async findBySlug(@Param('slug') slug: string) {
+        return await this.categoriesService.findBySlug(slug);
+    }
+
+    /**
      * GET /categories/:id
      * 
      * Lấy category theo ID
@@ -89,18 +101,6 @@ export class CategoriesController {
     @Get(':id')
     async findOne(@Param('id', ParseIntPipe) id: number) {
         return await this.categoriesService.findOne(id);
-    }
-
-    /**
-     * GET /categories/slug/:slug
-     * 
-     * Lấy category theo slug
-     * 
-     * PERMISSION: PUBLIC
-     */
-    @Get('slug/:slug')
-    async findBySlug(@Param('slug') slug: string) {
-        return await this.categoriesService.findBySlug(slug);
     }
 
     /**
@@ -148,6 +148,36 @@ export class CategoriesController {
         const url = await this.cloudinaryService.uploadImage(file, 'categories');
         const category = await this.categoriesService.update(id, { image: url });
         return { image: url, category };
+    }
+
+    /**
+     * POST /categories/:id/icon
+     *
+     * Upload icon lên Cloudinary và cập nhật category
+     *
+     * PERMISSION: ADMIN only
+     */
+    @Post(':id/icon')
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: memoryStorage(),
+            fileFilter: imageFileFilter,
+            limits: { fileSize: 5 * 1024 * 1024 },
+        })
+    )
+    async uploadCategoryIcon(
+        @Param('id', ParseIntPipe) id: number,
+        @UploadedFile() file: Express.Multer.File
+    ) {
+        if (!file) {
+            throw new BadRequestException('Icon file is required');
+        }
+
+        const url = await this.cloudinaryService.uploadImage(file, 'categories/icons');
+        const category = await this.categoriesService.update(id, { icon: url });
+        return { icon: url, category };
     }
 
     /**

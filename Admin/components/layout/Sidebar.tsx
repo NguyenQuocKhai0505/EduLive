@@ -11,10 +11,9 @@ import {
   PanelLeft,
   PanelLeftClose,
   ListTodo,
-  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -25,16 +24,9 @@ export function Sidebar() {
     { href: "/accounts", label: "Manage Account", icon: Users },
     { href: "/courses", label: "Toggle Course", icon: BookOpen },
     { href: "/blogs", label: "Manage Blog", icon: FileText },
+    { href: "/categories", label: "Category", icon: ListTodo },
     { href: "/chat", label: "Chat Monitor", icon: MessageCircle },
   ];
-  const categoryRoute = pathname.startsWith("/category") || pathname.startsWith("/category");
-  const [isCategoryOpen,setIsCategoryOpen] = useState(false)
-
-  useEffect(() =>{
-    if(isCategoryOpen){
-      setIsCategoryOpen(true)
-    }
-  },[isCategoryOpen])
   
   return (
     <aside
@@ -85,55 +77,6 @@ export function Sidebar() {
               </Link>
             );
           })}
-
-          {/* Category */}
-            <button
-            type="button"
-            className={cn(
-              "flex w-full items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-              "hover:bg-gray-100 dark:hover:bg-gray-800",
-              isCategoryOpen
-                ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-semibold"
-                : "text-gray-700 dark:text-gray-300"
-            )}
-            onClick={() => setIsCategoryOpen((prev) => !prev)}
-          >
-            <ListTodo className="h-5 w-5" />
-            <span className="font-medium">Category</span>
-            <ChevronDown
-              className={cn(
-                "ml-auto h-4 w-4 transition-transform",
-                isCategoryOpen && "rotate-180"
-              )}
-            />
-          </button>
-
-          {isCategoryOpen && (
-            <div className="ml-10 flex flex-col gap-1 border-l border-gray-200 dark:border-gray-800 pl-4">
-              <Link
-                href="/category/view"
-                className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
-                  pathname === "/chat/join"
-                    ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                )}
-              >
-                View Category
-              </Link>
-              <Link
-                href="/category"
-                className={cn(
-                  "block rounded-md px-3 py-2 text-sm transition-colors whitespace-nowrap hover:translate-x-1",
-                  pathname === "/catgory/create"
-                    ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                )}
-              >
-                Create Category
-              </Link>
-            </div>
-          )}
         </nav>
       </div>
     </aside>
