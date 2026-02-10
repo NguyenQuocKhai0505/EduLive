@@ -1,30 +1,35 @@
-import { Entity, Column, OneToMany } from "typeorm";
+import { Entity, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
 import { BaseEntity } from "../../../common/entities/base.entity";
 import { OrderItem } from "./order-item.entity";
+import { User } from "../../users/entities/user.entity";
 
-export enum OrderStatus{
-    PENDING="PENDING",
-    PAID="PAID",
-    FAILED="FAILED",
+export enum OrderStatus {
+  PENDING = "PENDING",
+  PAID = "PAID",
+  FAILED = "FAILED",
 }
+
 @Entity("orders")
-export class Order extends BaseEntity{
-    @Column()
-    userId:number
+export class Order extends BaseEntity {
+  @Column()
+  userId: number;
 
-    @Column({type:"decimal",precision:10,scale:2})
-    totalAmount:number 
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "userId" })
+  user?: User;
 
-    @Column({type:"enum",enum:OrderStatus,default:OrderStatus.PENDING})
-    status:OrderStatus
+  @Column({ type: "decimal", precision: 10, scale: 2 })
+  totalAmount: number;
 
-    @Column()
-    paymentMethod:string
+  @Column({ type: "enum", enum: OrderStatus, default: OrderStatus.PENDING })
+  status: OrderStatus;
 
-    //IdempotencyKey de tranh lap lai giao dich
-    @Column({ unique: true })
-    idempotencyKey: string;
+  @Column()
+  paymentMethod: string;
 
-    @OneToMany(()=>OrderItem,(item)=>item.order)
-    items:OrderItem[]
+  @Column({ unique: true })
+  idempotencyKey: string;
+
+  @OneToMany(() => OrderItem, (item) => item.order)
+  items: OrderItem[];
 }

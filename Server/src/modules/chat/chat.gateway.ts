@@ -22,8 +22,10 @@ import {
       origin: [
         process.env.STUDENT_APP_URL,
         process.env.TEACHER_APP_URL,
+        process.env.ADMIN_APP_URL,
         "http://localhost:3000",
         "http://localhost:3002",
+        "http://localhost:3003",
       ].filter(Boolean),
       credentials: true,
     },

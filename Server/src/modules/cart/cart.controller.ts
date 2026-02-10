@@ -1,16 +1,26 @@
 import { Controller, Post, Get, Delete, Param, Body, UseGuards, Req, ParseIntPipe } from "@nestjs/common";
 import { CartService } from "./cart.service";
 import { AuthGuard } from "../guards/auth.guard";
+import { RolesGuard } from "../guards/roles.guard";
+import { Roles } from "../../common/decorators/roles.decirator";
+import { UserRole } from "../users/enums/user-role.enum";
 import { AddToCartDto } from "./dto/AddToCart.dto";
 import { CheckoutDto } from "./dto/Checkout.dto";
 
 @Controller("cart")
 @UseGuards(AuthGuard)
-export class CartController{
-    constructor(private readonly cartService:CartService){}
+export class CartController {
+  constructor(private readonly cartService: CartService) {}
 
-    @Post()
-    addToCart(@Req() req:any,@Body() dto:AddToCartDto){
+  @Get("orders")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  getAllOrdersForAdmin() {
+    return this.cartService.findAllOrdersForAdmin();
+  }
+
+  @Post()
+  addToCart(@Req() req:any,@Body() dto:AddToCartDto){
         return this.cartService.addToCart(req.user.sub,dto.courseId)
     }
 

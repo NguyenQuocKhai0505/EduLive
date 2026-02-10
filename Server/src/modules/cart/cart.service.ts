@@ -73,6 +73,14 @@ export class CartService{
         return { status: order.status };
     }
 
+    /** Admin: lấy tất cả đơn hàng (student mua khóa học) kèm user, items, course */
+    async findAllOrdersForAdmin() {
+        return this.orderRepository.find({
+            relations: ["user", "items", "items.course"],
+            order: { createdAt: "DESC" },
+        });
+    }
+
     //5.CHECKOUT
     async checkout(userId: number, idempotencyKey: string, courseIds?: number[]) {
         // #region agent log

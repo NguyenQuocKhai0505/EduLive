@@ -7,10 +7,11 @@ import { Course } from "../courses/entities/course.entity";
 import { CartService } from "./cart.service";
 import { CartController } from "./cart.controller";
 import { AuthModule } from "../auth/auth.module";
+import { RolesGuard } from "../guards/roles.guard";
 
 @Module({
   imports: [TypeOrmModule.forFeature([CartItem, Order, OrderItem, Course]), AuthModule],
-  providers: [CartService],
+  providers: [CartService, RolesGuard],
   controllers: [CartController],
   exports: [CartService],
 })
