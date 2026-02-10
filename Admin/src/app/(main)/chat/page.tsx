@@ -40,43 +40,59 @@ export default function ChatMonitorPage() {
     selectedRoomIdRef.current = selectedRoomId
   },[selectedRoomId])
   
-  //Load Messages and Join Room when selected rooms 
-  useEffect(() =>{
-    if(selectedRoomId === null){
-      setMessages([])
-      return
+  // Load Messages and Join Room when selected room changes
+  useEffect(() => {
+    if (selectedRoomId === null) {
+      setMessages([]);
+      return;
     }
-    const fetchMessages = async() =>{
-      try{
-        setLoadingMessages(true);
-        const data = await getRoomMessages(selectedRoomId)
-        setMessages(Array.isArray(data) ? data : [])
 
-        //Join room through socket 
-        joinRoom(selectedRoomId)
-      }catch(error){
-        console.error("Error fetching messages:",error)
-        toast.error("Failed to load messages")
-        setMessages([])
-      }finally{
+    const fetchMessages = async () => {
+      try {
+        setLoadingMessages(true);
+        const data = await getRoomMessages(selectedRoomId);
+        setMessages(Array.isArray(data) ? data : []);
+
+        // Join room through socket
+        joinRoom(selectedRoomId);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        toast.error("Failed to load messages");
+        setMessages([]);
+      } finally {
         setLoadingMessages(false);
       }
-    }
-    fetchMessages()
-  },[selectedRoomId])
+    };
+
+    fetchMessages();
+
+    // Cleanup: Leave room khi đổi phòng hoặc unmount
+    return () => {
+      // Socket sẽ tự động leave khi disconnect, nhưng có thể thêm logic leave room nếu cần
+    };
+  }, [selectedRoomId]);
 
   // Listen for new messages from socket
   useEffect(() => {
     const socket = getSocket();
+    
     const handleMessage = (msg: ChatMessage) => {
+      // Chỉ thêm message nếu thuộc phòng đang được chọn
       if (msg.roomId !== selectedRoomIdRef.current) return;
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => {
+        // Tránh duplicate message (kiểm tra nếu đã có message với cùng id)
+        const exists = prev.some((m) => m.id === msg.id);
+        if (exists) return prev;
+        return [...prev, msg];
+      });
     };
+
     socket.on("message", handleMessage);
+
     return () => {
       socket.off("message", handleMessage);
     };
-  }, []);
+  }, []); // Dependency rỗng vì dùng ref để check selectedRoomId
 
   //Listen error from socket 
   useEffect(()=>{
@@ -96,15 +112,29 @@ export default function ChatMonitorPage() {
     messagesEndRef.current?.scrollIntoView({behavior:"smooth"})
   },[messages])
 
-  //Handle send message 
-  const handleSend = () =>{
-    if(!inputText.trim() || selectedRoomId === null){
-      toast.error("Vui lòng nhập tin nhắn và chọn phòng chat")
-      return
+  // Handle send message
+  const handleSend = () => {
+    if (!inputText.trim() || selectedRoomId === null) {
+      toast.error("Vui lòng nhập tin nhắn và chọn phòng chat");
+      return;
     }
-    sendMessage(selectedRoomId,inputText.trim())
-    setInputText("")
-  }
+
+    try {
+      sendMessage(selectedRoomId, inputText.trim());
+      setInputText("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Không thể gửi tin nhắn");
+    }
+  };
+
+  // Cleanup socket khi unmount component
+  useEffect(() => {
+    return () => {
+      // Có thể disconnect socket nếu muốn, nhưng thường giữ kết nối để nhận tin nhắn
+      // disconnectSocket();
+    };
+  }, []);
   return (
     <div className="flex h-[calc(100vh-12rem)] gap-4">
       <div className="w-80 shrink-0 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 flex flex-col overflow-hidden">

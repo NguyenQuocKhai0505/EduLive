@@ -46,8 +46,37 @@ let socket: Socket | null = null;
 
 /** Lấy hoặc tạo Socket client (withCredentials để gửi cookie accessToken). */
 export function getSocket(): Socket {
+  // Nếu socket đã tồn tại và đang connected, trả về luôn
   if (socket?.connected) return socket;
-  socket = io(CHAT_SERVER, { withCredentials: true });
+  
+  // Nếu socket tồn tại nhưng disconnected, reconnect
+  if (socket && !socket.connected) {
+    socket.connect();
+    return socket;
+  }
+  
+  // Tạo socket mới nếu chưa có
+  socket = io(CHAT_SERVER, { 
+    withCredentials: true,
+    autoConnect: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+  });
+  
+  // Log events để debug
+  socket.on("connect", () => {
+    console.log("Socket connected");
+  });
+  
+  socket.on("disconnect", (reason) => {
+    console.log("Socket disconnected:", reason);
+  });
+  
+  socket.on("connect_error", (error) => {
+    console.error("Socket connection error:", error);
+  });
+  
   return socket;
 }
 

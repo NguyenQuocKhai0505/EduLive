@@ -11,6 +11,7 @@ import {
   PanelLeft,
   PanelLeftClose,
   ListTodo,
+  Youtube,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -26,6 +27,7 @@ export function Sidebar() {
     { href: "/blogs", label: "Manage Blog", icon: FileText },
     { href: "/categories", label: "Category", icon: ListTodo },
     { href: "/chat", label: "Chat Monitor", icon: MessageCircle },
+    { href: "/youtube-courses", label: "Youtube Courses", icon: Youtube },
   ];
   
   return (
