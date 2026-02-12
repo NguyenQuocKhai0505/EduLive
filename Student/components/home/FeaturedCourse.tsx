@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { getAllCategories, getCoursesByCategory, CategoryResponse, CourseResponse } from "@/services/course.service";
 import CourseCard from "@/components/shared/CourseCard";
+import { formatPrice } from "@/lib/utils";
 
 export function FeaturedCourses() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
@@ -106,18 +107,14 @@ export function FeaturedCourses() {
                           id: course.id,
                           title: course.title,
                           thumbnail: course.thumbnail,
-                          price: course.price > 0 
-                            ? `${course.price.toLocaleString('vi-VN')}đ` 
-                            : "Free",
-                          originalPrice: course.originalPrice > 0
-                            ? `${course.originalPrice.toLocaleString('vi-VN')}đ`
-                            : undefined,
+                          price: formatPrice(course.price),
+                          originalPrice: course.originalPrice > 0 ? formatPrice(course.originalPrice) : undefined,
                           discount: course.originalPrice > course.price 
                             ? `${Math.round((1 - course.price / course.originalPrice) * 100)}%`
                             : undefined,
                           rating: course.rating,
                           lectures: course.lectures,
-                          instructor: course.instructor?.name || "Unknown",
+                          instructor: course.instructor?.fullName || course.instructor?.name || "Unknown",
                           students: course.students,
                         }} 
                       />

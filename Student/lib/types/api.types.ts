@@ -64,7 +64,8 @@ export interface CourseResponse {
   instructorId: number;
   instructor?: {
     id: number;
-    name: string;
+    fullName?: string;
+    name?: string;
     email: string;
   };
   isPublished: boolean;

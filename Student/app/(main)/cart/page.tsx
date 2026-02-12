@@ -9,6 +9,7 @@ import { Trash2, ShoppingCart, Star } from "lucide-react";
 import { toast } from "sonner";
 import { CartItemResponse, addToCart, getCartItems, removeFromCart } from "@/services/cart.service";
 import { validateVoucher, VoucherValidationResponse } from "@/services/voucher.service";
+import { formatPrice, formatRating } from "@/lib/utils";
 
 export default function CartPage() {
   const [items, setItems] = useState<CartItemResponse[]>([]);
@@ -159,16 +160,16 @@ export default function CartPage() {
                   <h4 className="font-bold line-clamp-2 h-12 mb-1 text-sm">{course.title}</h4>
                   <div className="text-xs text-slate-500 mb-2">{course.instructor?.name || "Unknown"}</div>
                   <div className="flex items-center mb-2">
-                    <span className="font-bold text-amber-500 mr-1 text-sm">{course.rating || 0}</span>
+                    <span className="font-bold text-amber-500 mr-1 text-sm">{formatRating(course.rating)}</span>
                     <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                   </div>
                   <div className="flex items-center gap-2 mb-3 mt-auto">
                     <span className="font-bold">
-                      {course.price > 0 ? `${course.price.toLocaleString("vi-VN")}đ` : "Miễn phí"}
+                      {formatPrice(course.price)}
                     </span>
                     {course.originalPrice > course.price && (
                       <span className="text-sm text-slate-400 line-through">
-                        {course.originalPrice.toLocaleString("vi-VN")}đ
+                        {formatPrice(course.originalPrice)}
                       </span>
                     )}
                   </div>
@@ -223,7 +224,7 @@ export default function CartPage() {
 
                 <div className="text-left sm:text-right flex-shrink-0">
                   <div className="text-purple-600 dark:text-purple-400 font-bold text-sm sm:text-base">
-                    {Number(item.priceSnapshot).toLocaleString("vi-VN")}đ
+                    {formatPrice(Number(item.priceSnapshot))}
                   </div>
                   <button
                     onClick={() => handleRemoveFromCart(item.courseId)}
@@ -242,11 +243,11 @@ export default function CartPage() {
         <div className="sticky top-20 sm:top-24 bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-lg border border-slate-200 dark:border-slate-800">
           <div className="text-slate-500 dark:text-slate-400 font-bold text-base sm:text-lg mb-2">Total:</div>
           <div className="text-2xl sm:text-3xl font-bold mb-2 text-purple-700 dark:text-purple-400">
-            {totalPrice.toLocaleString("vi-VN")}đ
+            {formatPrice(totalPrice)}
           </div>
           {discountAmount > 0 && (
             <div className="text-sm text-slate-500 dark:text-slate-400 mb-3">
-              Discount ({voucherData?.discountPercent}%): -{discountAmount.toLocaleString("vi-VN")}đ
+              Discount ({voucherData?.discountPercent}%): -{formatPrice(discountAmount)}
             </div>
           )}
           {(() => {

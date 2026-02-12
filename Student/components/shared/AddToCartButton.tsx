@@ -46,7 +46,7 @@ export default function AddToCartButton({ course }: { course: Course }) {
     <>
       <button
         onClick={handleClick}
-        className={`w-full py-2 px-4 rounded font-bold transition-colors duration-200 ${
+        className={`py-1.5 px-3 rounded-md text-xs sm:text-sm font-semibold transition-colors duration-200 whitespace-nowrap ${
           isAdded
             ? "bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200" // Style cho nút Go to Cart
             : "bg-purple-600 text-white hover:bg-purple-700" // Style cho nút Add to Cart

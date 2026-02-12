@@ -7,6 +7,7 @@ import FilterBar from "../search/components/FilterBar";
 import Pagination from "../search/components/Pagination";
 import { Search } from "lucide-react";
 import { searchCourses, CourseResponse } from "@/services/course.service";
+import { formatPrice } from "@/lib/utils";
 
 export default function CoursesPage() {
   const searchParams = useSearchParams();
@@ -100,14 +101,8 @@ export default function CoursesPage() {
                     category: course.category?.name || "",
                     title: course.title,
                     thumbnail: course.thumbnail,
-                    price:
-                      course.price > 0
-                        ? `${course.price.toLocaleString("vi-VN")}VND`
-                        : "Free",
-                    originalPrice:
-                      course.originalPrice > 0
-                        ? `${course.originalPrice.toLocaleString("vi-VN")}VND`
-                        : undefined,
+                    price: formatPrice(course.price),
+                    originalPrice: course.originalPrice > 0 ? formatPrice(course.originalPrice) : undefined,
                     discount:
                       course.originalPrice > course.price
                         ? `${Math.round(
@@ -116,7 +111,7 @@ export default function CoursesPage() {
                         : undefined,
                     rating: course.rating,
                     lectures: course.lectures,
-                    instructor: course.instructor?.name || "Unknown",
+                    instructor: course.instructor?.fullName || course.instructor?.name || "Unknown",
                     students: course.students,
                   }}
                 />

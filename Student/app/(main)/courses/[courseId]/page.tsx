@@ -9,6 +9,7 @@ import CourseSidebar from "@/components/course-detail/CourseSidebar";
 import SimilarCourses from "@/components/course-detail/SimiliarCourse";
 import RecentlyViewed from "@/components/course-detail/RecentlyView";
 import CourseCurriculum from "@/components/course-detail/CourseCurriculum";
+import { formatPrice } from "@/lib/utils";
 
 
 export default function CourseDetailPage() {
@@ -76,13 +77,14 @@ export default function CourseDetailPage() {
       students: course.students,
       lastUpdated: new Date(course.updateAt).toLocaleDateString("vi-VN"),
       language: course.language,
-      price: course.price>0 ? `${course.price.toLocaleString("vi-Vn")}VND`: "Free",
-      originalPrice: course.originalPrice > 0 ? `${course.originalPrice.toLocaleString('vi-VN')}đ` : undefined,
+      price: formatPrice(course.price),
+      originalPrice: course.originalPrice > 0 ? formatPrice(course.originalPrice) : undefined,
       discount: course.originalPrice > course.price
         ? `${Math.round((1-course.price/course.originalPrice)*100)}%`
         :undefined,
       thumbnail: course.thumbnail,
-      instructor: course.instructor?.name || "Unknown",
+      instructor: course.instructor?.fullName || course.instructor?.name || "Unknown",
+      authorName: course.instructor?.fullName || course.instructor?.name || "Unknown", // Hiển thị fullName từ instructorId
       duration:`${course.duration} hours`,
       level: course.level,
       lectures: course.lectures,
@@ -114,13 +116,13 @@ export default function CourseDetailPage() {
     students: c.students,
     lastUpdated: new Date(c.updateAt).toLocaleDateString('vi-VN'),
     language: c.language,
-    price: c.price > 0 ? `${c.price.toLocaleString('vi-VN')}đ` : "Miễn phí",
-    originalPrice: c.originalPrice > 0 ? `${c.originalPrice.toLocaleString('vi-VN')}đ` : undefined,
+    price: formatPrice(c.price),
+    originalPrice: c.originalPrice > 0 ? formatPrice(c.originalPrice) : undefined,
     discount: c.originalPrice > c.price 
       ? `${Math.round((1 - c.price / c.originalPrice) * 100)}%`
       : undefined,
     thumbnail: c.thumbnail,
-    instructor: c.instructor?.name || "Unknown",
+    instructor: c.instructor?.fullName || c.instructor?.name || "Unknown",
     duration: `${c.duration} hours`,
     lectures: c.lectures,
     level: c.level,

@@ -5,6 +5,7 @@ import { ShoppingCart, Star, Heart } from "lucide-react";
 import React from "react"; 
 import Link from "next/link"; // Import Link để bọc ảnh và tiêu đề
 import AddToCartButton from "./AddToCartButton";
+import { formatRating } from "@/lib/utils";
 interface CourseCardProps {
   item: any;
 }
@@ -62,7 +63,7 @@ export default function CourseCard({ item }: CourseCardProps) {
 
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="font-bold text-sm text-amber-500 dark:text-amber-400">{item.rating || 0}</span>
+              <span className="font-bold text-sm text-amber-500 dark:text-amber-400">{formatRating(item.rating)}</span>
               <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -91,8 +92,8 @@ export default function CourseCard({ item }: CourseCardProps) {
 
         {/* Footer: Giá & Nút Add Cart */}
         <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
-           <div className="flex items-baseline gap-1.5 flex-shrink-0 min-w-0">
-            <span className="font-bold text-base text-slate-900 dark:text-white whitespace-nowrap">
+           <div className="flex items-baseline gap-1.5 flex-shrink-0 min-w-0 flex-1">
+            <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white whitespace-nowrap">
                 {item.price}
             </span>
             {item.originalPrice && (

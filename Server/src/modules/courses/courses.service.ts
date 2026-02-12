@@ -68,7 +68,7 @@ export class CoursesService{
             isActive:false,
             price: createCourseDto.price ||0,
             students:0,
-            rating:0,
+            rating: createCourseDto.rating || 0,
             lectures:0
         })
         //4: Luu vao database 

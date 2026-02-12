@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "jkwiatk1.github.io",
+      },
+      {
+        protocol: "https",
+        hostname: "wallpaperaccess.com",
+      },
     ],
   },
 };
