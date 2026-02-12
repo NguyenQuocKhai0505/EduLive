@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getMyCourses } from "../../../services/course.service";
-
+import { useRouter } from "next/navigation";
 type CourseCategory = {
   id: number;
   name: string;
@@ -44,6 +44,7 @@ const formatCurrency = (value: number | string) => {
 export const CourseList = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter()
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -62,6 +63,12 @@ export const CourseList = () => {
     };
     fetchCourses();
   }, []);
+
+  const handleEdit = (courseId:number) =>{
+    router.push(`courses/${courseId}/edit`)
+  }
+
+  const handleDelete = (courseId:number) =>{}
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -161,7 +168,7 @@ export const CourseList = () => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex items-center gap-2">
-                    <Button variant="ghost" size="icon" aria-label="Edit course">
+                    <Button variant="ghost" size="icon" aria-label="Edit course" onClick={() => handleEdit(course.id)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
