@@ -106,6 +106,12 @@ export const getAllCategories = async (): Promise<CategoryResponse[]> => {
  * @param searchParams - Object chứa các tham số tìm kiếm
  * @returns Danh sách courses phù hợp
  */
+/**
+ * Tìm kiếm courses với filter đầy đủ
+ * 
+ * @param searchParams - Object chứa các tham số filter
+ * @returns Danh sách courses phù hợp
+ */
 export const searchCourses = async (searchParams: {
   title?: string;
   categoryId?: number;
@@ -114,10 +120,33 @@ export const searchCourses = async (searchParams: {
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
+  price?: string; // "Free" hoặc "Paid"
+  duration?: string; // "short", "medium", "long", "extra-long"
+  video?: boolean; // true nếu muốn courses có video
 }): Promise<CourseResponse[]> => {
   try {
-    const response = await api.get('/courses', { params: searchParams });
-    return response.data;
+    // ✅ Build params object - chỉ gửi những params có giá trị
+    const params: any = {};
+    
+    if (searchParams.title) params.title = searchParams.title;
+    if (searchParams.categoryId) params.categoryId = searchParams.categoryId;
+    if (searchParams.level && searchParams.level !== 'All Levels') {
+      params.level = searchParams.level;
+    }
+    if (searchParams.language) params.language = searchParams.language;
+    if (searchParams.minRating !== undefined) params.minRating = searchParams.minRating;
+    if (searchParams.minPrice !== undefined) params.minPrice = searchParams.minPrice;
+    if (searchParams.maxPrice !== undefined) params.maxPrice = searchParams.maxPrice;
+    if (searchParams.price) params.price = searchParams.price; // "Free" hoặc "Paid"
+    if (searchParams.duration) params.duration = searchParams.duration;
+    if (searchParams.video !== undefined) params.video = searchParams.video;
+
+    const response = await api.get('/courses', { params });
+    
+    // ✅ Xử lý response format linh hoạt
+    return Array.isArray(response.data) 
+      ? response.data 
+      : response.data?.data ?? [];
   } catch (error: any) {
     console.error('Error searching courses:', error);
     throw error;

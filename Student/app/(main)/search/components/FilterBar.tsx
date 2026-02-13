@@ -306,7 +306,7 @@ export default function FilterBar() {
             <div className="mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-slate-100 dark:border-slate-800 flex gap-2 sm:gap-3">
               <button
                 onClick={() => {
-                  router.push("/search");
+                  router.push("/courses");
                   setIsFilterOpen(false);
                 }}
                 className="flex-1 py-2.5 sm:py-3 border border-slate-900 dark:border-slate-600 font-bold transition text-sm sm:text-base

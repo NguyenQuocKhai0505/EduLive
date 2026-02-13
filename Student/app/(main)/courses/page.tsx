@@ -20,28 +20,33 @@ export default function CoursesPage() {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-
-        // Lay params tu URL
+  
         const title = searchParams.get("title") || searchParams.get("q");
         const categoryId = searchParams.get("categoryId");
         const level = searchParams.get("level");
         const language = searchParams.get("language");
         const rating = searchParams.get("rating");
+        const price = searchParams.get("price"); // "Free" hoặc "Paid"
+        const duration = searchParams.get("duration"); // "short", "medium", "long", "extra-long"
+        const video = searchParams.get("video"); // "true" hoặc null
         const page = searchParams.get("page");
 
-        // Buid search params
         const params: any = {};
+        
         if (title) params.title = title;
         if (categoryId) params.categoryId = parseInt(categoryId);
         if (level && level !== "All Levels") params.level = level;
         if (language) params.language = language;
         if (rating) params.minRating = parseFloat(rating);
-
+        if (price) params.price = price; // "Free" hoặc "Paid"
+        if (duration) params.duration = duration;
+        if (video === "true") params.video = true; // Convert string "true" → boolean true
+  
         if (page) setCurrentPage(parseInt(page));
+  
 
-        // Goi API search
         const results = await searchCourses(params);
-        // Chi lay course da publish
+        
         setCourse(results.filter((c) => c.isPublished));
       } catch (error) {
         console.error("Error searching courses:", error);
@@ -49,6 +54,7 @@ export default function CoursesPage() {
         setLoading(false);
       }
     };
+    
     fetchCourses();
   }, [searchParams]);
 
