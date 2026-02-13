@@ -33,7 +33,7 @@ import { Roles } from '../../common/decorators/roles.decirator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { CloudinaryService } from '../../common/services/cloudinary.service';
 import { imageFileFilter } from '../../common/utils/file-upload.util';
-
+import { FilterCourseDto } from './dto/filter-course.dto';
 // TẤT CẢ ROUTES:
 //  * - POST   /courses                    - Tạo course mới (TEACHER/ADMIN)
 //  * - GET    /courses                    - Lấy tất cả courses đã publish (PUBLIC)
@@ -73,16 +73,9 @@ export class CoursesController{
     //ENDPOINT 2: GET /courses
     @Get()
     async findAll(
-        @Query("categoryId") categoryId?:string, //Lay query tu parameter
-        @Query("level") level?:string,
-        @Query("language") language?:string,
-    ){
-        //Neu co categoryId, lay course theo category
-        if(categoryId){
-            return await this.coursesService.findByCategory(parseInt(categoryId))
-        }
-        //Neu khong lay tat ca cac category da publish
-        return await this.coursesService.findAll()
+        @Query() filterDto: FilterCourseDto,
+    ) {
+        return await this.coursesService.findFiltered(filterDto);
     }
     //ENDPOINT 3: GET /courses/pending/approval
     @Get('pending/approval')  
@@ -439,5 +432,6 @@ export class CoursesController{
         const userRole = req.user.role
         await this.coursesService.delete(id,userId,userRole)  // ⚠️ FIX: Không cần return vì đã set NO_CONTENT
     }
+
 
 }
