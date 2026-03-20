@@ -35,6 +35,7 @@ import { YoutubeCoursesModule } from './modules/youtube-courses/youtube-courses.
     ChatModule,
     AiChatModule,
     YoutubeCoursesModule,
+    
     //Cau hinh ket noi Postgres
     TypeOrmModule.forRootAsync({
       imports:[ConfigModule],

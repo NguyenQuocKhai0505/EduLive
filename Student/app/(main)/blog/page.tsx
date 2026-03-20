@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import { getAllBlogs, BlogResponse, createBlog, CreateBlogRequest, deleteBlog, createComment } from "@/services/blog.service";
+import { getAllBlogs, BlogResponse, createBlog, CreateBlogRequest, deleteBlog, createComment, toggleLike, getComments, type CommentResponse } from "@/services/blog.service";
 import { getMyProfile, UserProfile } from "@/services/user.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 export default function BlogPage() {
     const [blogs, setBlogs] = useState<BlogResponse[]>([]);
@@ -34,6 +35,13 @@ export default function BlogPage() {
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [commentTexts, setCommentTexts] = useState<Record<number, string>>({});
+    const [likedByBlogId, setLikedByBlogId] = useState<Record<number, boolean>>({});
+    const [likingBlogId, setLikingBlogId] = useState<number | null>(null);
+    const [commentDialogBlogId, setCommentDialogBlogId] = useState<number | null>(null);
+    const [dialogComments, setDialogComments] = useState<CommentResponse[]>([]);
+    const [dialogCommentLoading, setDialogCommentLoading] = useState(false);
+    const [dialogCommentText, setDialogCommentText] = useState("");
+    const [dialogReplyToId, setDialogReplyToId] = useState<number | null>(null);
 
     // Fetch blogs và user profile
     useEffect(() => {
@@ -123,9 +131,21 @@ export default function BlogPage() {
             };
 
             const createdPost = await createBlog(newPost);
-            
-            // Thêm blog mới vào đầu danh sách
-            setBlogs(prev => [createdPost, ...prev]);
+            const blogWithAuthor: BlogResponse = {
+                ...createdPost,
+                author: createdPost.author ?? (user ? {
+                    id: user.id,
+                    fullName: user.name,
+                    avatar: user.avatar || "",
+                    bio: user.bio || "",
+                    role: user.role,
+                } : undefined),
+                tag: createdPost.tag ?? [],
+                images: createdPost.images ?? [],
+                likesCount: createdPost.likesCount ?? 0,
+                commentsCount: createdPost.commentsCount ?? 0,
+            };
+            setBlogs(prev => [blogWithAuthor, ...prev]);
             
             // Reset form
             setPostTitle("");
@@ -181,6 +201,84 @@ export default function BlogPage() {
 
     const handleCommentChange = (blogId: number, value: string) => {
         setCommentTexts((prev) => ({ ...prev, [blogId]: value }));
+    };
+
+    const handleLikeClick = async (blogId: number) => {
+        if (!user) {
+            toast.error("Please login to like");
+            return;
+        }
+        if (likingBlogId) return;
+        setLikingBlogId(blogId);
+        try {
+            const { liked, likesCount } = await toggleLike(blogId);
+            setLikedByBlogId((prev) => ({ ...prev, [blogId]: liked }));
+            setBlogs((prev) =>
+                prev.map((b) => (b.id === blogId ? { ...b, likesCount } : b))
+            );
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                toast.error("Please login to like");
+            } else {
+                toast.error(err.response?.data?.message || "Failed to like");
+            }
+        } finally {
+            setLikingBlogId(null);
+        }
+    };
+
+    const handleOpenCommentDialog = async (blogId: number) => {
+        setCommentDialogBlogId(blogId);
+        setDialogCommentText("");
+        setDialogReplyToId(null);
+        setDialogCommentLoading(true);
+        try {
+            const comments = await getComments(blogId);
+            setDialogComments(comments);
+        } catch (err: any) {
+            toast.error("Failed to load comments");
+            setDialogComments([]);
+        } finally {
+            setDialogCommentLoading(false);
+        }
+    };
+
+    const handleCloseCommentDialog = () => {
+        setCommentDialogBlogId(null);
+        setDialogComments([]);
+        setDialogCommentText("");
+        setDialogReplyToId(null);
+    };
+
+    const handleSubmitDialogComment = async (parentId?: number) => {
+        if (!commentDialogBlogId || !user) return;
+        const content = dialogCommentText.trim();
+        if (!content) {
+            toast.error("Please enter a comment");
+            return;
+        }
+        const loadingToast = toast.loading("Posting comment...");
+        try {
+            await createComment(commentDialogBlogId, { content, parentId });
+            setDialogCommentText("");
+            setDialogReplyToId(null);
+            const comments = await getComments(commentDialogBlogId);
+            setDialogComments(comments);
+            setBlogs((prev) =>
+                prev.map((b) =>
+                    b.id === commentDialogBlogId
+                        ? { ...b, commentsCount: b.commentsCount + 1 }
+                        : b
+                )
+            );
+            toast.success("Comment posted!", { id: loadingToast });
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                toast.error("Please login to comment", { id: loadingToast });
+            } else {
+                toast.error(err.response?.data?.message || "Failed to post comment", { id: loadingToast });
+            }
+        }
     };
 
     const handleSubmitComment = async (blogId: number) => {
@@ -400,12 +498,27 @@ export default function BlogPage() {
                                             ))}
                                         </div>
                                         <div className="flex items-center gap-4 text-slate-500 text-sm">
-                                            <span className="flex items-center gap-1">
-                                                <Heart className="w-4 h-4" /> {blog.likesCount}
-                                            </span>
-                                            <span className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => handleLikeClick(blog.id)}
+                                                disabled={!user || likingBlogId === blog.id}
+                                                className="flex items-center gap-1 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title={user ? "Like" : "Login to like"}
+                                            >
+                                                <Heart
+                                                    className={cn(
+                                                        "w-4 h-4",
+                                                        likedByBlogId[blog.id] && "fill-red-500 text-red-500"
+                                                    )}
+                                                />{" "}
+                                                {blog.likesCount}
+                                            </button>
+                                            <button
+                                                onClick={() => handleOpenCommentDialog(blog.id)}
+                                                className="flex items-center gap-1 hover:text-purple-600 transition-colors"
+                                                title="View comments"
+                                            >
                                                 <MessageCircle className="w-4 h-4" /> {blog.commentsCount}
-                                            </span>
+                                            </button>
                                         </div>
                                     </div>
 
@@ -622,6 +735,114 @@ export default function BlogPage() {
                             </Button>
                         </div>
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* COMMENT DIALOG */}
+            <Dialog open={!!commentDialogBlogId} onOpenChange={(open) => !open && handleCloseCommentDialog()}>
+                <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Comments</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
+                        {dialogCommentLoading ? (
+                            <p className="text-slate-500 text-sm">Loading comments...</p>
+                        ) : dialogComments.length === 0 ? (
+                            <p className="text-slate-500 text-sm">No comments yet.</p>
+                        ) : (
+                            dialogComments.map((c) => (
+                                <div key={c.id} className="space-y-3">
+                                    <div className="flex gap-3">
+                                        <div className="relative w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                                            <Image
+                                                src={c.user?.avatar || "/default-avatar.png"}
+                                                alt={c.user?.fullName || "User"}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold">{c.user?.fullName || "Unknown"}</p>
+                                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                                                {c.content}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-xs text-slate-400">
+                                                    {formatDate(c.createdAt)}
+                                                </span>
+                                                {user && (
+                                                    <button
+                                                        onClick={() =>
+                                                            setDialogReplyToId((prev) =>
+                                                                prev === c.id ? null : c.id
+                                                            )
+                                                        }
+                                                        className="text-xs text-purple-600 hover:underline"
+                                                    >
+                                                        Reply
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {c.replies && c.replies.length > 0 && (
+                                        <div className="pl-12 space-y-2">
+                                            {c.replies.map((r) => (
+                                                <div key={r.id} className="flex gap-3">
+                                                    <div className="relative w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+                                                        <Image
+                                                            src={r.user?.avatar || "/default-avatar.png"}
+                                                            alt={r.user?.fullName || "User"}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-semibold">{r.user?.fullName || "Unknown"}</p>
+                                                        <p className="text-sm text-slate-600 dark:text-slate-400">{r.content}</p>
+                                                        <span className="text-xs text-slate-400">{formatDate(r.createdAt)}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                    {user && (
+                        <div className="flex gap-2 pt-4 border-t">
+                            <Input
+                                placeholder={
+                                    dialogReplyToId ? "Write a reply..." : "Write a comment..."
+                                }
+                                value={dialogCommentText}
+                                onChange={(e) => setDialogCommentText(e.target.value)}
+                                className="flex-1"
+                            />
+                            {dialogReplyToId && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setDialogReplyToId(null);
+                                        setDialogCommentText("");
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            )}
+                            <Button
+                                onClick={() =>
+                                    handleSubmitDialogComment(dialogReplyToId ?? undefined)
+                                }
+                                disabled={!dialogCommentText.trim()}
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                            >
+                                {dialogReplyToId ? "Reply" : "Comment"}
+                            </Button>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

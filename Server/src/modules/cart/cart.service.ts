@@ -1,10 +1,11 @@
 import { Injectable, BadRequestException,NotFoundException } from "@nestjs/common";
 import {InjectRepository} from "@nestjs/typeorm";
-import { In, Repository,DataSource} from "typeorm";
+import { In, Repository, DataSource, EntityManager } from "typeorm";
 import { CartItem } from "./entities/cart-item.entity";
 import { Order, OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { Course } from "../courses/entities/course.entity";
+import { Enrollment } from "../enrollments/entities/enrollment.entity";
 import { CartStatus } from "./enums/cart-status.enum";
 import { CheckoutDto } from "./dto/Checkout.dto";
 
@@ -172,6 +173,27 @@ export class CartService{
         });
     }
 
+    /**
+     * Tạo enrollment cho user với các khóa trong order (trong cùng transaction).
+     * Chỉ thêm nếu chưa có — tránh trùng, dễ bảo trì.
+     */
+    private async ensureEnrollmentsForOrder(
+        manager: EntityManager,
+        userId: number,
+        courseIds: number[],
+    ): Promise<void> {
+        if (courseIds.length === 0) return;
+        const enrollmentRepo = manager.getRepository(Enrollment);
+        for (const courseId of courseIds) {
+            const existing = await enrollmentRepo.findOne({
+                where: { userId, courseId },
+            });
+            if (!existing) {
+                await enrollmentRepo.save({ userId, courseId });
+            }
+        }
+    }
+
     //6.Confirm Payment 
     async confirmPayment(userId:number,orderId:number,method:string){
         return this.dataSource.transaction(async(manager) =>{
@@ -191,6 +213,7 @@ export class CartService{
                     { userId, status: CartStatus.IN_CART, courseId: In(courseIds) },
                     { status: CartStatus.PURCHASED }
                 );
+                await this.ensureEnrollmentsForOrder(manager, userId, courseIds);
             }
 
             return order;
@@ -216,9 +239,18 @@ export class CartService{
                     { userId: order.userId, status: CartStatus.IN_CART, courseId: In(courseIds) },
                     { status: CartStatus.PURCHASED }
                 );
+                await this.ensureEnrollmentsForOrder(manager, order.userId, courseIds);
             }
 
             return order;
         });
     }
+    async getPendingOrderForPayment(userId: number, orderId: number) {
+        const order = await this.orderRepository.findOne({ where: { id: orderId, userId } });
+        if (!order) throw new NotFoundException("Order not found");
+        if (order.status !== OrderStatus.PENDING) {
+          throw new BadRequestException(`Order is already ${order.status}`);
+        }
+        return order;
+      }
 }

@@ -38,6 +38,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'res.cloudinary.com', // ✨ Cloudinary images
       },
+      {
+        protocol: 'https',
+        hostname: 'jkwiatk1.github.io', // ✨ GitHub.io images
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com', // ✨ YouTube thumbnails
+      },
     ],
   },
 }

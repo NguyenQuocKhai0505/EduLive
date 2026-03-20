@@ -1,7 +1,8 @@
-import { Body, Controller, Headers, Post, Req } from "@nestjs/common";
+import { Body, Controller, Headers, Post, Req,UseGuards} from "@nestjs/common";
 import type { Request } from "express";
 import { PaymentService } from "./payment.service";
 import { CartService } from "../cart/cart.service";
+import {AuthGuard} from "../guards/auth.guard";
 import axios from "axios";
 @Controller("payment")
 export class PaymentController{
@@ -11,23 +12,33 @@ export class PaymentController{
     ){}
     //1.Create Payment Intent
     @Post("stripe/create-intent")
-    async createPaymentIntent(@Body() dto:{orderId:number,amount:number}){
-        const intent = await this.paymentService.createPaymentIntent(dto.amount,dto.orderId)
-        return {clientSecret:intent.client_secret}
+    @UseGuards(AuthGuard)
+    async createPaymentIntent(@Req() req: any, @Body() dto: { orderId: number }) {
+      const userId = req.user.sub;
+      const order = await this.cartService.getPendingOrderForPayment(userId, dto.orderId);
+    
+      const amount = Number(order.totalAmount);
+      const intent = await this.paymentService.createPaymentIntent(amount, order.id);
+    
+      return { clientSecret: intent.client_secret };
     }
 
     //2.Stripe Webhook
     @Post("stripe/webhook")
     async stripeWebhook(@Req() req:Request,@Headers("stripe-signature") signature:string){
-        const rawBody = (req as any).rawBody
+        const rawBody: Buffer | undefined = (req as any).rawBody;
+        if (!rawBody || rawBody.length === 0) {
+            console.error('[Stripe Webhook] rawBody is missing. Order will stay PENDING. Ensure main.ts uses NestFactory.create(AppModule, { rawBody: true }) and restart the server.');
+            return { received: false, error: 'rawBody missing' };
+        }
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'payment.controller.ts:stripeWebhook:enter',message:'Stripe webhook hit',data:{hasSignature:!!signature,rawBodyLength:rawBody?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3'})}).catch(()=>{});
         // #endregion agent log
 
         let event: any;
         try {
-            event = this.paymentService.verifyWebhook(rawBody,signature)
-        } catch (err:any) {
+            event = this.paymentService.verifyWebhook(rawBody, signature);
+        } catch (err: any) {
             // #region agent log
             fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'payment.controller.ts:stripeWebhook:verifyError',message:'Stripe webhook verify failed',data:{errorMessage:err?.message || 'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3'})}).catch(()=>{});
             // #endregion agent log
