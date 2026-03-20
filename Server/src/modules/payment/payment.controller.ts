@@ -59,27 +59,39 @@ export class PaymentController{
 
     //3.PayPal Payment
     @Post("paypal/create-order")
-    async createPaypalOrder(@Body() dto:{orderId:number,amount:number}){
-        const accessToken = await this.paymentService.getPayPalAccessToken()
-
-        const res = await axios.post(
-            `${process.env.PAYPAL_BASE_URL}/v2/checkout/orders`,
-            {
-                intent:"CAPTURE",
-                purchase_units:[{
-                    reference_id: dto.orderId.toString(),
-                    amount:{
-                        currency_code:"USD",
-                        value: dto.amount.toFixed(2)
-                    }
-                }]
-            },
-            {headers:{Authorization:`Bearer ${accessToken}`}}
-        )
-        return res.data
+    @UseGuards(AuthGuard)
+    async createPaypalOrder(@Req() req: any, @Body() dto: { orderId: number }) {
+      const userId = req.user.sub;
+      const order = await this.cartService.getPendingOrderForPayment(userId, dto.orderId);
+    
+      const amountVnd = Number(order.totalAmount);
+      const VND_PER_USD = 25000;
+      const amountUsd = Number((amountVnd / VND_PER_USD).toFixed(2));
+    
+      const accessToken = await this.paymentService.getPayPalAccessToken();
+    
+      const res = await axios.post(
+        `${process.env.PAYPAL_BASE_URL}/v2/checkout/orders`,
+        {
+          intent: "CAPTURE",
+          purchase_units: [{
+            reference_id: order.id.toString(),
+            amount: { currency_code: "USD", value: amountUsd.toFixed(2) }
+          }]
+        },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+    
+      return res.data;
     }
     @Post("paypal/capture")
-    async capturePaypal(@Body() dto:{ paypalOrderId:string, orderId:number }) {
+    @UseGuards(AuthGuard)
+    async capturePaypal(@Req() req: any, @Body() dto: { paypalOrderId: string, orderId: number }) {
+    
+    const userId = req.user.sub 
+    const order = await this.cartService.getPendingOrderForPayment(userId,dto.orderId)
+
+
     const accessToken = await this.paymentService.getPayPalAccessToken();
 
     await axios.post(
@@ -88,6 +100,6 @@ export class PaymentController{
         { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
-    return this.cartService.confirmPaymentByOrderId(dto.orderId, "PAYPAL");
+    return this.cartService.confirmPaymentByOrderId(order.id, "PAYPAL");
     }
 }
