@@ -25,37 +25,37 @@ export class PaymentController{
 
     //2.Stripe Webhook
     @Post("stripe/webhook")
-    async stripeWebhook(@Req() req:Request,@Headers("stripe-signature") signature:string){
-        const rawBody: Buffer | undefined = (req as any).rawBody;
-        if (!rawBody || rawBody.length === 0) {
-            console.error('[Stripe Webhook] rawBody is missing. Order will stay PENDING. Ensure main.ts uses NestFactory.create(AppModule, { rawBody: true }) and restart the server.');
-            return { received: false, error: 'rawBody missing' };
+    async stripeWebhook(@Req() req: Request, @Headers("stripe-signature") signature: string) {
+      const rawBody: Buffer | undefined = (req as any).rawBody;
+      if (!rawBody || rawBody.length === 0) {
+        console.error("[Stripe Webhook] rawBody is missing. Ensure main.ts uses rawBody: true.");
+        return { received: false, error: "rawBody missing" };
+      }
+    
+      let event: any;
+      try {
+        event = this.paymentService.verifyWebhook(rawBody, signature);
+      } catch (err: any) {
+        console.error("[Stripe Webhook] verify failed:", err?.message || err);
+        throw err;  
+      }
+    
+      const intent = event?.data?.object as any;
+      const orderId = Number(intent?.metadata?.orderId);
+    
+      if (Number.isFinite(orderId)) {
+        if (event.type === "payment_intent.succeeded") {
+          await this.cartService.confirmPaymentByOrderId(orderId, "STRIPE");
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'payment.controller.ts:stripeWebhook:enter',message:'Stripe webhook hit',data:{hasSignature:!!signature,rawBodyLength:rawBody?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion agent log
-
-        let event: any;
-        try {
-            event = this.paymentService.verifyWebhook(rawBody, signature);
-        } catch (err: any) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'payment.controller.ts:stripeWebhook:verifyError',message:'Stripe webhook verify failed',data:{errorMessage:err?.message || 'unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3'})}).catch(()=>{});
-            // #endregion agent log
-            throw err;
+    
+        if (event.type === "payment_intent.payment_failed") {
+          await this.cartService.markPaymentFailedByOrderId(orderId);
         }
-
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'payment.controller.ts:stripeWebhook',message:'Stripe webhook received',data:{eventType:event?.type,orderId:(event?.data?.object as any)?.metadata?.orderId || null},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3'})}).catch(()=>{});
-        // #endregion agent log
-
-        if(event.type === "payment_intent.succeeded"){
-            const intent = event.data.object as any
-            const orderId = parseInt(intent.metadata.orderId)
-            await this.cartService.confirmPaymentByOrderId(orderId,"STRIPE")
-        }
-        return {received:true}
+      }
+    
+      return { received: true };
     }
+
 
     //3.PayPal Payment
     @Post("paypal/create-order")

@@ -253,4 +253,36 @@ export class CartService{
         }
         return order;
       }
+
+      async markPaymentFailedByOrderId(orderId: number) {
+        return this.dataSource.transaction(async (manager) => {
+          const order = await manager.findOne(Order, { where: { id: orderId } });
+          if (!order) throw new NotFoundException("Order not found");
+      
+          // nếu đã PAID thì không đổi nữa
+          if (order.status === OrderStatus.PAID) return order;
+      
+          // nếu đã FAILED thì idempotent
+          if (order.status === OrderStatus.FAILED) return order;
+      
+          // 1) set FAILED
+          order.status = OrderStatus.FAILED;
+          order.paymentMethod = "FAILED";
+          await manager.save(order);
+      
+          // 2) trả lại slot đã reserve lúc checkout
+          const orderItems = await manager.find(OrderItem, { where: { orderId } });
+          for (const item of orderItems) {
+            const course = await manager.findOne(Course, { where: { id: item.courseId } });
+            if (!course) continue;
+            if (course.availableSlots !== null) {
+              course.availableSlots += 1;
+              await manager.save(course);
+            }
+          }
+      
+          // 3) cart item giữ IN_CART để user thử thanh toán lại
+          return order;
+        });
+      }
 }

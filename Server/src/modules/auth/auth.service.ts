@@ -73,13 +73,19 @@ export class AuthService {
       }
     }
     async logout(token: string, userEmail: string) {
-            await this.redis.set(`blacklist:${token}`, "true", 86400);
-            const user = await this.usersService.findByEmail(userEmail);
-            if (user) {
-                await this.usersService.update(user.id, { refreshTokenHash: undefined });
-            }
-            return { message: "Logout Successfully" };
+      if (token) {
+        await this.redis.set(`blacklist:${token}`, "true", 86400);
+      }
+    
+      const user = await this.usersService.findByEmail(userEmail);
+      if (user) {
+        await this.usersService.update(user.id, { refreshTokenHash: undefined });
+      }
+    
+      return { message: "Logout Successfully" };
     }
+
+    
     async validateSocialUser(profile:any){
         const {email,socialId, provider,fullName,avatar}= profile
         let user = await this.usersService.findByEmail(email)
