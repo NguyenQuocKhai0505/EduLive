@@ -4,15 +4,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
-import { RedisService } from '../../common/redis/redis.service';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './strategies/google.strategy';
 // import { FacebookStrategy } from './strategies/facebook.strategy'; // Tạm thời ẩn
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { AuthGuard } from '../guards/auth.guard';
+import { RedisModule } from '../../common/redis/redis.module';
 
 @Module({
   imports: [
     UsersModule,
+    RedisModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -26,8 +28,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
     }),
   ],
-  providers: [AuthService, RedisService,GoogleStrategy,/*FacebookStrategy,*/JwtStrategy], // Tạm thời ẩn FacebookStrategy
+  providers: [AuthService, AuthGuard, GoogleStrategy,/*FacebookStrategy,*/JwtStrategy], // Tạm thời ẩn FacebookStrategy
   controllers: [AuthController],
-  exports: [AuthService, JwtModule], // Export JwtModule để các module khác có thể dùng AuthGuard
+  exports: [AuthService, JwtModule, AuthGuard, RedisModule],
 })
 export class AuthModule {}

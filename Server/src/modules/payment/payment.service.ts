@@ -1,6 +1,8 @@
-import { BadRequestException } from "@nestjs/common";
+
 import Stripe from "stripe"
 import axios from "axios";
+import { Injectable, BadRequestException } from "@nestjs/common";
+@Injectable()
 export class PaymentService{
     private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
         apiVersion: "2025-12-15.clover",

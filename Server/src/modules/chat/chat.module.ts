@@ -11,6 +11,7 @@ import { ChatService } from "./chat.service";
 import { ChatController } from "./chat.controller";
 import { ChatGateway } from "./chat.gateway";
 import { CloudinaryService } from "../../common/services/cloudinary.service";
+import { RedisModule } from "../../common/redis/redis.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CloudinaryService } from "../../common/services/cloudinary.service";
       User,
     ]),
     JwtModule.register({}),
+    RedisModule,
   ],
   providers: [ChatService, ChatGateway, CloudinaryService],
   controllers: [ChatController],

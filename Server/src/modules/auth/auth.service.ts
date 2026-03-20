@@ -73,8 +73,9 @@ export class AuthService {
       }
     }
     async logout(token: string, userEmail: string) {
+      const ttl = this.getAccessTokenTtlSeconds()
       if (token) {
-        await this.redis.set(`blacklist:${token}`, "true", 86400);
+        await this.redis.set(`blacklist:${token}`, "true", ttl);
       }
     
       const user = await this.usersService.findByEmail(userEmail);
@@ -85,7 +86,7 @@ export class AuthService {
       return { message: "Logout Successfully" };
     }
 
-    
+
     async validateSocialUser(profile:any){
         const {email,socialId, provider,fullName,avatar}= profile
         let user = await this.usersService.findByEmail(email)
@@ -188,5 +189,20 @@ export class AuthService {
     
       return { accessToken, refreshToken: newRefresh };
     }
-  
+  private getAccessTokenTtlSeconds():number{
+    const raw = process.env.ACCESS_TOKEN_EXPIRES 
+    if(!raw) return 15 * 60
+    if (/^\d+$/.test(raw)) return Number(raw);
+    const m = raw.match(/^(\d+)([smhd])$/i);
+    if (!m) return 15 * 60;
+    
+    const value = Number(m[1])
+    const unit = m[2].toLowerCase()
+
+    if(unit === 's') return value
+    if(unit === 'm') return value * 60
+    if(unit === 'h') return value * 3600
+    if(unit === 'd') return value * 86400
+    return 15 * 60
+  }
 }

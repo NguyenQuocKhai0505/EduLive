@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
+import { RedisModule } from '../../common/redis/redis.module';
 
 @Module({
   imports: [
@@ -25,9 +26,10 @@ import { User } from './entities/user.entity';
         },
       }),
     }),
+    RedisModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService], 
+  exports: [UsersService],
 })
 export class UsersModule {}

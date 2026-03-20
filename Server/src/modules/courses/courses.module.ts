@@ -16,6 +16,7 @@ import { Section } from './entities/section.entity';
 import { Lesson } from './entities/lesson.entity';
 import { UsersModule } from '../users/users.module';
 import { CloudinaryService } from '../../common/services/cloudinary.service';
+import { RedisModule } from '../../common/redis/redis.module';
 
 @Module({
     // IMPORTS: Import cac module khac 
@@ -50,6 +51,7 @@ import { CloudinaryService } from '../../common/services/cloudinary.service';
                 },
             }),
         }),
+        RedisModule,
     ],
         controllers:[CoursesController, CategoriesController, SectionsController, LessonsController],
         providers:[CoursesService, CategoriesService, SectionsService, LessonsService, CloudinaryService],

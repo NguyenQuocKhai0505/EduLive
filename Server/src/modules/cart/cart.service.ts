@@ -84,14 +84,8 @@ export class CartService{
 
     //5.CHECKOUT
     async checkout(userId: number, idempotencyKey: string, courseIds?: number[]) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'cart.service.ts:checkout:enter',message:'Checkout start',data:{userId,idempotencyKey,courseIdsCount:courseIds?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion agent log
         // 1) Idempotency: nếu đã tạo order rồi, trả lại
         const existingOrder = await this.orderRepository.findOne({ where: { idempotencyKey } });
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'cart.service.ts:checkout:idempotency',message:'Idempotency check',data:{hasExisting:!!existingOrder,existingOrderId:existingOrder?.id || null},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1'})}).catch(()=>{});
-        // #endregion agent log
         if (existingOrder) return existingOrder;
       
         return await this.dataSource.transaction(async (manager) => {
@@ -111,10 +105,6 @@ export class CartService{
           }
 
           const cartItems = await cartQuery.getMany();
-      
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/5b48d651-031a-4992-b459-29ae3cf4b327',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'cart.service.ts:checkout:cartItems',message:'Cart items locked',data:{cartItemsCount:cartItems.length,courseIdsCount:courseIds?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2'})}).catch(()=>{});
-          // #endregion agent log
 
           if (cartItems.length === 0) {
             throw new BadRequestException("No items in cart");
