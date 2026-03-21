@@ -24,4 +24,8 @@ export class CreateYoutubeCourseDto {
   @IsOptional()
   @IsString()
   durationLabel?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
 }

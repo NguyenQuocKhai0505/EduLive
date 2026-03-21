@@ -74,3 +74,18 @@ export interface CourseResponse {
   createdAt: string;
   updateAt: string;
 }
+
+/** Free YouTube resources (GET /youtube-courses) */
+export interface YoutubeCourseResponse {
+  id: number;
+  title: string;
+  author: string;
+  tags: string | null;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  durationLabel: string | null;
+  /** Tab nhóm trên Student (có thể null → hiển thị "Khác") */
+  category: string | null;
+  createdAt: string;
+  updateAt: string;
+}

@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "searchPlaceholder": "Search for a course...",
+    "langEnglish": "English",
+    "langVietnamese": "Vietnamese",
+    "login": "Log in",
+    "signUp": "Sign Up",
+    "myProfile": "My profile",
+    "writePost": "Write Post",
+    "myPosts": "My posts",
+    "logOut": "Log out",
+    "user": "User"
+  },
+  "search": {
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "unknown": "Unknown",
+    "uncategorized": "Uncategorized"
+  },
+  "sidebar": {
+    "welcome": "Welcome, Student!",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "home": "HOME",
+    "courses": "COURSES",
+    "blogs": "BLOGS",
+    "chat": "CHAT",
+    "joinChat": "Join Chat",
+    "myChats": "My Chats"
+  },
+  "footer": {
+    "aboutTitle": "EduLive",
+    "aboutText": "The leading online programming learning platform. We offer high-quality courses to help you master technology and advance your career.",
+    "contact": "Contact",
+    "support247": "Supports 24/7 for learners.",
+    "follow": "Follow me on",
+    "copyright": "© 2024 EduLive. All rights reserved. Designed by Nguyen Quoc Khai."
+  },
+  "banner": {
+    "1": {
+      "title": "Learn ReactJS for Free!",
+      "description": "ReactJS from basics to advanced. After this course, you can build most real-world projects.",
+      "cta": "Enroll now"
+    },
+    "2": {
+      "title": "Student outcomes",
+      "description": "See projects completed by F8 students after finishing the courses.",
+      "cta": "View outcomes"
+    },
+    "3": {
+      "title": "F8 on YouTube",
+      "description": "F8 is mentioned everywhere there are IT job opportunities and people who love programming.",
+      "cta": "Visit channel"
+    }
+  },
+  "topicCategories": {
+    "loading": "Loading categories...",
+    "headingLearn": "Learn",
+    "headingEssential": "essential",
+    "subtext": "EduLive helps you build in-demand skills fast and advance your career in a changing job market.",
+    "slideAria": "Go to slide {{n}}"
+  },
+  "featured": {
+    "loading": "Loading courses...",
+    "title": "Skills to transform your career and life",
+    "subtitlePrefix": "From critical skills to technical topics,",
+    "subtitleSuffix": "supports your professional development.",
+    "brand": "Keducation",
+    "emptyCategory": "No featured courses in this category yet.",
+    "showAllCourses": "Show all {{name}} courses"
+  },
+  "youtube": {
+    "tabAll": "All",
+    "uncategorized": "Other",
+    "badgeFree": "Free",
+    "tabListAria": "YouTube course groups",
+    "freeResources": "Free Resources",
+    "title": "Learning Free On",
+    "titleBold": "Youtube",
+    "description": "A compilation of high-quality tutorial videos from the community, helping you access knowledge quickly and free of charge.",
+    "loading": "Loading YouTube courses…",
+    "loadError": "Could not load YouTube courses.",
+    "empty": "No YouTube courses yet. Admins can add them in Admin or via API POST /youtube-courses.",
+    "emptyFilter": "No videos in this group. Pick another tab or \"{{all}}\".",
+    "showAllGroups": "Show all videos (all groups)",
+    "slideAria": "Go to slide {{n}}"
+  },
+  "testimonials": {
+    "title": "What Students Say About",
+    "brand": "EduLive",
+    "subtitle": "Many students have joined and achieved their career goals",
+    "students": "Students",
+    "courses": "Courses",
+    "lessons": "Lessons",
+    "rating": "Rating"
+  },
+  "cart": {
+    "addToCart": "Add to cart",
+    "goToCart": "Go to cart",
+    "addFailed": "Failed to add to cart"
+  },
+  "courses": {
+    "resultsFor": "Results for",
+    "allCourses": "All Courses",
+    "oneResult": "{{count}} result found",
+    "manyResults": "{{count}} results found",
+    "noResultsTitle": "No results found",
+    "noResultsBody": "We could not find any courses matching your filters."
+  },
+  "courseDetail": {
+    "whatYoullLearn": "What you will learn",
+    "description": "Description"
+  },
+  "courseSidebar": {
+    "previewThisCourse": "Preview this course",
+    "daysLeftAtPrice": "{{days}} days left at this price!",
+    "buyNow": "Buy now",
+    "moneyBackGuarantee": "30-Day Money-Back Guarantee",
+    "includesTitle": "This course includes:",
+    "onDemandVideo": "{{duration}} on-demand video",
+    "articles": "{{count}} articles",
+    "certificate": "Certificate of completion",
+    "lifetimeAccess": "Full lifetime access",
+    "discountOff": "{{value}} off"
+  },
+  "courseCard": {
+    "lectures": "{{count}} lectures"
+  },
+  "auth": {
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up"
+  }
+}

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import { getAllBlogs, BlogResponse, createBlog, CreateBlogRequest, deleteBlog, createComment, toggleLike, getComments, type CommentResponse } from "@/services/blog.service";
+import { getAllBlogs, BlogResponse, createBlog, CreateBlogRequest, updateBlog, deleteBlog, createComment, toggleLike, getComments, type CommentResponse } from "@/services/blog.service";
 import { getMyProfile, UserProfile } from "@/services/user.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,10 @@ export default function BlogPage() {
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<UserProfile | null>(null);
     
-    // Create Post Dialog State
+    // Create / Edit Post Dialog State
     const [showCreateDialog, setShowCreateDialog] = useState(false);
+    /** When set, dialog is in edit mode for this blog id */
+    const [editingBlogId, setEditingBlogId] = useState<number | null>(null);
     const [postTitle, setPostTitle] = useState("");
     const [postContent, setPostContent] = useState("");
     const [postTags, setPostTags] = useState<string[]>([]);
@@ -112,57 +114,98 @@ export default function BlogPage() {
         URL.revokeObjectURL(imagePreviews[index]);
     };
 
-    // Handle create post
-    const handleCreatePost = async () => {
+    const resetPostForm = () => {
+        imagePreviews.forEach((url) => {
+            if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+        });
+        setEditingBlogId(null);
+        setPostTitle("");
+        setPostContent("");
+        setPostTags([]);
+        setTagInput("");
+        setPostImages([]);
+        setImagePreviews([]);
+    };
+
+    /** Create new post or update when `editingBlogId` is set */
+    const handleSavePost = async () => {
         if (!postTitle.trim() || !postContent.trim()) {
             toast.error("Please fill in title and content");
             return;
         }
 
-        const loadingToast = toast.loading("Publishing post...");
+        const isEdit = editingBlogId !== null;
+        const loadingToast = toast.loading(isEdit ? "Saving changes..." : "Publishing post...");
 
         try {
             setIsSubmitting(true);
-            const newPost: CreateBlogRequest = {
-                title: postTitle.trim(),
-                content: postContent.trim(),
-                tags: postTags.length > 0 ? postTags : undefined,
-                images: postImages.length > 0 ? postImages : undefined
-            };
-
-            const createdPost = await createBlog(newPost);
-            const blogWithAuthor: BlogResponse = {
-                ...createdPost,
-                author: createdPost.author ?? (user ? {
-                    id: user.id,
-                    fullName: user.name,
-                    avatar: user.avatar || "",
-                    bio: user.bio || "",
-                    role: user.role,
-                } : undefined),
-                tag: createdPost.tag ?? [],
-                images: createdPost.images ?? [],
-                likesCount: createdPost.likesCount ?? 0,
-                commentsCount: createdPost.commentsCount ?? 0,
-            };
-            setBlogs(prev => [blogWithAuthor, ...prev]);
-            
-            // Reset form
-            setPostTitle("");
-            setPostContent("");
-            setPostTags([]);
-            setTagInput("");
-            setPostImages([]);
-            setImagePreviews([]);
-            setShowCreateDialog(false);
-            
-            toast.success("Post published successfully!", { id: loadingToast });
-        } catch (error: any) {
-            console.error("Error creating post:", error);
-            if (error.response?.status === 401) {
-                toast.error("Please login to write a post", { id: loadingToast });
+            if (isEdit) {
+                const updated = await updateBlog(editingBlogId!, {
+                    title: postTitle.trim(),
+                    content: postContent.trim(),
+                    tags: postTags,
+                });
+                setBlogs((prev) =>
+                    prev.map((b) =>
+                        b.id === editingBlogId
+                            ? {
+                                  ...b,
+                                  title: updated.title,
+                                  content: updated.content,
+                                  tag: updated.tag ?? postTags,
+                              }
+                            : b
+                    )
+                );
+                toast.success("Post updated!", { id: loadingToast });
             } else {
-                toast.error(error.response?.data?.message || "An error occurred while creating the post", { id: loadingToast });
+                const newPost: CreateBlogRequest = {
+                    title: postTitle.trim(),
+                    content: postContent.trim(),
+                    tags: postTags.length > 0 ? postTags : undefined,
+                    images: postImages.length > 0 ? postImages : undefined,
+                };
+
+                const createdPost = await createBlog(newPost);
+                const blogWithAuthor: BlogResponse = {
+                    ...createdPost,
+                    author:
+                        createdPost.author ??
+                        (user
+                            ? {
+                                  id: user.id,
+                                  fullName: user.name,
+                                  avatar: user.avatar || "",
+                                  bio: user.bio || "",
+                                  role: user.role,
+                              }
+                            : undefined),
+                    tag: createdPost.tag ?? [],
+                    images: createdPost.images ?? [],
+                    likesCount: createdPost.likesCount ?? 0,
+                    commentsCount: createdPost.commentsCount ?? 0,
+                };
+                setBlogs((prev) => [blogWithAuthor, ...prev]);
+                toast.success("Post published successfully!", { id: loadingToast });
+            }
+
+            resetPostForm();
+            setShowCreateDialog(false);
+        } catch (error: any) {
+            console.error("Error saving post:", error);
+            if (error.response?.status === 401) {
+                toast.error(
+                    isEdit ? "Please login to edit this post" : "Please login to write a post",
+                    { id: loadingToast }
+                );
+            } else if (error.response?.status === 403) {
+                toast.error("You are not allowed to edit this post", { id: loadingToast });
+            } else {
+                toast.error(
+                    error.response?.data?.message ||
+                        (isEdit ? "Could not update the post" : "An error occurred while creating the post"),
+                    { id: loadingToast }
+                );
             }
         } finally {
             setIsSubmitting(false);
@@ -338,7 +381,10 @@ export default function BlogPage() {
                     {user && (
                         <div className="bg-white dark:bg-slate-900 rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-800 shadow-sm">
                             <button
-                                onClick={() => setShowCreateDialog(true)}
+                                onClick={() => {
+                                    resetPostForm();
+                                    setShowCreateDialog(true);
+                                }}
                                 className="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                             >
                                 <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-purple-200 dark:border-purple-800">
@@ -429,7 +475,21 @@ export default function BlogPage() {
                                             {user && (user.role === 'admin' || blog.authorId === user.id) && (
                                                 <>
                                                     <button
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            imagePreviews.forEach((url) => {
+                                                                if (url.startsWith("blob:"))
+                                                                    URL.revokeObjectURL(url);
+                                                            });
+                                                            setEditingBlogId(blog.id);
+                                                            setPostTitle(blog.title);
+                                                            setPostContent(blog.content);
+                                                            setPostTags(blog.tag ? [...blog.tag] : []);
+                                                            setTagInput("");
+                                                            setPostImages([]);
+                                                            setImagePreviews([]);
+                                                            setShowCreateDialog(true);
+                                                        }}
                                                         className="text-slate-400 hover:text-blue-600 transition-colors"
                                                         title="Edit post"
                                                     >
@@ -586,10 +646,16 @@ export default function BlogPage() {
             </div>
 
             {/* CREATE POST DIALOG */}
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <Dialog
+                open={showCreateDialog}
+                onOpenChange={(open) => {
+                    setShowCreateDialog(open);
+                    if (!open) resetPostForm();
+                }}
+            >
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Create New Post</DialogTitle>
+                        <DialogTitle>{editingBlogId !== null ? "Edit Post" : "Create New Post"}</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4 mt-4">
@@ -623,43 +689,48 @@ export default function BlogPage() {
                             </p>
                         </div>
 
-                        {/* Image Upload */}
-                        <div>
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
-                                Images (Optional, max 10)
-                            </label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                onChange={handleImageChange}
-                                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                            />
-                            
-                            {/* Preview Images */}
-                            {imagePreviews.length > 0 && (
-                                <div className="grid grid-cols-3 gap-4 mt-4">
-                                    {imagePreviews.map((preview, index) => (
-                                        <div key={index} className="relative group">
-                                            <Image
-                                                src={preview}
-                                                alt={`Preview ${index + 1}`}
-                                                width={200}
-                                                height={200}
-                                                className="w-full h-32 object-cover rounded-lg"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveImage(index)}
-                                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        {/* Image Upload — only when creating; API PATCH does not support new images */}
+                        {editingBlogId === null ? (
+                            <div>
+                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                                    Images (Optional, max 10)
+                                </label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageChange}
+                                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                                />
+
+                                {imagePreviews.length > 0 && (
+                                    <div className="grid grid-cols-3 gap-4 mt-4">
+                                        {imagePreviews.map((preview, index) => (
+                                            <div key={index} className="relative group">
+                                                <Image
+                                                    src={preview}
+                                                    alt={`Preview ${index + 1}`}
+                                                    width={200}
+                                                    height={200}
+                                                    className="w-full h-32 object-cover rounded-lg"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveImage(index)}
+                                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Existing images are kept. To change images, create a new post or extend the API.
+                            </p>
+                        )}
 
                         {/* Tags Input */}
                         <div>
@@ -714,24 +785,22 @@ export default function BlogPage() {
                         <div className="flex justify-end gap-3 pt-4 border-t">
                             <Button
                                 variant="outline"
-                                onClick={() => {
-                                    setShowCreateDialog(false);
-                                    setPostTitle("");
-                                    setPostContent("");
-                                    setPostTags([]);
-                                    setTagInput("");
-                                    setPostImages([]);
-                                    setImagePreviews([]);
-                                }}
+                                onClick={() => setShowCreateDialog(false)}
                             >
                                 Cancel
                             </Button>
                             <Button
-                                onClick={handleCreatePost}
+                                onClick={handleSavePost}
                                 disabled={!postTitle.trim() || !postContent.trim() || isSubmitting}
                                 className="bg-purple-600 hover:bg-purple-700 text-white"
                             >
-                                {isSubmitting ? "Publishing..." : "Publish Post"}
+                                {isSubmitting
+                                    ? editingBlogId !== null
+                                        ? "Saving..."
+                                        : "Publishing..."
+                                    : editingBlogId !== null
+                                      ? "Save changes"
+                                      : "Publish Post"}
                             </Button>
                         </div>
                     </div>

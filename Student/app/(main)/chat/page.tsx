@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
@@ -31,11 +31,16 @@ export default function ChatPage() {
     /** Đóng/mở sidebar danh sách phòng: true = hiện, false = ẩn; nút PanelLeftClose thu gọn, PanelLeft mở lại */
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const socketRef = useRef<Socket | null>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesScrollRef = useRef<HTMLDivElement>(null);
+    const selectedRoomIdRef = useRef<number | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const hasOpenedRoomFromUrlRef = useRef(false);
 
     const selectedRoom = rooms.find((r) => r.id === selectedRoomId) ?? null;
+
+    useEffect(() => {
+        selectedRoomIdRef.current = selectedRoomId;
+    }, [selectedRoomId]);
 
     useEffect(() => {
         const fetchRooms = async () => {
@@ -73,7 +78,14 @@ export default function ChatPage() {
         const socket = io(socketUrl, { withCredentials: true });
         socketRef.current = socket;
         socket.on("message", (message: ChatMessage) => {
-            setMessages((prev) => [...prev, message]);
+            // Chỉ hiển thị tin thuộc phòng đang mở (phòng thủ nếu server/socket lệch)
+            if (message.roomId !== selectedRoomIdRef.current) return;
+            setMessages((prev) => {
+                if (prev.some((m) => m.id === message.id)) return prev;
+                return [...prev, message].sort(
+                    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                );
+            });
         });
         socket.on("chatError", (payload: { action: string; message: string }) => {
             toast.error(payload.message);
@@ -82,16 +94,24 @@ export default function ChatPage() {
             socket.disconnect();
         };
     }, []);
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, [messages]);
+
+    useLayoutEffect(() => {
+        const el = messagesScrollRef.current;
+        if (!el || !selectedRoomId) return;
+        el.scrollTop = el.scrollHeight;
+    }, [messages, selectedRoomId]);
 
     //SELECT ROOM 
     const handleSelectRoom = async (roomId:number) =>{
         setSelectedRoomId(roomId)
         try{
-            const res = await getRoomMessages(roomId)
-            setMessages(Array.isArray(res.data) ? res.data : [])
+            const res = await getRoomMessages(roomId);
+            const list = Array.isArray(res.data) ? res.data : [];
+            setMessages(
+                [...list].sort(
+                    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                )
+            );
         } catch {
             toast.error("Failed to load messages")
             return
@@ -159,7 +179,9 @@ export default function ChatPage() {
                         <ArrowLeft className="inline-block h-4 w-4" /> Back to Home
                     </Link>
                     <div className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">My Chats</div>
-                    <div className="text-xs text-gray-500 dark:text-slate-400">Select a room to chat.</div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400">
+                        Mỗi khóa học có một phòng chung — mọi học viên đã mua/đăng ký khóa đó đều thấy cùng lịch sử chat.
+                    </div>
                   </div>
                   <Button
                     type="button"
@@ -243,7 +265,10 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            <div className="flex-1 space-y-6 overflow-y-auto bg-gray-100/50 dark:bg-slate-950/60 px-6 py-6">
+            <div
+                ref={messagesScrollRef}
+                className="flex-1 space-y-6 overflow-y-auto bg-gray-100/50 dark:bg-slate-950/60 px-6 py-6"
+            >
                 {!selectedRoomId ? (
                     <div className="flex h-full items-center justify-center text-sm text-gray-500 dark:text-slate-400">
                         Chọn một phòng để bắt đầu chat.
@@ -291,7 +316,6 @@ export default function ChatPage() {
                                 </div>
                             );
                         })}
-                        <div ref={messagesEndRef} />
                     </>
                 )}
             </div>

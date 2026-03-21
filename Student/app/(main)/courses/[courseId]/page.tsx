@@ -10,9 +10,11 @@ import SimilarCourses from "@/components/course-detail/SimiliarCourse";
 import RecentlyViewed from "@/components/course-detail/RecentlyView";
 import CourseCurriculum from "@/components/course-detail/CourseCurriculum";
 import { formatPrice } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 
 export default function CourseDetailPage() {
+  const { t } = useI18n();
   const params = useParams()
   const courseId = parseInt(params.courseId as string)
 
@@ -145,7 +147,7 @@ export default function CourseDetailPage() {
             
             {/* What You Will Learn Box */}
             <div className="border border-slate-200 dark:border-slate-800 p-4 sm:p-6 rounded-lg bg-white dark:bg-slate-900">
-               <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-slate-900 dark:text-white">What you'll learn</h2>
+               <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-slate-900 dark:text-white">{t("courseDetail.whatYoullLearn")}</h2>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {courseForComponent.whatYouWillLearn?.map((text, index) => (
                       <div key={index} className="flex gap-2 sm:gap-3 items-start">
@@ -159,7 +161,7 @@ export default function CourseDetailPage() {
 
             {/* Course Content (Description) */}
              <div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-slate-900 dark:text-white">Description</h2>
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-slate-900 dark:text-white">{t("courseDetail.description")}</h2>
                 <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                    {courseForComponent.description}
                    <br/><br/>

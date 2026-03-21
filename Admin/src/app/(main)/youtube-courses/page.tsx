@@ -34,6 +34,7 @@ export default function YoutubeCoursesPage() {
   const [addTags, setAddTags] = useState("");
   const [addVideoUrl, setAddVideoUrl] = useState("");
   const [addDurationLabel, setAddDurationLabel] = useState("");
+  const [addCategory, setAddCategory] = useState("");
   const [addThumbnailUrl, setAddThumbnailUrl] = useState("");
   const [addThumbnailFile, setAddThumbnailFile] = useState<File | null>(null);
   const [addSubmitting, setAddSubmitting] = useState(false);
@@ -46,6 +47,7 @@ export default function YoutubeCoursesPage() {
   const [editTags, setEditTags] = useState("");
   const [editVideoUrl, setEditVideoUrl] = useState("");
   const [editDurationLabel, setEditDurationLabel] = useState("");
+  const [editCategory, setEditCategory] = useState("");
   const [editThumbnailUrl, setEditThumbnailUrl] = useState("");
   const [editThumbnailFile, setEditThumbnailFile] = useState<File | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
@@ -79,6 +81,7 @@ export default function YoutubeCoursesPage() {
     setEditTags(course.tags ?? "");
     setEditVideoUrl(course.videoUrl);
     setEditDurationLabel(course.durationLabel ?? "");
+    setEditCategory(course.category ?? "");
     setEditThumbnailUrl(course.thumbnailUrl ?? "");
     setEditThumbnailFile(null);
   };
@@ -102,6 +105,7 @@ export default function YoutubeCoursesPage() {
           tags: addTags.trim() || undefined,
           videoUrl: addVideoUrl.trim(),
           durationLabel: addDurationLabel.trim() || undefined,
+          category: addCategory.trim() || undefined,
         });
 
         const uploadResult = await uploadYoutubeCourseThumbnail(
@@ -121,6 +125,7 @@ export default function YoutubeCoursesPage() {
           videoUrl: addVideoUrl.trim(),
           durationLabel: addDurationLabel.trim() || undefined,
           thumbnailUrl: thumbnailUrl || undefined,
+          category: addCategory.trim() || undefined,
         });
       }
 
@@ -165,6 +170,7 @@ export default function YoutubeCoursesPage() {
         videoUrl: editVideoUrl.trim(),
         durationLabel: editDurationLabel.trim() || undefined,
         thumbnailUrl: thumbnailUrl || undefined,
+        category: editCategory.trim() || undefined,
       });
 
       toast.success("Đã cập nhật YouTube course thành công");
@@ -203,6 +209,7 @@ export default function YoutubeCoursesPage() {
     setAddTags("");
     setAddVideoUrl("");
     setAddDurationLabel("");
+    setAddCategory("");
     setAddThumbnailUrl("");
     setAddThumbnailFile(null);
   };
@@ -213,6 +220,7 @@ export default function YoutubeCoursesPage() {
     setEditTags("");
     setEditVideoUrl("");
     setEditDurationLabel("");
+    setEditCategory("");
     setEditThumbnailUrl("");
     setEditThumbnailFile(null);
   };
@@ -362,6 +370,9 @@ export default function YoutubeCoursesPage() {
                   Tags
                 </th>
                 <th className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
+                  Category
+                </th>
+                <th className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
                   Video URL
                 </th>
                 <th className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">
@@ -399,6 +410,9 @@ export default function YoutubeCoursesPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
                     {course.tags || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                    {course.category?.trim() || "—"}
                   </td>
                   <td className="px-4 py-3">
                     <a
@@ -478,6 +492,20 @@ export default function YoutubeCoursesPage() {
               />
               <p className="mt-1 text-xs text-slate-500">
                 Nhập tags cách nhau bằng dấu phẩy
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Category (tab trên Student)
+              </label>
+              <Input
+                placeholder='VD: Programming Language, Web Development'
+                value={addCategory}
+                onChange={(e) => setAddCategory(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Cùng tên category sẽ gom vào một tab (ví dụ nhiều video cùng &quot;Programming Language&quot;).
               </p>
             </div>
 
@@ -632,6 +660,17 @@ export default function YoutubeCoursesPage() {
               <Input
                 value={editTags}
                 onChange={(e) => setEditTags(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                Category (tab trên Student)
+              </label>
+              <Input
+                placeholder="VD: Programming Language"
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
               />
             </div>
 

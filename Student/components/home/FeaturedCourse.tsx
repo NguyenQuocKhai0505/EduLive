@@ -8,8 +8,10 @@ import { ArrowRight } from "lucide-react";
 import { getAllCategories, getCoursesByCategory, CategoryResponse, CourseResponse } from "@/services/course.service";
 import CourseCard from "@/components/shared/CourseCard";
 import { formatPrice } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 export function FeaturedCourses() {
+  const { t } = useI18n();
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [coursesByCategory, setCoursesByCategory] = useState<Record<number, CourseResponse[]>>({});
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export function FeaturedCourses() {
   if (loading) {
     return (
       <div className="py-10 space-y-6 bg-transparent text-slate-900 dark:text-white transition-colors duration-300">
-        <div className="text-center text-slate-600 dark:text-slate-400">Loading courses...</div>
+        <div className="text-center text-slate-600 dark:text-slate-400">{t("featured.loading")}</div>
       </div>
     );
   }
@@ -59,10 +61,12 @@ export function FeaturedCourses() {
     <div className="py-6 sm:py-10 space-y-4 sm:space-y-6 bg-transparent text-slate-900 dark:text-white transition-colors duration-300">
       <div className="space-y-2">
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-          Skills to transform your career and life
+          {t("featured.title")}
         </h2>
         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
-          From critical skills to technical topics, <b className="text-slate-900 dark:text-white">Keducation</b> supports your professional development.
+          {t("featured.subtitlePrefix")}{" "}
+          <b className="text-slate-900 dark:text-white">{t("featured.brand")}</b>{" "}
+          {t("featured.subtitleSuffix")}
         </p>
       </div>
 
@@ -96,7 +100,7 @@ export function FeaturedCourses() {
               >
                 {featuredCourses.length === 0 ? (
                   <div className="text-center py-10 text-slate-600 dark:text-slate-400 border border-dashed rounded-lg border-slate-200 dark:border-slate-800">
-                    Chưa có khóa học nổi bật cho mục này.
+                    {t("featured.emptyCategory")}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -129,7 +133,7 @@ export function FeaturedCourses() {
                     asChild
                   >
                     <Link href={`/courses?categoryId=${cat.id}`}>
-                      Show all {cat.name} courses
+                      {t("featured.showAllCourses", { name: cat.name })}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </Button>

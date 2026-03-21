@@ -72,7 +72,12 @@ export class ChatGateway implements OnGatewayConnection {
         this.metrics.joinAttempts += 1;
         try{
             await this.chatService.joinRoom(user.sub, payload.roomId, user.role as any)
-            client.join(payload.roomId.toString())
+            // Rời mọi phòng chat cũ (tránh client vẫn nhận tin từ phòng trước → trộn tin / sai thứ tự)
+            const roomIds = Array.from(client.rooms).filter((id) => id !== client.id);
+            for (const id of roomIds) {
+                await client.leave(id);
+            }
+            await client.join(payload.roomId.toString());
             client.emit("joinedRoom",{roomId:payload.roomId})
         }catch(error:any){
             const message = error?.message || "Failed to join room";

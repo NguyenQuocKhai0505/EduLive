@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, Map, FileText, MessageCircle, ChevronDown, PanelLeft, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/context/I18nContext";
 
 interface SidebarProps {
   className?: string;
@@ -12,11 +13,12 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   const navItems = [
-    { href: "/", label: "HOME", icon: Home },
-    { href: "/courses", label: "COURSES", icon: Map },
-    { href: "/blog", label: "BLOGS", icon: FileText },
+    { href: "/", labelKey: "sidebar.home" as const, icon: Home },
+    { href: "/courses", labelKey: "sidebar.courses" as const, icon: Map },
+    { href: "/blog", labelKey: "sidebar.blogs" as const, icon: FileText },
   ];
 
   // CHAT ROUTE
@@ -46,7 +48,7 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="flex items-center justify-between mb-3 min-h-10">
           {sidebarOpen && (
             <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-              Wellcome,Student !
+              {t("sidebar.welcome")}
             </span>
           )}
           <button
@@ -57,7 +59,7 @@ export function Sidebar({ className }: SidebarProps) {
               "text-gray-500 hover:bg-gray-200 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white",
               !sidebarOpen && "mx-auto"
             )}
-            aria-label={sidebarOpen ? "Thu gọn sidebar" : "Mở rộng sidebar"}
+            aria-label={sidebarOpen ? t("sidebar.collapseSidebar") : t("sidebar.expandSidebar")}
           >
             {sidebarOpen ? (
               <PanelLeftClose className="h-5 w-5" />
@@ -83,7 +85,7 @@ export function Sidebar({ className }: SidebarProps) {
                 )}
               >
                 <Icon className="h-5 w-5" />
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -100,7 +102,7 @@ export function Sidebar({ className }: SidebarProps) {
             onClick={() => setIsChatOpen((prev) => !prev)}
           >
             <MessageCircle className="h-5 w-5" />
-            <span className="font-medium">CHAT</span>
+            <span className="font-medium">{t("sidebar.chat")}</span>
             <ChevronDown
               className={cn(
                 "ml-auto h-4 w-4 transition-transform",
@@ -120,7 +122,7 @@ export function Sidebar({ className }: SidebarProps) {
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 )}
               >
-                Join Chat
+                {t("sidebar.joinChat")}
               </Link>
               <Link
                 href="/chat"
@@ -131,7 +133,7 @@ export function Sidebar({ className }: SidebarProps) {
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 )}
               >
-                My Chats
+                {t("sidebar.myChats")}
               </Link>
             </div>
           )}

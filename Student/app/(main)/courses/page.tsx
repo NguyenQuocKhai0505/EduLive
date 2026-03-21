@@ -8,8 +8,10 @@ import Pagination from "../search/components/Pagination";
 import { Search } from "lucide-react";
 import { searchCourses, CourseResponse } from "@/services/course.service";
 import { formatPrice } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 
 export default function CoursesPage() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const [course, setCourse] = useState<CourseResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,17 +82,19 @@ export default function CoursesPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
             {title ? (
               <>
-                Results for{" "}
+                {t("courses.resultsFor")}{" "}
                 <span className="text-purple-600 dark:text-purple-400">
-                  "{title}"
+                  &ldquo;{title}&rdquo;
                 </span>
               </>
             ) : (
-              "All Courses"
+              t("courses.allCourses")
             )}
           </h1>
           <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2">
-            {course.length} result{course.length !== 1 && "s"} found
+            {course.length === 1
+              ? t("courses.oneResult", { count: course.length })
+              : t("courses.manyResults", { count: course.length })}
           </p>
         </div>
 
@@ -117,7 +121,8 @@ export default function CoursesPage() {
                         : undefined,
                     rating: course.rating,
                     lectures: course.lectures,
-                    instructor: course.instructor?.fullName || course.instructor?.name || "Unknown",
+                    instructor:
+                      course.instructor?.fullName || course.instructor?.name || t("search.unknown"),
                     students: course.students,
                   }}
                 />
@@ -134,10 +139,10 @@ export default function CoursesPage() {
               <Search className="h-10 w-10 text-slate-400 dark:text-slate-500" />
             </div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              No results found
+              {t("courses.noResultsTitle")}
             </h2>
             <p className="text-slate-500 dark:text-slate-400 max-w-md mt-2">
-              We couldn't find any courses matching your filters.
+              {t("courses.noResultsBody")}
             </p>
           </div>
         )}

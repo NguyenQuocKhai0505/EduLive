@@ -15,7 +15,8 @@ export class YoutubeCoursesService {
   ) {}
 
   create(dto: CreateYoutubeCourseDto) {
-    const entity = this.repo.create(dto);
+    const category = dto.category?.trim() || null;
+    const entity = this.repo.create({ ...dto, category });
     return this.repo.save(entity);
   }
 
@@ -31,7 +32,11 @@ export class YoutubeCoursesService {
   async update(id: number, dto: UpdateYoutubeCourseDto) {
     const existing = await this.repo.findOneBy({ id });
     if (!existing) throw new NotFoundException("YouTube course not found");
-    Object.assign(existing, dto);
+    const { category, ...rest } = dto;
+    Object.assign(existing, rest);
+    if (category !== undefined) {
+      existing.category = category?.trim() || null;
+    }
     return this.repo.save(existing);
   }
 

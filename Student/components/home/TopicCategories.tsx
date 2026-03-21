@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { getAllCategories, CategoryResponse } from "@/services/course.service"
+import { useI18n } from "@/context/I18nContext";
 
 export function TopicCategories(){
+    const { t } = useI18n();
     const [topics,setTopics] = useState<CategoryResponse[]>([])
     const [loading,setLoading] = useState(true)
     const [api, setApi] = useState<CarouselApi>();
@@ -52,7 +54,7 @@ export function TopicCategories(){
         return (
           <div className="py-12 bg-slate-50 dark:bg-slate-950">
             <div className="max-w-7xl mx-auto px-6">
-              <div className="text-center text-slate-600 dark:text-slate-400">Loading categories...</div>
+              <div className="text-center text-slate-600 dark:text-slate-400">{t("topicCategories.loading")}</div>
             </div>
           </div>
         );
@@ -63,10 +65,13 @@ export function TopicCategories(){
             <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start lg:items-center">
               <div className="w-full lg:w-1/4 space-y-3 sm:space-y-4">
                 <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white leading-tight">
-                  Learn <span className="italic font-serif text-blue-600 dark:text-blue-400">essential</span>
+                  {t("topicCategories.headingLearn")}{" "}
+                  <span className="italic font-serif text-blue-600 dark:text-blue-400">
+                    {t("topicCategories.headingEssential")}
+                  </span>
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 text-sm">
-                  EduLive helps you build in-demand skills fast and advance your career in a changing job market.
+                  {t("topicCategories.subtext")}
                 </p>
               </div>
     
@@ -120,7 +125,7 @@ export function TopicCategories(){
                               ? "w-8 bg-blue-600 dark:bg-blue-500"
                               : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600"
                           )}
-                          aria-label={`Go to slide ${index + 1}`}
+                          aria-label={t("topicCategories.slideAria", { n: index + 1 })}
                         />
                       ))}
                     </div>

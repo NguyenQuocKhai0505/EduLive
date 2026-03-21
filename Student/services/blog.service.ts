@@ -115,17 +115,17 @@ export const createBlog = async (
         throw error;
     }
 };
-//UPDATE BLOG
+//UPDATE BLOG (PATCH body must match UpdateBlogDto: title, content, tags)
 export const updateBlog = async (
     blogId: number,
-    data: Partial<CreateBlogRequest>
+    data: Partial<Pick<CreateBlogRequest, 'title' | 'content' | 'tags'>>
 ): Promise<BlogResponse> => {
     try {
-        const requestData: any = {};
-        if (data.title) requestData.title = data.title;
-        if (data.content) requestData.content = data.content;
-        if (data.tags) requestData.tag = data.tags;
-        
+        const requestData: Record<string, unknown> = {};
+        if (data.title !== undefined) requestData.title = data.title;
+        if (data.content !== undefined) requestData.content = data.content;
+        if (data.tags !== undefined) requestData.tags = data.tags;
+
         const response = await api.patch(`/blogs/${blogId}`, requestData);
         return response.data;
     } catch (error: any) {

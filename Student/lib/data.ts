@@ -1,5 +1,6 @@
 // lib/data.ts
-import { ALL_COURSES, Course } from "./mock-data";
+import { ALL_COURSES } from "./mock-data";
+import type { Course } from "./types/course.types";
 
 // 1. Định nghĩa User
 export type UserRole = "student" | "teacher";

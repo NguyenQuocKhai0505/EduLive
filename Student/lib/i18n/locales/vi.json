@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "searchPlaceholder": "Tìm kiếm khóa học...",
+    "langEnglish": "Tiếng Anh",
+    "langVietnamese": "Tiếng Việt",
+    "login": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "myProfile": "Hồ sơ của tôi",
+    "writePost": "Viết bài",
+    "myPosts": "Bài viết của tôi",
+    "logOut": "Đăng xuất",
+    "user": "Người dùng"
+  },
+  "search": {
+    "loading": "Đang tải...",
+    "noResults": "Không có kết quả",
+    "unknown": "Chưa rõ",
+    "uncategorized": "Chưa phân loại"
+  },
+  "sidebar": {
+    "welcome": "Chào mừng, Học viên!",
+    "collapseSidebar": "Thu gọn thanh bên",
+    "expandSidebar": "Mở rộng thanh bên",
+    "home": "TRANG CHỦ",
+    "courses": "KHÓA HỌC",
+    "blogs": "BLOG",
+    "chat": "CHAT",
+    "joinChat": "Tham gia chat",
+    "myChats": "Chat của tôi"
+  },
+  "footer": {
+    "aboutTitle": "EduLive",
+    "aboutText": "Nền tảng học lập trình trực tuyến hàng đầu. Chúng tôi cung cấp khóa học chất lượng để bạn là chủ công nghệ và phát triển sự nghiệp.",
+    "contact": "Liên hệ",
+    "support247": "Hỗ trợ 24/7 cho học viên.",
+    "follow": "Theo dõi tại",
+    "copyright": "© 2024 EduLive. Bảo lưu mọi quyền. Thiết kế bởi Nguyễn Quốc Khải."
+  },
+  "banner": {
+    "1": {
+      "title": "Học ReactJS Miễn Phí!",
+      "description": "Khóa học ReactJS từ cơ bản tới nâng cao. Kết quả của khóa học này là bạn có thể làm hầu hết các dự án.",
+      "cta": "Đăng ký ngay"
+    },
+    "2": {
+      "title": "Thành Quả của Học Viên",
+      "description": "Xem các sản phẩm được hoàn thành bởi học viên F8 sau khi kết thúc khóa học.",
+      "cta": "Xem thành quả"
+    },
+    "3": {
+      "title": "F8 trên Youtube",
+      "description": "F8 được nhắc tới ở mọi nơi, ở đâu có cơ hội việc làm cho nghề IT và có những con người yêu thích lập trình.",
+      "cta": "Truy cập kênh"
+    }
+  },
+  "topicCategories": {
+    "loading": "Đang tải danh mục...",
+    "headingLearn": "Học",
+    "headingEssential": "nền tảng",
+    "subtext": "EduLive giúp bạn rút ngắn thời gian làm chủ kỹ năng thị trường cần và phát triển sự nghiệp trong bối cảnh việc làm thay đổi.",
+    "slideAria": "Chuyển tới slide {{n}}"
+  },
+  "featured": {
+    "loading": "Đang tải khóa học...",
+    "title": "Kỹ năng thay đổi sự nghiệp và cuộc sống",
+    "subtitlePrefix": "Từ kỹ năng cốt lõi đến chuyên sâu kỹ thuật,",
+    "subtitleSuffix": "đồng hành phát triển nghề nghiệp của bạn.",
+    "brand": "Keducation",
+    "emptyCategory": "Chưa có khóa học nổi bật cho mục này.",
+    "showAllCourses": "Xem tất cả khóa {{name}}"
+  },
+  "youtube": {
+    "tabAll": "Tất cả",
+    "uncategorized": "Khác",
+    "badgeFree": "Miễn phí",
+    "tabListAria": "Nhóm khóa YouTube",
+    "freeResources": "Tài nguyên miễn phí",
+    "title": "Học miễn phí trên",
+    "titleBold": "Youtube",
+    "description": "Tuyển tập video hướng dẫn chất lượng từ cộng đồng, giúp bạn tiếp cận kiến thức nhanh và hoàn toàn miễn phí.",
+    "loading": "Đang tải khóa học YouTube…",
+    "loadError": "Không tải được danh sách khóa YouTube.",
+    "empty": "Chưa có khóa YouTube nào. Admin có thể thêm trong Admin hoặc API POST /youtube-courses.",
+    "emptyFilter": "Không có video trong nhóm này. Chọn tab khác hoặc \"{{all}}\".",
+    "showAllGroups": "Xem tất cả video (mọi nhóm)",
+    "slideAria": "Chuyển tới slide {{n}}"
+  },
+  "testimonials": {
+    "title": "Học viên nói gì về",
+    "brand": "EduLive",
+    "subtitle": "Hàng nghìn học viên đã tham gia và đạt được mục tiêu nghề nghiệp",
+    "students": "Học viên",
+    "courses": "Khóa học",
+    "lessons": "Bài học",
+    "rating": "Đánh giá"
+  },
+  "cart": {
+    "addToCart": "Thêm vào giỏ",
+    "goToCart": "Vào giỏ hàng",
+    "addFailed": "Không thể thêm vào giỏ"
+  },
+  "courses": {
+    "resultsFor": "Kết quả cho",
+    "allCourses": "Tất cả khóa học",
+    "oneResult": "Tìm thấy {{count}} kết quả",
+    "manyResults": "Tìm thấy {{count}} kết quả",
+    "noResultsTitle": "Không có kết quả",
+    "noResultsBody": "Không tìm thấy khóa học phù hợp với bộ lọc của bạn."
+  },
+  "courseDetail": {
+    "whatYoullLearn": "Bạn sẽ học được gì",
+    "description": "Mô tả"
+  },
+  "courseSidebar": {
+    "previewThisCourse": "Xem trước khóa học",
+    "daysLeftAtPrice": "Còn {{days}} ngày với mức giá này!",
+    "buyNow": "Mua ngay",
+    "moneyBackGuarantee": "Hoàn tiền trong 30 ngày",
+    "includesTitle": "Khóa học bao gồm:",
+    "onDemandVideo": "{{duration}} video theo yêu cầu",
+    "articles": "{{count}} bài viết",
+    "certificate": "Chứng chỉ hoàn thành",
+    "lifetimeAccess": "Truy cập trọn đời",
+    "discountOff": "Giảm {{value}}"
+  },
+  "courseCard": {
+    "lectures": "{{count}} bài giảng"
+  },
+  "auth": {
+    "noAccount": "Chưa có tài khoản?",
+    "signUp": "Đăng ký"
+  }
+}

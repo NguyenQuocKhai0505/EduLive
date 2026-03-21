@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,8 @@ export default function MyChatPage() {
   /** Đóng/mở sidebar danh sách phòng: true = hiện, false = ẩn; nút PanelLeftClose thu gọn, PanelLeft mở lại */
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const socketRef = useRef<Socket | null>(null);
+  const selectedRoomIdRef = useRef<number | null>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredRooms = rooms.filter((room) =>
@@ -35,6 +37,10 @@ export default function MyChatPage() {
   );
 
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) || null;
+
+  useEffect(() => {
+    selectedRoomIdRef.current = selectedRoomId;
+  }, [selectedRoomId]);
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -54,7 +60,13 @@ export default function MyChatPage() {
     socketRef.current = socket;
 
     socket.on("message", (message: ChatMessage) => {
-      setMessages((prev) => [...prev, message]);
+      if (message.roomId !== selectedRoomIdRef.current) return;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === message.id)) return prev;
+        return [...prev, message].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
     });
 
     socket.on("chatError", (payload: { action: string; message: string }) => {
@@ -66,11 +78,22 @@ export default function MyChatPage() {
     };
   }, []);
 
+  useLayoutEffect(() => {
+    const el = messagesScrollRef.current;
+    if (!el || !selectedRoomId) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, selectedRoomId]);
+
   const handleSelectRoom = async (roomId: number) => {
     setSelectedRoomId(roomId);
     try {
       const res = await getRoomMessages(roomId);
-      setMessages(res.data);
+      const list = Array.isArray(res.data) ? res.data : [];
+      setMessages(
+        [...list].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        )
+      );
     } catch {
       toast.error("Failed to load messages");
       return;
@@ -209,7 +232,10 @@ export default function MyChatPage() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto bg-slate-950/60 px-6 py-6">
+        <div
+          ref={messagesScrollRef}
+          className="flex-1 space-y-6 overflow-y-auto bg-slate-950/60 px-6 py-6"
+        >
           {!selectedRoomId ? (
             <div className="text-sm text-slate-400">
               Select a room to start chatting.

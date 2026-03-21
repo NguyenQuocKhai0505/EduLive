@@ -12,12 +12,20 @@ import {
     createComment, 
     getComments,
     deleteBlog,
+    updateBlog,
     BlogResponse,
     CommentResponse 
 } from "@/services/blog.service";
 import { getMyProfile, UserProfile } from "@/services/user.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Calendar, Clock, MessageCircle, Heart, Share2, MoreHorizontal, Send, X, Image as ImageIcon, Trash2, Pencil } from "lucide-react";
 
 export default function BlogPostPage() {
@@ -40,6 +48,14 @@ export default function BlogPostPage() {
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
     const [commentImages, setCommentImages] = useState<File[]>([]);
     const [commentImagePreviews, setCommentImagePreviews] = useState<string[]>([]);
+
+    // Edit post dialog
+    const [showEditDialog, setShowEditDialog] = useState(false);
+    const [editTitle, setEditTitle] = useState("");
+    const [editContent, setEditContent] = useState("");
+    const [editTags, setEditTags] = useState<string[]>([]);
+    const [editTagInput, setEditTagInput] = useState("");
+    const [savingEdit, setSavingEdit] = useState(false);
 
     // Fetch blog data
     useEffect(() => {
@@ -172,6 +188,68 @@ export default function BlogPostPage() {
                 toast.error("Failed to post comment", { id: loadingToast });
             }
         }
+    };
+
+    const openEditDialog = () => {
+        if (!blog) return;
+        setEditTitle(blog.title);
+        setEditContent(blog.content);
+        setEditTags(blog.tag ? [...blog.tag] : []);
+        setEditTagInput("");
+        setShowEditDialog(true);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editTitle.trim() || !editContent.trim()) {
+            toast.error("Please fill in title and content");
+            return;
+        }
+        const loadingToast = toast.loading("Saving changes...");
+        try {
+            setSavingEdit(true);
+            const updated = await updateBlog(blogId, {
+                title: editTitle.trim(),
+                content: editContent.trim(),
+                tags: editTags,
+            });
+            setBlog((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          title: updated.title,
+                          content: updated.content,
+                          tag: updated.tag ?? editTags,
+                      }
+                    : null
+            );
+            setShowEditDialog(false);
+            toast.success("Post updated!", { id: loadingToast });
+        } catch (error: any) {
+            console.error("Error updating post:", error);
+            if (error.response?.status === 401) {
+                toast.error("Please login to edit this post", { id: loadingToast });
+            } else if (error.response?.status === 403) {
+                toast.error("You are not allowed to edit this post", { id: loadingToast });
+            } else {
+                toast.error(error.response?.data?.message || "Could not update the post", {
+                    id: loadingToast,
+                });
+            }
+        } finally {
+            setSavingEdit(false);
+        }
+    };
+
+    const handleAddEditTag = () => {
+        const t = editTagInput.trim();
+        if (t && !editTags.includes(t)) {
+            setEditTags([...editTags, t]);
+            setEditTagInput("");
+        }
+    };
+
+    const handleRemoveEditTag = (tag: string) => {
+        setEditTags(editTags.filter((x) => x !== tag));
     };
 
     // Handle delete blog
@@ -353,7 +431,7 @@ export default function BlogPostPage() {
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
-                                            onClick={() => {/* TODO: Implement edit */}}
+                                            onClick={openEditDialog}
                                             title="Edit post"
                                         >
                                             <Pencil className="w-5 h-5 text-slate-400 hover:text-blue-600" />
@@ -637,6 +715,95 @@ export default function BlogPostPage() {
                     </div>
                 </div>
             )}
+
+            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Edit Post</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                                Title *
+                            </label>
+                            <Input
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                placeholder="Post title"
+                                className="w-full"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                                Content * (HTML)
+                            </label>
+                            <textarea
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                rows={10}
+                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                            />
+                        </div>
+                        <p className="text-xs text-slate-500">
+                            Images are unchanged when editing (API supports title, content, tags only).
+                        </p>
+                        <div>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                                Tags
+                            </label>
+                            <div className="flex gap-2 mb-2">
+                                <Input
+                                    value={editTagInput}
+                                    onChange={(e) => setEditTagInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            handleAddEditTag();
+                                        }
+                                    }}
+                                    placeholder="Tag + Enter"
+                                    className="flex-1"
+                                />
+                                <Button type="button" variant="outline" onClick={handleAddEditTag} disabled={!editTagInput.trim()}>
+                                    Add
+                                </Button>
+                            </div>
+                            {editTags.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {editTags.map((tag) => (
+                                        <Badge
+                                            key={tag}
+                                            variant="secondary"
+                                            className="rounded-full px-3 py-1 flex items-center gap-2"
+                                        >
+                                            {tag}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveEditTag(tag)}
+                                                className="hover:text-red-500"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-2 pt-4 border-t">
+                            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                className="bg-purple-600 hover:bg-purple-700 text-white"
+                                onClick={handleSaveEdit}
+                                disabled={!editTitle.trim() || !editContent.trim() || savingEdit}
+                            >
+                                {savingEdit ? "Saving..." : "Save changes"}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

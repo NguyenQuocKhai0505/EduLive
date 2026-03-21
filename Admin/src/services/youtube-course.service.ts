@@ -8,6 +8,8 @@ export type YoutubeCourse = {
   videoUrl: string;
   thumbnailUrl: string | null;
   durationLabel: string | null;
+  /** Nhóm tab trên Student (vd: Programming Language) */
+  category: string | null;
   createdAt: string;              
   updateAt: string;              
 };
@@ -21,7 +23,8 @@ export const createYoutubeCourse = (data: {
   tags?: string;                   
   videoUrl: string;
   thumbnailUrl?: string;           
-  durationLabel?: string;     
+  durationLabel?: string;
+  category?: string;
 }) =>
   api
     .post<YoutubeCourse>("/youtube-courses", data)

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useI18n } from "@/context/I18nContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Star, Quote } from "lucide-react"; 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
@@ -42,15 +43,17 @@ const reviews = [
 ];
 
 export function Testimonials(){
+    const { t } = useI18n();
     return(
         <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12">
             {/* Header Section */}
             <div className="text-center space-y-3 sm:space-y-4 max-w-3xl mx-auto">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
-                    What Students Say About <span className="text-blue-600 dark:text-blue-400">EduLive</span>
+                    {t("testimonials.title")}{" "}
+                    <span className="text-blue-600 dark:text-blue-400">{t("testimonials.brand")}</span>
                 </h2>
                 <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400">
-                    Many students have joined and achived their carrer roles
+                    {t("testimonials.subtitle")}
                 </p>
             </div>
             {/* Grid Reviews */}
@@ -74,7 +77,7 @@ export function Testimonials(){
                             <div className="relative">
                                 <Quote className="absolute -top-2 -left-2 w-8 h-8 text-slate-100 -z-10 transform -scale-x-100"/>
                                     <p className="text-slate-700 italic leading-relaxed text-sm">
-                                        "{reviews.content}"
+                                        &ldquo;{reviews.content}&rdquo;
                                     </p>
                             </div>
                             {/* User Info */}
@@ -97,19 +100,19 @@ export function Testimonials(){
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 py-6 sm:py-8 border-t border-slate-200 dark:border-slate-800 mt-8 sm:mt-12">
                 <div className="text-center">
                     <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">10k+</h3>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Students</p>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">{t("testimonials.students")}</p>
                 </div>
                 <div className="text-center">
                     <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">50+</h3>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Courses</p>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">{t("testimonials.courses")}</p>
                 </div>
                 <div className="text-center">
                     <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">1200+</h3>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Lessons</p>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">{t("testimonials.lessons")}</p>
                 </div>
                 <div className="text-center">
                     <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">4.9/5</h3>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">Rating</p>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 dark:text-slate-400">{t("testimonials.rating")}</p>
                 </div>
             </div>
         </section>

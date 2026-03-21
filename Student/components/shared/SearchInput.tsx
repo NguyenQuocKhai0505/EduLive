@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { searchCourses, type CourseResponse } from "@/services/course.service";
+import { useI18n } from "@/context/I18nContext";
 
 export default function SearchInput(){
+    const { t } = useI18n();
     const searchParams = useSearchParams()
 
     //Lay gia tri hien tai tren url 
@@ -75,7 +77,7 @@ export default function SearchInput(){
             onBlur={() => {
                 setTimeout(() => setOpen(false), 150)
             }}
-            placeholder="Search for a course..."
+            placeholder={t("nav.searchPlaceholder")}
             className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700 border-none text-sm text-slate-600 dark:text-slate-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
 
@@ -83,12 +85,12 @@ export default function SearchInput(){
                 <div className="absolute top-full left-0 mt-2 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg z-50 overflow-hidden">
                     {loading && (
                         <div className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
-                            Loading...
+                            {t("search.loading")}
                         </div>
                     )}
                     {!loading && suggestions.length === 0 && (
                         <div className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
-                            No results found
+                            {t("search.noResults")}
                         </div>
                     )}
                     {!loading && suggestions.map((course) => (
@@ -101,7 +103,7 @@ export default function SearchInput(){
                                 {highlightMatch(course.title, normalizedQuery)}
                             </div>
                             <div className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-                                {course.instructor?.name || "Unknown"} • {course.category?.name || "Uncategorized"}
+                                {course.instructor?.name || t("search.unknown")} • {course.category?.name || t("search.uncategorized")}
                             </div>
                         </Link>
                     ))}

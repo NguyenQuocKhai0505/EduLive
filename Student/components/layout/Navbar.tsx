@@ -19,7 +19,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import SearchInput from "@/components/shared/SearchInput";
 import { logout } from "@/services/auth.service";
+import { useI18n } from "@/context/I18nContext";
+import type { Locale } from "@/lib/i18n/translate";
+
 export function NavBar() {
+    const { locale, setLocale, t } = useI18n();
     const [user, setUser] = useState<any>(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -131,12 +135,24 @@ export function NavBar() {
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="hidden sm:flex items-center gap-1.5 px-2">
                                 <Globe size={18} />
-                                <span className="text-sm font-medium hidden md:inline">English</span>
+                                <span className="text-sm font-medium hidden md:inline">
+                                    {locale === "vi" ? t("nav.langVietnamese") : t("nav.langEnglish")}
+                                </span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="cursor-pointer">English</DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">Vietnamese</DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => setLocale("en" as Locale)}
+                            >
+                                {t("nav.langEnglish")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => setLocale("vi" as Locale)}
+                            >
+                                {t("nav.langVietnamese")}
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
@@ -144,10 +160,10 @@ export function NavBar() {
                         /* CHƯA LOGIN */
                         <div className="flex items-center gap-1 sm:gap-2">
                             <Link href="/login">
-                                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Log in</Button>
+                                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">{t("nav.login")}</Button>
                             </Link>
                             <Link href="/register">
-                                <Button className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm px-3 sm:px-4">Sign Up</Button>
+                                <Button className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm px-3 sm:px-4">{t("nav.signUp")}</Button>
                             </Link>
                         </div>
                     ) : (
@@ -171,23 +187,23 @@ export function NavBar() {
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col overflow-hidden">
-                                            <span className="font-bold text-sm truncate">{user.name || "User"}</span>
+                                            <span className="font-bold text-sm truncate">{user.name || t("nav.user")}</span>
                                             <span className="text-xs text-muted-foreground truncate">@{user.email?.split('@')[0]}</span>
                                         </div>
                                     </div>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild className="cursor-pointer py-2">
-                                        <Link href="/profile" className="flex items-center gap-2"><User size={16}/>My profile</Link>
+                                        <Link href="/profile" className="flex items-center gap-2"><User size={16}/>{t("nav.myProfile")}</Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild className="cursor-pointer py-2 text-purple-600">
-                                        <Link href="/write" className="flex items-center gap-2"><FileText size={16}/> Write Post</Link>
+                                        <Link href="/write" className="flex items-center gap-2"><FileText size={16}/> {t("nav.writePost")}</Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild className="cursor-pointer py-2">
-                                        <Link href="/my-blogs" className="flex items-center gap-2"><BookOpen size={16}/> My posts</Link>
+                                        <Link href="/my-blogs" className="flex items-center gap-2"><BookOpen size={16}/> {t("nav.myPosts")}</Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={()=>logout()} className="cursor-pointer py-2 text-red-600">
-                                        <LogOut size={16} className="mr-2"/> Log out
+                                        <LogOut size={16} className="mr-2"/> {t("nav.logOut")}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>

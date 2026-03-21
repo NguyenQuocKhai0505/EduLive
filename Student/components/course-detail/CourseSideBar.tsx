@@ -1,6 +1,11 @@
+"use client";
+
 import { Play, AlertCircle, MonitorPlay, FileText, Trophy, Infinity } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 export default function CourseSidebar({ course }: { course: any }) {
+  const { t } = useI18n();
+
   return (
     <div className="sticky top-20 sm:top-24 bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
       {/* Video Preview */}
@@ -12,7 +17,7 @@ export default function CourseSidebar({ course }: { course: any }) {
           </div>
         </div>
         <div className="absolute bottom-2 sm:bottom-4 left-0 right-0 text-center text-white font-bold text-xs sm:text-sm px-2">
-            Preview this course
+            {t("courseSidebar.previewThisCourse")}
         </div>
       </div>
 
@@ -23,7 +28,9 @@ export default function CourseSidebar({ course }: { course: any }) {
             <>
               <span className="text-slate-400 dark:text-slate-500 line-through text-base sm:text-lg">{course.originalPrice}</span>
               {course.discount && (
-                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{course.discount} off</span>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  {t("courseSidebar.discountOff", { value: course.discount })}
+                </span>
               )}
             </>
           )}
@@ -31,27 +38,27 @@ export default function CourseSidebar({ course }: { course: any }) {
         
         <div className="text-red-600 dark:text-red-400 flex items-center gap-2 text-xs sm:text-sm">
           <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span>2 days left at this price!</span>
+          <span>{t("courseSidebar.daysLeftAtPrice", { days: 2 })}</span>
         </div>
 
         <div className="space-y-2 sm:space-y-3">
           <button className="w-full h-11 sm:h-12 text-sm sm:text-base md:text-lg font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors">
-            Add to cart
+            {t("cart.addToCart")}
           </button>
           <button className="w-full h-11 sm:h-12 text-sm sm:text-base md:text-lg font-bold border border-slate-900 dark:border-white text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors">
-            Buy now
+            {t("courseSidebar.buyNow")}
           </button>
         </div>
         
-        <div className="text-center text-xs text-slate-500 dark:text-slate-400">30-Day Money-Back Guarantee</div>
+        <div className="text-center text-xs text-slate-500 dark:text-slate-400">{t("courseSidebar.moneyBackGuarantee")}</div>
         
         <div className="space-y-2 sm:space-y-3 pt-2">
-          <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">This course includes:</h4>
+          <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{t("courseSidebar.includesTitle")}</h4>
           <ul className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 space-y-1.5 sm:space-y-2">
-            <li className="flex items-center gap-2 sm:gap-3"><MonitorPlay className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>{course.duration} on-demand video</span></li>
-            <li className="flex items-center gap-2 sm:gap-3"><FileText className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>{course.lectures} articles</span></li>
-            <li className="flex items-center gap-2 sm:gap-3"><Trophy className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>Certificate of completion</span></li>
-            <li className="flex items-center gap-2 sm:gap-3"><Infinity className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>Full lifetime access</span></li>
+            <li className="flex items-center gap-2 sm:gap-3"><MonitorPlay className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>{t("courseSidebar.onDemandVideo", { duration: course.duration })}</span></li>
+            <li className="flex items-center gap-2 sm:gap-3"><FileText className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>{t("courseSidebar.articles", { count: course.lectures })}</span></li>
+            <li className="flex items-center gap-2 sm:gap-3"><Trophy className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>{t("courseSidebar.certificate")}</span></li>
+            <li className="flex items-center gap-2 sm:gap-3"><Infinity className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span>{t("courseSidebar.lifetimeAccess")}</span></li>
           </ul>
         </div>
       </div>

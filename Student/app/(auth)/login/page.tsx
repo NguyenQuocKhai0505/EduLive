@@ -10,7 +10,9 @@ import { Loader2, Github, Chrome } from "lucide-react";
 import image from "../../../public/assets/logo.png"
 import { login, loginWithGoogle } from "@/services/auth.service";
 import { toast } from "sonner";
+import { useI18n } from "@/context/I18nContext";
 export default function LoginPage(){
+    const { t } = useI18n();
     const router = useRouter()
     const searchParams = useSearchParams();
     const [isLoading,setIsLoading] = useState(false)
@@ -124,9 +126,9 @@ export default function LoginPage(){
                </div>
                 {/* FOOTER */}
                 <div className="text-center text-sm font-medium">
-                    Don't have an account?{" "}
+                    {t("auth.noAccount")}{" "}
                     <Link href="/register" className="text-purple-600 hover:underline font-bold">
-                        Sign up
+                        {t("auth.signUp")}
                     </Link>
                 </div>
                 </div>

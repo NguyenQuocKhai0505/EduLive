@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { useCart } from "@/context/CartContext";
 import { Course } from "@/lib/types/course.types";
 import AddedToCartModal from "./AddedToCartModal";
+import { useI18n } from "@/context/I18nContext";
 
 export default function AddToCartButton({ course }: { course: Course }) {
+  const { t } = useI18n();
   const { addToCart, isInCart } = useCart();
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
@@ -36,7 +38,7 @@ export default function AddToCartButton({ course }: { course: Course }) {
             router.push("/cart");
           }
         } else {
-          toast.error("Failed to add to cart");
+          toast.error(t("cart.addFailed"));
         }
       }
     }
@@ -52,7 +54,7 @@ export default function AddToCartButton({ course }: { course: Course }) {
             : "bg-purple-600 text-white hover:bg-purple-700" // Style cho nút Add to Cart
         }`}
       >
-        {isAdded ? "Go to cart" : "Add to cart"}
+        {isAdded ? t("cart.goToCart") : t("cart.addToCart")}
       </button>
 
       {/* Popup Modal */}

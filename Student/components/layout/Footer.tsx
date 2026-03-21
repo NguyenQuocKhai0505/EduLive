@@ -1,8 +1,10 @@
 "use client";
 
 import { Facebook, Instagram, Mail, Youtube } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 export function Footer() {
+  const { t } = useI18n();
   return (
     <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -11,17 +13,17 @@ export function Footer() {
           {/* Cột 1: Thông tin (About Us) */}
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-lg sm:text-xl font-bold text-blue-600 dark:text-blue-500">
-              EduLive
+              {t("footer.aboutTitle")}
             </h3>
             <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xs">
-            The leading online programming learning platform. We offer high-quality courses to help you master technology and advance your career.
+            {t("footer.aboutText")}
             </p>
           </div>
 
           {/* Cột 2: Liên hệ (Email) */}
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
-              Contact
+              {t("footer.contact")}
             </h3>
             <a 
               href="mailto:support@edulive.com" 
@@ -31,14 +33,14 @@ export function Footer() {
               <span className="break-all">support@edulive.com</span>
             </a>
             <p className="text-xs text-slate-500 dark:text-slate-500">
-              Supports 24/7 for leaners.
+              {t("footer.support247")}
             </p>
           </div>
 
           {/* Cột 3: Mạng xã hội */}
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">
-              Follow me on
+              {t("footer.follow")}
             </h3>
             <div className="flex gap-3 sm:gap-4">
               {/* Facebook */}
@@ -62,7 +64,7 @@ export function Footer() {
 
         {/* Dòng bản quyền dưới cùng */}
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-500">
-          © 2024 EduLive. All rights reserved. Designed by Nguyen Quoc Khai.
+          {t("footer.copyright")}
         </div>
       </div>
     </footer>

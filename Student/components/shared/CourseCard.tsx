@@ -6,12 +6,14 @@ import React from "react";
 import Link from "next/link"; // Import Link để bọc ảnh và tiêu đề
 import AddToCartButton from "./AddToCartButton";
 import { formatRating } from "@/lib/utils";
+import { useI18n } from "@/context/I18nContext";
 interface CourseCardProps {
   item: any;
 }
 
 export default function CourseCard({ item }: CourseCardProps) {
-  
+  const { t } = useI18n();
+
   // Hàm xử lý thêm vào giỏ hàng
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Ngăn chặn sự kiện nổi bọt
@@ -59,7 +61,7 @@ export default function CourseCard({ item }: CourseCardProps) {
             </h4>
           </Link>
 
-          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 truncate">{item.instructor || "Unknown"}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 truncate">{item.instructor || t("search.unknown")}</p>
 
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -82,9 +84,9 @@ export default function CourseCard({ item }: CourseCardProps) {
                 ({item.students.toLocaleString()})
               </span>
             )}
-            {item.lectures && (
+            {item.lectures != null && (
               <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
-                {item.lectures} lectures
+                {t("courseCard.lectures", { count: item.lectures })}
               </span>
             )}
           </div>
