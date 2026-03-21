@@ -8,11 +8,10 @@ import { Enrollment } from "../enrollments/entities/enrollment.entity";
 import { CartService } from "./cart.service";
 import { CartController } from "./cart.controller";
 import { AuthModule } from "../auth/auth.module";
-import { RolesGuard } from "../guards/roles.guard";
 
 @Module({
   imports: [TypeOrmModule.forFeature([CartItem, Order, OrderItem, Course, Enrollment]), AuthModule],
-  providers: [CartService, RolesGuard],
+  providers: [CartService],
   controllers: [CartController],
   exports: [CartService],
 })
