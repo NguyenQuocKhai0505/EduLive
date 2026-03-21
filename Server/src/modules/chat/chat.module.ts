@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { JwtModule } from "@nestjs/jwt";
 import { ChatRoom } from "./entities/chat-room.entity";
 import { ChatMessage } from "./entities/chat-message.entity";
 import { Course } from "../courses/entities/course.entity";
@@ -11,7 +10,7 @@ import { ChatService } from "./chat.service";
 import { ChatController } from "./chat.controller";
 import { ChatGateway } from "./chat.gateway";
 import { CloudinaryService } from "../../common/services/cloudinary.service";
-import { RedisModule } from "../../common/redis/redis.module";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
   imports: [
@@ -23,8 +22,7 @@ import { RedisModule } from "../../common/redis/redis.module";
       Enrollment,
       User,
     ]),
-    JwtModule.register({}),
-    RedisModule,
+    AuthModule,
   ],
   providers: [ChatService, ChatGateway, CloudinaryService],
   controllers: [ChatController],

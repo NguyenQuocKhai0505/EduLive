@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CoursesService } from './courses.service';
 import { CoursesController } from './courses.controller';
 import { CategoriesService } from './categories.service';
@@ -16,7 +14,7 @@ import { Section } from './entities/section.entity';
 import { Lesson } from './entities/lesson.entity';
 import { UsersModule } from '../users/users.module';
 import { CloudinaryService } from '../../common/services/cloudinary.service';
-import { RedisModule } from '../../common/redis/redis.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
     // IMPORTS: Import cac module khac 
@@ -35,23 +33,7 @@ import { RedisModule } from '../../common/redis/redis.module';
          * Course co relationship ManytoOne voi User
          */
         UsersModule,
-        /**
-         * JwtModule
-         * 
-         * ⚠️ QUAN TRỌNG: Import JwtModule để AuthGuard có thể inject JwtService
-         * AuthGuard được sử dụng trong CoursesController cần JwtService để verify token
-         */
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: async (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET'),
-                signOptions: {
-                    expiresIn: (configService.get<string>('JWT_EXPIRES_IN') || '1h') as any
-                },
-            }),
-        }),
-        RedisModule,
+        AuthModule,
     ],
         controllers:[CoursesController, CategoriesController, SectionsController, LessonsController],
         providers:[CoursesService, CategoriesService, SectionsService, LessonsService, CloudinaryService],
