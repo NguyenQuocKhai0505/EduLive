@@ -1,10 +1,57 @@
 "use client";
 
 import { Play, AlertCircle, MonitorPlay, FileText, Trophy, Infinity } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
+import { useCart } from "@/context/CartContext";
+import AddToCartButton from "@/components/shared/AddToCartButton";
+import type { Course } from "@/lib/types/course.types";
 
-export default function CourseSidebar({ course }: { course: any }) {
+function toCartCourse(c: Record<string, unknown>): Course {
+  const x = c as Record<string, unknown>;
+  return {
+    id: Number(x.id),
+    category: String(x.category ?? ""),
+    title: String(x.title ?? ""),
+    description: String(x.description ?? ""),
+    rating: Number(x.rating ?? 0),
+    students: Number(x.students ?? 0),
+    lastUpdated: String(x.lastUpdated ?? ""),
+    language: String(x.language ?? ""),
+    price: String(x.price ?? ""),
+    originalPrice: String(x.originalPrice ?? ""),
+    discount: String(x.discount ?? ""),
+    thumbnail: String(x.thumbnail ?? ""),
+    instructor: String(x.instructor ?? ""),
+    duration: String(x.duration ?? ""),
+    lectures: Number(x.lectures ?? 0),
+    level: String(x.level ?? ""),
+    curriculum: Array.isArray(x.curriculum) ? (x.curriculum as Course["curriculum"]) : [],
+    whatYouWillLearn: Array.isArray(x.whatYouWillLearn) ? (x.whatYouWillLearn as string[]) : [],
+  };
+}
+
+export default function CourseSidebar({ course }: { course: Record<string, unknown> }) {
   const { t } = useI18n();
+  const router = useRouter();
+  const { addToCart, isInCart } = useCart();
+  const cartCourse = toCartCourse(course);
+  const courseId = Number(course.id);
+
+  const handleBuyNow = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      if (!isInCart(courseId)) await addToCart(courseId);
+      router.push("/cart");
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      toast.error(typeof msg === "string" ? msg : t("cart.addFailed"));
+    }
+  };
 
   return (
     <div className="sticky top-20 sm:top-24 bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
@@ -42,10 +89,14 @@ export default function CourseSidebar({ course }: { course: any }) {
         </div>
 
         <div className="space-y-2 sm:space-y-3">
-          <button className="w-full h-11 sm:h-12 text-sm sm:text-base md:text-lg font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors">
-            {t("cart.addToCart")}
-          </button>
-          <button className="w-full h-11 sm:h-12 text-sm sm:text-base md:text-lg font-bold border border-slate-900 dark:border-white text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors">
+          <div className="w-full [&_button]:w-full [&_button]:h-11 sm:[&_button]:h-12 [&_button]:text-sm sm:[&_button]:text-base md:[&_button]:text-lg [&_button]:font-bold">
+            <AddToCartButton course={cartCourse} />
+          </div>
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            className="w-full h-11 sm:h-12 text-sm sm:text-base md:text-lg font-bold border border-slate-900 dark:border-white text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors"
+          >
             {t("courseSidebar.buyNow")}
           </button>
         </div>

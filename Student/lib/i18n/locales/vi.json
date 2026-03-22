@@ -124,7 +124,9 @@
     "discountOff": "Giảm {{value}}"
   },
   "courseCard": {
-    "lectures": "{{count}} bài giảng"
+    "lectures": "{{count}} bài giảng",
+    "addedToWishlist": "Đã thêm vào danh sách yêu thích",
+    "removedFromWishlist": "Đã bỏ khỏi danh sách yêu thích"
   },
   "auth": {
     "noAccount": "Chưa có tài khoản?",

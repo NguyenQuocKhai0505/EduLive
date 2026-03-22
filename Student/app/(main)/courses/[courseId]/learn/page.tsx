@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getCourseById, CourseResponse } from "@/services/course.service";
+import {
+  getCourseLessonProgress,
+  markLessonCompleteApi,
+} from "@/services/learning-progress.service";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Play, Check, ChevronDown, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LearnPage() {
   const params = useParams();
@@ -24,6 +29,13 @@ export default function LearnPage() {
         setLoading(true);
         const courseData = await getCourseById(courseId);
         setCourse(courseData);
+
+        try {
+          const { completedLessonIds } = await getCourseLessonProgress(courseId);
+          setCompletedLessons(new Set(completedLessonIds));
+        } catch {
+          /* chưa login / chưa mua khóa */
+        }
 
         // Auto-select first lesson and expand first section
         if (courseData.sections && courseData.sections.length > 0) {
@@ -134,22 +146,22 @@ export default function LearnPage() {
     }
   };
 
-  // Mark lesson as completed (tạm thời - sau sẽ lưu vào backend)
-  const markLessonComplete = (lessonId: number) => {
-    setCompletedLessons(prev => new Set(prev).add(lessonId));
-    // TODO: Gọi API để lưu progress vào backend
-  };
-
-  // Mark current lesson as complete (demo - có thể trigger khi xem hết video)
-  useEffect(() => {
-    // Tạm thời: Auto-mark lesson as complete khi xem (sau sẽ thay bằng logic xem hết video)
-    // Bạn có thể bỏ comment dòng này để test
-    // if (currentLessonId) {
-    //   setTimeout(() => {
-    //     markLessonComplete(currentLessonId);
-    //   }, 5000); // Auto complete sau 5 giây (chỉ để demo)
-    // }
-  }, [currentLessonId]);
+  const handleMarkLessonComplete = useCallback(
+    async (lessonId: number) => {
+      setCompletedLessons((prev) => new Set(prev).add(lessonId));
+      try {
+        await markLessonCompleteApi(courseId, lessonId);
+      } catch {
+        toast.error("Không lưu được tiến độ. Bạn cần đăng nhập và có quyền truy cập khóa học.");
+        setCompletedLessons((prev) => {
+          const next = new Set(prev);
+          next.delete(lessonId);
+          return next;
+        });
+      }
+    },
+    [courseId]
+  );
 
   // Check if has previous/next
   const hasPrevious = currentIndex > 0;
@@ -283,7 +295,7 @@ export default function LearnPage() {
                 </div>
 
                 {/* Lesson Type Badge */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
                     {currentLesson.type === "video" ? "Video" : 
                      currentLesson.type === "article" ? "Article" : "Quiz"}
@@ -294,6 +306,21 @@ export default function LearnPage() {
                     </span>
                   )}
                 </div>
+                {!completedLessons.has(currentLesson.id) ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-2 border-green-600 text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950/40"
+                    onClick={() => handleMarkLessonComplete(currentLesson.id)}
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Đánh dấu đã hoàn thành
+                  </Button>
+                ) : (
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-2">
+                    <Check className="w-4 h-4" /> Bạn đã hoàn thành bài này
+                  </p>
+                )}
               </div>
             )}
 

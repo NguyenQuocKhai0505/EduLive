@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import { getAllBlogs, BlogResponse, createBlog, CreateBlogRequest, deleteBlog, createComment } from "@/services/blog.service";
+import { getAllBlogs, BlogResponse, createBlog, CreateBlogRequest, deleteBlog, createComment, updateBlog } from "@/services/blog.service";
 import { getMyProfile, UserProfile } from "@/services/user.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,28 @@ export default function BlogPage() {
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [commentTexts, setCommentTexts] = useState<Record<number, string>>({});
+    const [editingBlogId, setEditingBlogId] = useState<number | null>(null);
+
+    const resetPostForm = () => {
+        setEditingBlogId(null);
+        setPostTitle("");
+        setPostContent("");
+        setPostTags([]);
+        setTagInput("");
+        setPostImages([]);
+        setImagePreviews([]);
+    };
+
+    const openEditBlog = (blog: BlogResponse) => {
+        setEditingBlogId(blog.id);
+        setPostTitle(blog.title);
+        setPostContent(blog.content);
+        setPostTags(blog.tag?.length ? [...blog.tag] : []);
+        setTagInput("");
+        setPostImages([]);
+        setImagePreviews([]);
+        setShowCreateDialog(true);
+    };
 
     // Fetch blogs và user profile
     useEffect(() => {
@@ -104,45 +126,50 @@ export default function BlogPage() {
         URL.revokeObjectURL(imagePreviews[index]);
     };
 
-    // Handle create post
-    const handleCreatePost = async () => {
+    const handleSavePost = async () => {
         if (!postTitle.trim() || !postContent.trim()) {
             toast.error("Please fill in title and content");
             return;
         }
 
-        const loadingToast = toast.loading("Publishing post...");
+        const loadingToast = toast.loading(editingBlogId ? "Updating post..." : "Publishing post...");
 
         try {
             setIsSubmitting(true);
-            const newPost: CreateBlogRequest = {
-                title: postTitle.trim(),
-                content: postContent.trim(),
-                tags: postTags.length > 0 ? postTags : undefined,
-                images: postImages.length > 0 ? postImages : undefined
-            };
-
-            const createdPost = await createBlog(newPost);
-            
-            // Thêm blog mới vào đầu danh sách
-            setBlogs(prev => [createdPost, ...prev]);
-            
-            // Reset form
-            setPostTitle("");
-            setPostContent("");
-            setPostTags([]);
-            setTagInput("");
-            setPostImages([]);
-            setImagePreviews([]);
-            setShowCreateDialog(false);
-            
-            toast.success("Post published successfully!", { id: loadingToast });
+            if (editingBlogId != null) {
+                const updated = await updateBlog(editingBlogId, {
+                    title: postTitle.trim(),
+                    content: postContent.trim(),
+                    tags: postTags,
+                });
+                setBlogs((prev) =>
+                    prev.map((b) => (b.id === editingBlogId ? { ...b, ...updated } : b))
+                );
+                resetPostForm();
+                setShowCreateDialog(false);
+                toast.success("Post updated!", { id: loadingToast });
+            } else {
+                const newPost: CreateBlogRequest = {
+                    title: postTitle.trim(),
+                    content: postContent.trim(),
+                    tags: postTags.length > 0 ? postTags : undefined,
+                    images: postImages.length > 0 ? postImages : undefined,
+                };
+                const createdPost = await createBlog(newPost);
+                setBlogs((prev) => [createdPost, ...prev]);
+                resetPostForm();
+                setShowCreateDialog(false);
+                toast.success("Post published successfully!", { id: loadingToast });
+            }
         } catch (error: any) {
-            console.error("Error creating post:", error);
+            console.error("Error saving post:", error);
             if (error.response?.status === 401) {
                 toast.error("Please login to write a post", { id: loadingToast });
             } else {
-                toast.error(error.response?.data?.message || "An error occurred while creating the post", { id: loadingToast });
+                toast.error(
+                    error.response?.data?.message || "An error occurred while saving the post",
+                    { id: loadingToast }
+                );
             }
         } finally {
             setIsSubmitting(false);
@@ -240,7 +267,10 @@ export default function BlogPage() {
                     {user && (
                         <div className="bg-white dark:bg-slate-900 rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-800 shadow-sm">
                             <button
-                                onClick={() => setShowCreateDialog(true)}
+                                onClick={() => {
+                                    resetPostForm();
+                                    setShowCreateDialog(true);
+                                }}
                                 className="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                             >
                                 <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-purple-200 dark:border-purple-800">
@@ -336,7 +366,8 @@ export default function BlogPage() {
                                             {user && (user.role === 'admin' || blog.authorId === user.id) && (
                                                 <>
                                                     <button
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        type="button"
+                                                        onClick={() => openEditBlog(blog)}
                                                         className="text-slate-400 hover:text-blue-600 transition-colors"
                                                         title="Edit post"
                                                     >
@@ -478,10 +509,16 @@ export default function BlogPage() {
             </div>
 
             {/* CREATE POST DIALOG */}
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <Dialog
+                open={showCreateDialog}
+                onOpenChange={(open) => {
+                    if (!open) resetPostForm();
+                    setShowCreateDialog(open);
+                }}
+            >
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Create New Post</DialogTitle>
+                        <DialogTitle>{editingBlogId ? "Edit Post" : "Create New Post"}</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4 mt-4">
@@ -515,7 +552,8 @@ export default function BlogPage() {
                             </p>
                         </div>
 
-                        {/* Image Upload */}
+                        {/* Image Upload — chỉ khi tạo mới (API PATCH chưa hỗ trợ đổi ảnh) */}
+                        {!editingBlogId && (
                         <div>
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
                                 Images (Optional, max 10)
@@ -528,7 +566,6 @@ export default function BlogPage() {
                                 className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
                             />
                             
-                            {/* Preview Images */}
                             {imagePreviews.length > 0 && (
                                 <div className="grid grid-cols-3 gap-4 mt-4">
                                     {imagePreviews.map((preview, index) => (
@@ -552,6 +589,7 @@ export default function BlogPage() {
                                 </div>
                             )}
                         </div>
+                        )}
 
                         {/* Tags Input */}
                         <div>
@@ -607,23 +645,24 @@ export default function BlogPage() {
                             <Button
                                 variant="outline"
                                 onClick={() => {
+                                    resetPostForm();
                                     setShowCreateDialog(false);
-                                    setPostTitle("");
-                                    setPostContent("");
-                                    setPostTags([]);
-                                    setTagInput("");
-                                    setPostImages([]);
-                                    setImagePreviews([]);
                                 }}
                             >
                                 Cancel
                             </Button>
                             <Button
-                                onClick={handleCreatePost}
+                                onClick={handleSavePost}
                                 disabled={!postTitle.trim() || !postContent.trim() || isSubmitting}
                                 className="bg-purple-600 hover:bg-purple-700 text-white"
                             >
-                                {isSubmitting ? "Publishing..." : "Publish Post"}
+                                {isSubmitting
+                                    ? editingBlogId
+                                        ? "Saving..."
+                                        : "Publishing..."
+                                    : editingBlogId
+                                      ? "Save changes"
+                                      : "Publish Post"}
                             </Button>
                         </div>
                     </div>

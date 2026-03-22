@@ -124,7 +124,9 @@
     "discountOff": "{{value}} off"
   },
   "courseCard": {
-    "lectures": "{{count}} lectures"
+    "lectures": "{{count}} lectures",
+    "addedToWishlist": "Saved to wishlist",
+    "removedFromWishlist": "Removed from wishlist"
   },
   "auth": {
     "noAccount": "Don't have an account?",

@@ -10,6 +10,7 @@ import { MessageCircle, Heart, Bookmark, Edit3, X, Trash2, Pencil } from "lucide
 import {
     getAllBlogs,
     createBlog,
+    updateBlog,
     deleteBlog,
     createComment,
     type BlogResponse,
@@ -42,6 +43,28 @@ export default function BlogPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [commentTexts, setCommentTexts] = useState<Record<number, string>>({});
     const [blogToDelete, setBlogToDelete] = useState<BlogResponse | null>(null);
+    const [editingBlogId, setEditingBlogId] = useState<number | null>(null);
+
+    const resetPostForm = () => {
+        setEditingBlogId(null);
+        setPostTitle("");
+        setPostContent("");
+        setPostTags([]);
+        setTagInput("");
+        setPostImages([]);
+        setImagePreviews([]);
+    };
+
+    const openEditBlog = (blog: BlogResponse) => {
+        setEditingBlogId(blog.id);
+        setPostTitle(blog.title);
+        setPostContent(blog.content);
+        setPostTags(blog.tag?.length ? [...blog.tag] : []);
+        setTagInput("");
+        setPostImages([]);
+        setImagePreviews([]);
+        setShowCreateDialog(true);
+    };
 
     useEffect(()=>{
         const fetchData = async ()=>{
@@ -102,37 +125,51 @@ export default function BlogPage() {
         URL.revokeObjectURL(imagePreviews[index]);
     };
 
-    // Handle create post (mock: chỉ cập nhật state)
-    const handleCreatePost = async () => {
+    const handleSavePost = async () => {
         if (!postTitle.trim() || !postContent.trim()) {
           toast.error("Please fill in title and content");
           return;
         }
-        const loadingToast = toast.loading("Publishing post...");
+        const loadingToast = toast.loading(
+          editingBlogId != null ? "Updating post..." : "Publishing post..."
+        );
         try {
           setIsSubmitting(true);
-          const created = await createBlog(
-            {
+          if (editingBlogId != null) {
+            const updated = await updateBlog(editingBlogId, {
               title: postTitle.trim(),
               content: postContent.trim(),
-              tags: postTags.length > 0 ? postTags : undefined,
-            },
-            postImages.length > 0 ? postImages : undefined
-          );
-          setBlogs((prev) => [created, ...prev]);
-          setPostTitle("");
-          setPostContent("");
-          setPostTags([]);
-          setTagInput("");
-          setPostImages([]);
-          setImagePreviews([]);
-          setShowCreateDialog(false);
-          toast.success("Post published successfully!", { id: loadingToast });
+              tags: postTags,
+            });
+            setBlogs((prev) =>
+              prev.map((b) => (b.id === editingBlogId ? { ...b, ...updated } : b))
+            );
+            resetPostForm();
+            setShowCreateDialog(false);
+            toast.success("Post updated!", { id: loadingToast });
+          } else {
+            const created = await createBlog(
+              {
+                title: postTitle.trim(),
+                content: postContent.trim(),
+                tags: postTags.length > 0 ? postTags : undefined,
+              },
+              postImages.length > 0 ? postImages : undefined
+            );
+            setBlogs((prev) => [created, ...prev]);
+            resetPostForm();
+            setShowCreateDialog(false);
+            toast.success("Post published successfully!", { id: loadingToast });
+          }
         } catch (err: any) {
           if (err.response?.status === 401) {
             toast.error("Please login to write a post", { id: loadingToast });
           } else {
-            toast.error(err.response?.data?.message ?? "Failed to create post", { id: loadingToast });
+            toast.error(
+              err.response?.data?.message ??
+                (editingBlogId != null ? "Failed to update post" : "Failed to create post"),
+              { id: loadingToast }
+            );
           }
         } finally {
           setIsSubmitting(false);
@@ -202,7 +239,10 @@ export default function BlogPage() {
                     {user && (
                         <div className="bg-white dark:bg-slate-900 rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-800 shadow-sm">
                             <button
-                                onClick={() => setShowCreateDialog(true)}
+                                onClick={() => {
+                                    resetPostForm();
+                                    setShowCreateDialog(true);
+                                }}
                                 className="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                             >
                                 <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-purple-200 dark:border-purple-800">
@@ -293,7 +333,7 @@ export default function BlogPage() {
                                             {user && (user.role === 'admin' || blog.authorId === user.id) && (
                                                 <>
                                                     <button
-                                                        onClick={() => {/* TODO: Implement edit */}}
+                                                        onClick={() => openEditBlog(blog)}
                                                         className="text-slate-400 hover:text-blue-600 transition-colors"
                                                         title="Edit post"
                                                     >
@@ -403,10 +443,16 @@ export default function BlogPage() {
             </div>
 
             {/* CREATE POST DIALOG */}
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <Dialog
+                open={showCreateDialog}
+                onOpenChange={(open) => {
+                    if (!open) resetPostForm();
+                    setShowCreateDialog(open);
+                }}
+            >
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Create New Post</DialogTitle>
+                        <DialogTitle>{editingBlogId != null ? "Edit Post" : "Create New Post"}</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4 mt-4">
@@ -440,7 +486,8 @@ export default function BlogPage() {
                             </p>
                         </div>
 
-                        {/* Image Upload */}
+                        {/* Image Upload (create only — existing images stay on server) */}
+                        {editingBlogId == null && (
                         <div>
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
                                 Images (Optional, max 10)
@@ -477,6 +524,7 @@ export default function BlogPage() {
                                 </div>
                             )}
                         </div>
+                        )}
 
                         {/* Tags Input */}
                         <div>
@@ -532,23 +580,24 @@ export default function BlogPage() {
                             <Button
                                 variant="outline"
                                 onClick={() => {
+                                    resetPostForm();
                                     setShowCreateDialog(false);
-                                    setPostTitle("");
-                                    setPostContent("");
-                                    setPostTags([]);
-                                    setTagInput("");
-                                    setPostImages([]);
-                                    setImagePreviews([]);
                                 }}
                             >
                                 Cancel
                             </Button>
                             <Button
-                                onClick={handleCreatePost}
+                                onClick={handleSavePost}
                                 disabled={!postTitle.trim() || !postContent.trim() || isSubmitting}
                                 className="bg-purple-600 hover:bg-purple-700 text-white"
                             >
-                                {isSubmitting ? "Publishing..." : "Publish Post"}
+                                {isSubmitting
+                                    ? editingBlogId != null
+                                        ? "Saving..."
+                                        : "Publishing..."
+                                    : editingBlogId != null
+                                      ? "Save changes"
+                                      : "Publish Post"}
                             </Button>
                         </div>
                     </div>

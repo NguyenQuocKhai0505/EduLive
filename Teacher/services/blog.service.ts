@@ -74,6 +74,18 @@ export const deleteBlog = async (blogId: number): Promise<void> => {
   await api.delete(`/blogs/${blogId}`);
 };
 
+export const updateBlog = async (
+  blogId: number,
+  data: Partial<Pick<CreateBlogRequest, "title" | "content" | "tags">>
+): Promise<BlogResponse> => {
+  const body: Record<string, unknown> = {};
+  if (data.title !== undefined) body.title = data.title;
+  if (data.content !== undefined) body.content = data.content;
+  if (data.tags !== undefined) body.tags = data.tags;
+  const response = await api.patch<BlogResponse>(`/blogs/${blogId}`, body);
+  return response.data;
+};
+
 export const toggleLike = async (
   blogId: number
 ): Promise<{ liked: boolean; likesCount: number }> => {

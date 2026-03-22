@@ -50,9 +50,8 @@ import { YoutubeCoursesModule } from './modules/youtube-courses/youtube-courses.
 
         //Tu dong load file entity
         autoLoadEntities: true,
-        //Tu tao bang khi chay app
-        //true khi local, false khi production
-        synchronize:true
+        // Local: NODE_ENV không set → true. Production: đặt NODE_ENV=production → false (an toàn DB).
+        synchronize: process.env.NODE_ENV !== 'production',
       })
     })
   ],

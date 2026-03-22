@@ -44,6 +44,11 @@ export const createBlog = (data:CreateBlogRequest,images?:File[]) =>{
     }).then((res) => res.data)
 }
 
+export type UpdateBlogRequest = Partial<Pick<CreateBlogRequest, "title" | "content" | "tags">>;
+
+export const updateBlog = (id: number, data: UpdateBlogRequest) =>
+    api.patch<BlogResponse>(`/blogs/${id}`, data).then((res) => res.data);
+
 //Delete Blog
 export const deleteBlog = (id: number) => api.delete(`/blogs/${id}`);
 
