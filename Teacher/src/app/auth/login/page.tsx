@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
-export default function TeacherLoginPage() {
+function TeacherLoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
@@ -109,5 +109,15 @@ export default function TeacherLoginPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function TeacherLoginPage() {
+  // Next.js yêu cầu `useSearchParams` phải được bọc trong Suspense boundary
+  // để tránh lỗi prerender khi build.
+  return (
+    <Suspense fallback={null}>
+      <TeacherLoginInner />
+    </Suspense>
   );
 }

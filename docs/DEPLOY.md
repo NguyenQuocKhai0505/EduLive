@@ -124,3 +124,7 @@ Hiện chưa có `Dockerfile`. Nếu cần, có thể bổ sung sau: image Node 
 ---
 
 *Tài liệu này mô tả đúng cấu hình trong code tại thời điểm tạo; nếu đổi port/CORS, cập nhật `Server/src/main.ts` và `chat.gateway.ts` tương ứng.*
+
+---
+
+**Hướng dẫn chi tiết Vercel + Render:** xem [`DEPLOY_VERCEL_RENDER.md`](./DEPLOY_VERCEL_RENDER.md).
