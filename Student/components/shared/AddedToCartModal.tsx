@@ -3,6 +3,7 @@
 import { CheckCircle, X } from "lucide-react";
 import { Course } from "@/lib/types/course.types";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface AddedToCartModalProps {
   isOpen: boolean;
@@ -31,10 +32,8 @@ export default function AddedToCartModal({ isOpen, onClose, course }: AddedToCar
         {/* Thông tin khóa học vừa thêm */}
         <div className="flex gap-4 mb-6">
           <div className="relative w-20 h-20 flex-shrink-0">
-             {/* Giả sử course.image là string url */}
              <div className="w-full h-full bg-slate-200 rounded object-cover overflow-hidden">
-                {/* Thay bằng Image component thật của bạn */}
-                <img src={course.thumbnail || "/placeholder.jpg"} alt={course.title} className="w-full h-full object-cover"/>
+                <Image src={course.thumbnail || "/placeholder.jpg"} alt={course.title} fill className="object-cover"/>
              </div>
           </div>
           <div>

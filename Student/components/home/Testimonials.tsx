@@ -4,7 +4,7 @@ import * as React from "react";
 import { useI18n } from "@/context/I18nContext";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Star, Quote } from "lucide-react"; 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
+import Image from "next/image";
 
 // 1. Mock Data (In English)
 const reviews = [
@@ -82,11 +82,14 @@ export function Testimonials(){
                             </div>
                             {/* User Info */}
                             <div className="mt-auto flex items-center gap-3 pt-4 border-t border-slate-100">
-                                <img
-                                    src={reviews.avatar}
-                                    alt={reviews.name}
-                                    className="w-10 h-10 rounded-full object-cover border border-slate-200"
-                                />
+                                <div className="relative h-10 w-10 overflow-hidden rounded-full border border-slate-200">
+                                  <Image
+                                      src={reviews.avatar}
+                                      alt={reviews.name}
+                                      fill
+                                      className="object-cover"
+                                  />
+                                </div>
                                 <div>
                                     <h4 className="font-bold text-sm text-slate-900 dark:bg-slate-900 dark:text-white">{reviews.name}</h4>
                                     <p className="text-xs text-slate-500">{reviews.role}</p>

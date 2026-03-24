@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Send, Smile, Paperclip, ArrowLeft, PanelLeft, PanelLeftClose } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
 import {
   ChatAttachment,
@@ -28,6 +29,7 @@ export default function ChatPage() {
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
     const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
     const [uploading, setUploading] = useState(false);
+    const [banner, setBanner] = useState<{ type: "error" | "info"; text: string } | null>(null);
     /** Đóng/mở sidebar danh sách phòng: true = hiện, false = ẩn; nút PanelLeftClose thu gọn, PanelLeft mở lại */
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const socketRef = useRef<Socket | null>(null);
@@ -47,8 +49,9 @@ export default function ChatPage() {
             try {
                 const res = await getMyChatRooms();
                 setRooms(res.data);
+                setBanner(null);
             } catch {
-                toast.error("Failed to load chat rooms");
+                setBanner({ type: "error", text: "Không thể tải danh sách phòng chat." });
             }
         };
         fetchRooms();
@@ -113,9 +116,10 @@ export default function ChatPage() {
                 )
             );
         } catch {
-            toast.error("Failed to load messages")
+            setBanner({ type: "error", text: "Không thể tải tin nhắn của phòng này." });
             return
         }
+        setBanner(null);
         socketRef.current?.emit("joinRoom",{roomId})
     }
     // Gửi tin (có thể kèm ảnh đã upload)
@@ -170,15 +174,26 @@ export default function ChatPage() {
 
     return (
         <div className="px-4 pb-8 pt-6 sm:px-6">
+          {banner && (
+            <div
+              className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+                banner.type === "error"
+                  ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300"
+                  : "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
+              }`}
+            >
+              {banner.text}
+            </div>
+          )}
           <div className="grid min-h-[70vh] grid-cols-1 overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-950/70 text-gray-900 dark:text-white lg:grid-cols-12">
           <aside className={`border-b border-gray-200 dark:border-white/10 bg-white dark:bg-slate-950/70 lg:border-b-0 lg:border-r ${sidebarOpen ? "block lg:col-span-4" : "hidden"}`}>
             <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <Link className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white" href={"/"}>
-                        <ArrowLeft className="inline-block h-4 w-4" /> Back to Home
+                        <ArrowLeft className="inline-block h-4 w-4" /> Về trang chủ
                     </Link>
-                    <div className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">My Chats</div>
+                    <div className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">Phòng chat của tôi</div>
                     <div className="text-xs text-gray-500 dark:text-slate-400">
                         Mỗi khóa học có một phòng chung — mọi học viên đã mua/đăng ký khóa đó đều thấy cùng lịch sử chat.
                     </div>
@@ -201,7 +216,7 @@ export default function ChatPage() {
                     <Input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search a course..."
+                        placeholder="Tìm khóa học..."
                         className="border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-slate-900 pl-9 text-sm text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-400"
                     />
                 </div>
@@ -209,7 +224,7 @@ export default function ChatPage() {
             <div className="max-h-[70vh] space-y-1 overflow-y-auto px-2 pb-4">
                 {filteredRooms.length === 0 ? (
                     <div className="px-4 py-6 text-sm text-gray-500 dark:text-slate-400">
-                        Chưa có phòng. Mua/đăng ký khóa học hoặc dùng link từ giáo viên (Join Chat).
+                        Chưa có phòng. Mua/đăng ký khóa học hoặc dùng link từ giáo viên (Tham gia chat).
                     </div>
                 ) : (
                     filteredRooms.map((room) => (
@@ -297,7 +312,9 @@ export default function ChatPage() {
                                                     {msg.attachments.map((att, i) =>
                                                         att.type?.startsWith("image/") ? (
                                                             <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="block">
-                                                                <img src={att.url} alt={att.name} className="max-h-48 rounded-lg object-cover" />
+                                                                <div className="relative h-48 w-48 max-w-full overflow-hidden rounded-lg">
+                                                                  <Image src={att.url} alt={att.name} fill className="object-cover" />
+                                                                </div>
                                                             </a>
                                                         ) : (
                                                             <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="block text-xs underline">
@@ -309,7 +326,7 @@ export default function ChatPage() {
                                             ) : null}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">
-                                            {me ? "Bạn" : (msg.senderName || "Unknown")} •{" "}
+                                            {me ? "Bạn" : (msg.senderName || "Không rõ")} •{" "}
                                             {new Date(msg.createdAt).toLocaleTimeString()}
                                         </div>
                                     </div>
@@ -326,7 +343,9 @@ export default function ChatPage() {
                         {pendingAttachments.map((att, i) => (
                             <div key={i} className="relative inline-block">
                                 {att.type?.startsWith("image/") ? (
-                                    <img src={att.url} alt={att.name} className="h-16 w-16 rounded object-cover" />
+                                    <div className="relative h-16 w-16 overflow-hidden rounded">
+                                      <Image src={att.url} alt={att.name} fill className="object-cover" />
+                                    </div>
                                 ) : (
                                     <span className="rounded bg-gray-200 px-2 py-1 text-xs dark:bg-slate-700">{att.name}</span>
                                 )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export default function CartPage() {
   const [applyingVoucher, setApplyingVoucher] = useState(false);
   const [voucherError, setVoucherError] = useState<string | null>(null);
   const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([]);
-  const [selectionInitialized, setSelectionInitialized] = useState(false);
+  const selectionInitializedRef = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,12 +38,12 @@ export default function CartPage() {
         setItems(cartItems);
         setSelectedCourseIds((prev) => {
           const nextIds = cartItems.map((item) => item.courseId);
-          if (!selectionInitialized) {
+          if (!selectionInitializedRef.current) {
             return nextIds;
           }
           return prev.filter((id) => nextIds.includes(id));
         });
-        setSelectionInitialized(true);
+        selectionInitializedRef.current = true;
       } catch (err: any) {
         console.error("Error fetching cart data:", err);
         setError(err.response?.data?.message || "Failed to load cart");

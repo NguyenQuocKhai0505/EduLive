@@ -2,6 +2,7 @@
 
 import { Play, AlertCircle, MonitorPlay, FileText, Trophy, Infinity } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
 import { useI18n } from "@/context/I18nContext";
 import { useCart } from "@/context/CartContext";
@@ -58,7 +59,7 @@ export default function CourseSidebar({ course }: { course: Record<string, unkno
       {/* Video Preview */}
       <div className="relative aspect-video group cursor-pointer">
         {/* cartCourse.thumbnail đã được convert sang string để tránh lỗi kiểu build */}
-        <img src={cartCourse.thumbnail} alt="Preview" className="w-full h-full object-cover" />
+        <Image src={cartCourse.thumbnail} alt="Preview" fill className="object-cover" />
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-lg pl-1 group-hover:scale-110 transition-transform">
             <Play className="w-4 h-4 sm:w-6 sm:h-6 text-black fill-black" />

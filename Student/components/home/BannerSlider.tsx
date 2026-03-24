@@ -14,22 +14,23 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/context/I18nContext';
+import Image from 'next/image';
 
 const banners = [
   {
     id: 1,
     image: 'https://files.fullstack.edu.vn/f8-prod/banners/20/6308a026878f6.png',
-    gradient: 'from-blue-600 to-violet-600',
+    bgClass: 'bg-blue-600',
   },
   {
     id: 2,
     image: 'https://files.fullstack.edu.vn/f8-prod/banners/Banner_01_2.png',
-    gradient: 'from-purple-600 to-blue-500',
+    bgClass: 'bg-purple-600',
   },
   {
     id: 3,
     image: 'https://files.fullstack.edu.vn/f8-prod/banners/Banner_03_youtube.png',
-    gradient: 'from-red-500 to-orange-500',
+    bgClass: 'bg-red-600',
   },
 ];
 
@@ -71,7 +72,7 @@ export function BannerSlider() {
           {banners.map((item) => (
             <CarouselItem key={item.id}>
               <div
-                className={`relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r ${item.gradient} p-4 sm:p-6 md:p-12 text-white h-[240px] sm:h-[280px] md:h-[320px] flex items-center`}
+                className={`relative overflow-hidden rounded-xl sm:rounded-2xl ${item.bgClass} p-4 sm:p-6 md:p-12 text-white h-[240px] sm:h-[280px] md:h-[320px] flex items-center`}
               >
                 <div className="relative z-10 w-full md:w-2/3 space-y-2 sm:space-y-4">
                   <h2 className="text-xl sm:text-2xl md:text-4xl font-bold leading-tight">
@@ -89,10 +90,11 @@ export function BannerSlider() {
                   </Button>
                 </div>
                 <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden md:block">
-                    <img 
-                        src={item.image} 
-                        alt={t(`banner.${item.id}.title`)} 
-                        className="h-full w-full object-contain object-right opacity-90 hover:scale-105 transition-transform duration-500"
+                    <Image
+                        src={item.image}
+                        alt={t(`banner.${item.id}.title`)}
+                        fill
+                        className="object-contain object-right opacity-90 hover:scale-105 transition-transform duration-500"
                     />
                 </div>
               </div>

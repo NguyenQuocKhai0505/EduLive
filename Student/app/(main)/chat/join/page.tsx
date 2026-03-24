@@ -7,7 +7,6 @@ import { ArrowLeft, Link2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { joinByToken } from "@/services/chat.service";
 
 /**
@@ -35,6 +34,7 @@ export default function JoinChatPage() {
   const searchParams = useSearchParams();
   const [inputValue, setInputValue] = useState("");
   const [joining, setJoining] = useState(false);
+  const [banner, setBanner] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
   // Prefill token từ URL khi student mở link từ giáo viên (vd: /chat/join?token=xxx)
   useEffect(() => {
@@ -46,14 +46,14 @@ export default function JoinChatPage() {
     e.preventDefault();
     const token = parseTokenFromInput(inputValue);
     if (!token) {
-      toast.error("Vui lòng dán link tham gia hoặc token vào ô trên.");
+      setBanner({ type: "error", text: "Vui lòng dán link tham gia hoặc token vào ô bên dưới." });
       return;
     }
     setJoining(true);
     try {
       const res = await joinByToken(token);
       const data = res.data as { roomId?: number; courseTitle?: string };
-      toast.success("Đã tham gia phòng chat.");
+      setBanner({ type: "success", text: "Tham gia phòng chat thành công, đang chuyển trang..." });
       // Redirect sang My Chats và mở luôn phòng vừa join (nếu backend trả roomId)
       const roomId = data?.roomId;
       window.location.href = roomId != null ? `/chat?roomId=${roomId}` : "/chat";
@@ -62,7 +62,7 @@ export default function JoinChatPage() {
         err && typeof err === "object" && "response" in err
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
           : null;
-      toast.error(msg || "Không thể tham gia. Kiểm tra link/token hoặc đăng nhập.");
+      setBanner({ type: "error", text: msg || "Không thể tham gia. Kiểm tra link/token hoặc đăng nhập." });
     } finally {
       setJoining(false);
     }
@@ -71,15 +71,26 @@ export default function JoinChatPage() {
   return (
     <div className="px-4 pb-8 pt-6 sm:px-6">
       <div className="mx-auto max-w-lg space-y-6">
+        {banner && (
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${
+              banner.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+                : "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300"
+            }`}
+          >
+            {banner.text}
+          </div>
+        )}
         <Link
           href="/chat"
           className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
         >
-          <ArrowLeft className="h-4 w-4" /> My Chats
+          <ArrowLeft className="h-4 w-4" /> Phòng chat của tôi
         </Link>
 
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Join Chat</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tham gia chat</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
             Dán link tham gia phòng chat từ giáo viên hoặc nhập token vào ô dưới.
           </p>
@@ -117,7 +128,7 @@ export default function JoinChatPage() {
                 className="w-full sm:w-auto"
                 disabled={joining || !inputValue.trim()}
               >
-                {joining ? "Đang tham gia..." : "Join Chat"}
+                {joining ? "Đang tham gia..." : "Tham gia chat"}
               </Button>
             </form>
           </CardContent>

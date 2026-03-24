@@ -25,6 +25,7 @@ import {
   parseYoutubeTags,
 } from "@/services/youtube-course.service";
 import { useI18n } from "@/context/I18nContext";
+import Image from "next/image";
 
 const ALL_TAB_VALUE = "__ALL__";
 const UNCATEGORIZED_VALUE = "__uncategorized__";
@@ -240,19 +241,11 @@ export function FreeYoutubeCourses(){
                                         <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
                                             {/* Ảnh nền */}
                                             {video.thumb ? (
-                                            <img 
+                                            <Image
                                                 src={video.thumb}
                                                 alt={video.title}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                onError={(ev) => {
-                                                    const el = ev.currentTarget;
-                                                    if (!el.src.includes("hqdefault")) {
-                                                        const m = video.videoUrl.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-                                                        if (m?.[1]) {
-                                                            el.src = `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
-                                                        }
-                                                    }
-                                                }}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                             ) : (
                                             <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">

@@ -3,6 +3,7 @@
 import { ShoppingCart, Star, Heart } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import AddToCartButton from "./AddToCartButton";
 import { formatRating } from "@/lib/utils";
 import { useI18n } from "@/context/I18nContext";
@@ -54,10 +55,11 @@ export default function CourseCard({ item }: CourseCardProps) {
     <div className="group flex flex-col gap-2 sm:gap-3 h-full bg-white dark:bg-slate-900 rounded-lg p-2 sm:p-3 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
       <div className="overflow-hidden rounded-lg aspect-video border border-slate-200 dark:border-slate-700 relative">
         <Link href={`/course/${item.id}`} className="block w-full h-full">
-          <img
+          <Image
             src={item.thumbnail}
             alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </Link>

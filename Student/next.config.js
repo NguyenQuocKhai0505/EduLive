@@ -46,6 +46,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'img.youtube.com', // ✨ YouTube thumbnails
       },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+      },
     ],
   },
 }
