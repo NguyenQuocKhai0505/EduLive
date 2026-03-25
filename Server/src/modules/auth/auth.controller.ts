@@ -7,9 +7,6 @@ export class AuthController {
     constructor(private authService: AuthService){}
 
     private getCookieOptions(req: any) {
-        // Quyết định cookie theo protocol của request thật.
-        // Nếu backend đang chạy qua HTTPS (Render) thì đặt SameSite=None; Secure=true
-        // để cookie được phép trong cross-site XHR (frontend Vercel -> backend Render).
         const isSecure =
             !!req?.secure ||
             req?.headers?.['x-forwarded-proto'] === 'https' ||
