@@ -6,27 +6,32 @@ import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 export class AuthController {
     constructor(private authService: AuthService){}
 
-    private getCookieOptions() {
-        const isProd = process.env.NODE_ENV === 'production';
-        // Khi frontend và backend khác domain (Vercel ↔ Render), cookie cho XHR/fetch cross-site
-        // cần: SameSite=None; Secure=true để trình duyệt gửi cookie.
+    private getCookieOptions(req: any) {
+        // Quyết định cookie theo protocol của request thật.
+        // Nếu backend đang chạy qua HTTPS (Render) thì đặt SameSite=None; Secure=true
+        // để cookie được phép trong cross-site XHR (frontend Vercel -> backend Render).
+        const isSecure =
+            !!req?.secure ||
+            req?.headers?.['x-forwarded-proto'] === 'https' ||
+            req?.headers?.['x-forwarded-scheme'] === 'https';
+
         return {
             httpOnly: true,
-            sameSite: (isProd ? 'none' : 'lax') as 'lax' | 'none',
-            secure: isProd,
+            sameSite: (isSecure ? 'none' : 'lax') as 'lax' | 'none',
+            secure: isSecure,
         };
     }
 
 
     @Post("login")
     @HttpCode(HttpStatus.OK)
-    async signIn(@Body() signInDto: Record<string,any>, @Res() res){
+    async signIn(@Body() signInDto: Record<string,any>, @Req() req: any, @Res() res){
         // 1) Xac thuc email + password, service se tao access/refresh token
         const result = await this.authService.signIn(signInDto.email, signInDto.password)
 
         // 2) Luu access token vao cookie (ngan han)
         res.cookie("accessToken", result.access_token, {
-            ...this.getCookieOptions(),
+            ...this.getCookieOptions(req),
             maxAge: 15 * 60 * 1000,
         })
 
@@ -34,7 +39,7 @@ export class AuthController {
         //    Refresh token duoc tao trong service (getTokens),
         //    sau do hash va luu DB. O day chi set cookie ban goc.
         res.cookie("refreshToken", result.refresh_token, {
-            ...this.getCookieOptions(),
+            ...this.getCookieOptions(req),
             maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
@@ -67,22 +72,22 @@ export class AuthController {
     
     // Luu access token vao cookie (ngan han)
     res.cookie('accessToken', result.access_token, { 
-        ...this.getCookieOptions(),
+        ...this.getCookieOptions(req),
         maxAge: 15 * 60 * 1000
     });
 
     // Luu refresh token vao cookie (dai han)
     // Refresh token duoc tao trong service, hash luu DB de bao mat
     res.cookie('refreshToken', result.refresh_token, { 
-        ...this.getCookieOptions(),
+        ...this.getCookieOptions(req),
         maxAge: 7 * 24 * 60 * 60 * 1000
     });
     
     // Luu user info vao cookie de frontend lay ngay (tuy chon)
     res.cookie('userInfo', JSON.stringify(result.user), {
         httpOnly: false,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        secure: process.env.NODE_ENV === 'production',
+        sameSite: req?.secure ? 'none' : 'lax',
+        secure: !!req?.secure,
         maxAge: 24 * 60 * 60 * 1000
     });
     
@@ -112,11 +117,11 @@ export class AuthController {
     const result = await this.authService.refreshToken(refreshToken);
 
     res.cookie("accessToken", result.accessToken, {
-        ...this.getCookieOptions(),
+        ...this.getCookieOptions(req),
         maxAge: 15 * 60 * 1000,
     });
     res.cookie("refreshToken", result.refreshToken, {
-        ...this.getCookieOptions(),
+        ...this.getCookieOptions(req),
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
