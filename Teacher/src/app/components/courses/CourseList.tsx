@@ -17,6 +17,7 @@ import { deleteCourse, getMyCourses } from "../../../services/course.service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { normalizeMediaUrl } from "@/lib/media-url";
+import { confirmWithToast } from "../../../../lib/confirm-toast";
 type CourseCategory = {
   id: number;
   name: string;
@@ -72,13 +73,12 @@ export const CourseList = () => {
   };
 
   const handleDelete = async (courseId: number, courseTitle: string) => {
-    if (
-      !confirm(
-        `Delete course "${courseTitle}"? Sections and lessons will be removed. This cannot be undone.`
-      )
-    ) {
-      return;
-    }
+    const ok = await confirmWithToast({
+      message: `Delete course "${courseTitle}"? Sections and lessons will be removed.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+    });
+    if (!ok) return;
     try {
       await deleteCourse(courseId);
       toast.success("Course deleted");

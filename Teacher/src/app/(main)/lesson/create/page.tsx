@@ -21,6 +21,7 @@ import {
 } from "../../../../services/lesson.service";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
+import { confirmWithToast } from "../../../../../lib/confirm-toast";
 type Course = {
     id:number
     title:string
@@ -184,7 +185,12 @@ export default function LessonCreatePage(){
 
     const handleDeleteLesson = async (lesson: Lesson) => {
       if (!selectedCourseId) return;
-      if (!confirm(`Xóa lesson "${lesson.title}"?`)) return;
+      const ok = await confirmWithToast({
+        message: `Xóa lesson "${lesson.title}"?`,
+        confirmLabel: "Xóa",
+        cancelLabel: "Hủy",
+      });
+      if (!ok) return;
       try {
         await deleteLesson(selectedCourseId, lesson.sectionId, lesson.id);
         await reloadAllLessons();
