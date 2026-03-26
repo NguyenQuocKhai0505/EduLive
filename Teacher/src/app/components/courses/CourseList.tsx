@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { getMyCourses } from "../../../services/course.service";
 import { useRouter } from "next/navigation";
+import { normalizeMediaUrl } from "@/lib/media-url";
 type CourseCategory = {
   id: number;
   name: string;
@@ -98,14 +99,19 @@ export const CourseList = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              courses.map((course) => (
+              courses.map((course) => {
+                const thumbUrl = normalizeMediaUrl(course.thumbnail);
+                const categoryImgUrl = normalizeMediaUrl(
+                  course.category?.image ?? null
+                );
+                return (
               <TableRow key={course.id}>
                 <TableCell className="min-w-[240px]">
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-20 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                      {course.thumbnail ? (
+                      {thumbUrl ? (
                         <Image
-                          src={course.thumbnail}
+                          src={thumbUrl}
                           alt={course.title}
                           width={80}
                           height={48}
@@ -130,10 +136,10 @@ export const CourseList = () => {
                 <TableCell className="hidden lg:table-cell">
                   <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                     <div className="h-7 w-7 overflow-hidden rounded-full border border-slate-200 dark:border-slate-800">
-                      {course.category?.image ? (
+                      {categoryImgUrl ? (
                         <Image
-                          src={course.category.image}
-                          alt={course.category.name}
+                          src={categoryImgUrl}
+                          alt={course.category?.name ?? "Danh mục"}
                           width={28}
                           height={28}
                           className="h-full w-full object-cover"
@@ -182,7 +188,8 @@ export const CourseList = () => {
                   </div>
                 </TableCell>
               </TableRow>
-              ))
+              );
+              })
             )}
           </TableBody>
         </Table>

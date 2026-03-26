@@ -16,3 +16,6 @@ export const updateSection = (
   sectionId: number,
   data: Partial<SectionPayload>
 ) => api.patch(`/courses/${courseId}/sections/${sectionId}`, data);
+
+export const deleteSection = (courseId: number, sectionId: number) =>
+  api.delete(`/courses/${courseId}/sections/${sectionId}`);
