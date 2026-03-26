@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getMyCourses } from "../../../services/course.service";
+import { deleteCourse, getMyCourses } from "../../../services/course.service";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { normalizeMediaUrl } from "@/lib/media-url";
 type CourseCategory = {
@@ -47,29 +48,45 @@ export const CourseList = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setLoading(true);
-        const response = await getMyCourses();
-        const list = Array.isArray(response.data)
-          ? response.data
-          : response.data?.data ?? [];
-        setCourses(list);
-      } catch (error) {
-        console.error("Error fetching courses", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCourses();
+  const loadCourses = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await getMyCourses();
+      const list = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data ?? [];
+      setCourses(list);
+    } catch (error) {
+      console.error("Error fetching courses", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleEdit = (courseId:number) =>{
-    router.push(`courses/${courseId}/edit`)
-  }
+  useEffect(() => {
+    void loadCourses();
+  }, [loadCourses]);
 
-  const handleDelete = (courseId:number) =>{}
+  const handleEdit = (courseId: number) => {
+    router.push(`courses/${courseId}/edit`);
+  };
+
+  const handleDelete = async (courseId: number, courseTitle: string) => {
+    if (
+      !confirm(
+        `Delete course "${courseTitle}"? Sections and lessons will be removed. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    try {
+      await deleteCourse(courseId);
+      toast.success("Course deleted");
+      await loadCourses();
+    } catch {
+      toast.error("Failed to delete course");
+    }
+  };
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -182,6 +199,9 @@ export const CourseList = () => {
                       size="icon"
                       className="text-red-600 hover:text-red-700"
                       aria-label="Delete course"
+                      onClick={() =>
+                        void handleDelete(course.id, course.title)
+                      }
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
