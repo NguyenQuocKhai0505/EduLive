@@ -17,19 +17,10 @@ import {
   getLessonsBySection,
   createLesson,
   uploadLessonVideos,
-  updateLesson,
   deleteLesson,
-  type LessonPayload,
 } from "../../../../services/lesson.service";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Trash2 } from "lucide-react";
 type Course = {
     id:number
     title:string
@@ -72,18 +63,6 @@ export default function LessonCreatePage(){
     const [expandedCourseId, setExpandedCourseId] = useState<number | null>(null);
     const [expandedSectionId, setExpandedSectionId] = useState<number | null>(null);
 
-    const [lessonToEdit, setLessonToEdit] = useState<Lesson | null>(null);
-    const [editLessonTitle, setEditLessonTitle] = useState("");
-    const [editLessonType, setEditLessonType] =
-      useState<Lesson["type"]>("video");
-    const [editLessonContent, setEditLessonContent] = useState("");
-    const [editLessonTime, setEditLessonTime] = useState("");
-    const [editLessonOrder, setEditLessonOrder] = useState<number | "">("");
-    const [editLessonPreview, setEditLessonPreview] = useState(false);
-    const [editLessonVideoFile, setEditLessonVideoFile] =
-      useState<File | null>(null);
-    const [savingLesson, setSavingLesson] = useState(false);
-
     const filteredSections = useMemo(
       () => sections.filter((s) => s.courseId === selectedCourseId),
       [sections, selectedCourseId]
@@ -110,18 +89,6 @@ export default function LessonCreatePage(){
         toast.error("Không tải được danh sách lesson");
       }
     }, [selectedCourseId, sections]);
-
-    useEffect(() => {
-      if (lessonToEdit) {
-        setEditLessonTitle(lessonToEdit.title);
-        setEditLessonType(lessonToEdit.type);
-        setEditLessonContent(lessonToEdit.content ?? "");
-        setEditLessonTime(lessonToEdit.time ?? "");
-        setEditLessonOrder(lessonToEdit.order);
-        setEditLessonPreview(lessonToEdit.preview);
-        setEditLessonVideoFile(null);
-      }
-    }, [lessonToEdit]);
 
     //Load courses 
     useEffect(()=>{
@@ -214,54 +181,6 @@ export default function LessonCreatePage(){
         setCreating(false)
       }
     }
-
-    const handleSaveLessonEdit = async () => {
-      if (!lessonToEdit || !selectedCourseId || !editLessonTitle.trim()) return;
-      if (editLessonType === "video" && !lessonToEdit.videoUrl && !editLessonVideoFile) {
-        toast.error("Lesson video cần file hoặc URL đã có — hãy chọn video mới");
-        return;
-      }
-      setSavingLesson(true);
-      try {
-        let newVideoUrl: string | undefined;
-        if (editLessonType === "video" && editLessonVideoFile) {
-          const uploadRes = await uploadLessonVideos([editLessonVideoFile]);
-          newVideoUrl = uploadRes.data.urls?.[0];
-          if (!newVideoUrl) {
-            toast.error("Upload video thất bại");
-            return;
-          }
-        }
-
-        const payload: Partial<LessonPayload> = {
-          title: editLessonTitle.trim(),
-          type: editLessonType,
-          time: editLessonTime.trim() || undefined,
-          order:
-            editLessonOrder === "" ? lessonToEdit.order : Number(editLessonOrder),
-          preview: editLessonPreview,
-        };
-        if (editLessonType === "video") {
-          if (newVideoUrl) payload.videoUrl = newVideoUrl;
-        } else {
-          payload.content = editLessonContent.trim() || undefined;
-        }
-
-        await updateLesson(
-          selectedCourseId,
-          lessonToEdit.sectionId,
-          lessonToEdit.id,
-          payload
-        );
-        await reloadAllLessons();
-        setLessonToEdit(null);
-        toast.success("Đã cập nhật lesson");
-      } catch {
-        toast.error("Không cập nhật được lesson");
-      } finally {
-        setSavingLesson(false);
-      }
-    };
 
     const handleDeleteLesson = async (lesson: Lesson) => {
       if (!selectedCourseId) return;
@@ -519,16 +438,6 @@ export default function LessonCreatePage(){
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8"
-                                            aria-label="Sửa lesson"
-                                            onClick={() => setLessonToEdit(lesson)}
-                                          >
-                                            <Pencil className="h-4 w-4" />
-                                          </Button>
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
                                             className="h-8 w-8 text-red-600 hover:text-red-700"
                                             aria-label="Xóa lesson"
                                             onClick={() => void handleDeleteLesson(lesson)}
@@ -549,124 +458,6 @@ export default function LessonCreatePage(){
               )}
             </div>
           </Card>
-
-          <Dialog
-            open={!!lessonToEdit}
-            onOpenChange={(open) => !open && setLessonToEdit(null)}
-          >
-            <DialogContent className="max-h-[90vh] overflow-y-auto dark:border-slate-800 sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Sửa lesson</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-3 py-2">
-                <div>
-                  <label className="text-sm font-medium">Tiêu đề</label>
-                  <Input
-                    value={editLessonTitle}
-                    onChange={(e) => setEditLessonTitle(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Loại</label>
-                  <Select
-                    value={editLessonType}
-                    onValueChange={(v) =>
-                      setEditLessonType(v as Lesson["type"])
-                    }
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="article">Article</SelectItem>
-                      <SelectItem value="quiz">Quiz</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {editLessonType === "video" && (
-                  <div>
-                    <label className="text-sm font-medium">
-                      Video mới (tùy chọn)
-                    </label>
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      className="mt-1"
-                      onChange={(e) =>
-                        setEditLessonVideoFile(e.target.files?.[0] ?? null)
-                      }
-                    />
-                    {lessonToEdit?.videoUrl && !editLessonVideoFile ? (
-                      <p className="mt-1 text-xs text-slate-500">
-                        Đang dùng video hiện tại. Chọn file để thay thế.
-                      </p>
-                    ) : null}
-                  </div>
-                )}
-                {editLessonType !== "video" && (
-                  <div>
-                    <label className="text-sm font-medium">Nội dung</label>
-                    <Textarea
-                      rows={4}
-                      value={editLessonContent}
-                      onChange={(e) => setEditLessonContent(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium">Thời lượng</label>
-                    <Input
-                      value={editLessonTime}
-                      placeholder="05:00"
-                      onChange={(e) => setEditLessonTime(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Thứ tự</label>
-                    <Input
-                      type="number"
-                      value={editLessonOrder}
-                      onChange={(e) =>
-                        setEditLessonOrder(
-                          e.target.value === "" ? "" : Number(e.target.value)
-                        )
-                      }
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={editLessonPreview}
-                    onChange={(e) => setEditLessonPreview(e.target.checked)}
-                  />
-                  Preview (học thử)
-                </label>
-              </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setLessonToEdit(null)}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="button"
-                  disabled={savingLesson || !editLessonTitle.trim()}
-                  onClick={() => void handleSaveLessonEdit()}
-                >
-                  {savingLesson ? "Đang lưu..." : "Lưu"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       );
 }

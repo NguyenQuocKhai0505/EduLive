@@ -37,7 +37,7 @@ export const login = async (email: string, pass: string) => {
             ? { id: meRes.data.id, email: meRes.data.email, name: meRes.data.name, role: meRes.data.role, avatar: meRes.data.avatar }
             : null;
         } catch (e) {
-          console.error("Backend không trả user và /auth/me thất bại:", e);
+          console.error("No user in login response and /auth/me failed:", e);
         }
       }
 
