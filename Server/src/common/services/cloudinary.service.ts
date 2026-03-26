@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 import { Express } from 'express';
+import * as fs from 'fs';
 
 @Injectable()
 export class CloudinaryService {
@@ -103,6 +104,46 @@ export class CloudinaryService {
     ): Promise<string[]> {
         const uploadPromises = files.map((file) => this.uploadVideo(file, folder));
         return Promise.all(uploadPromises);
+    }
+
+    /**
+     * Upload video lớn từ đường dẫn file (disk) — dùng chunked upload, không đọc cả file vào RAM.
+     * Phù hợp lesson dài (vài GB).
+     */
+    async uploadLargeVideoFromPath(filePath: string, folder: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            // Cloudinary v2: upload_large(path, options, callback)
+            cloudinary.uploader.upload_large(
+                filePath,
+                {
+                    folder,
+                    resource_type: 'video',
+                    chunk_size: 20 * 1024 * 1024,
+                },
+                (error, result) => {
+                    if (error) {
+                        reject(error);
+                    } else if (!result || !result.secure_url) {
+                        reject(
+                            new Error('Upload failed: No result or secure_url from Cloudinary')
+                        );
+                    } else {
+                        resolve(result.secure_url);
+                    }
+                }
+            );
+        });
+    }
+
+    /** Xóa file tạm sau upload (best-effort). */
+    tryUnlink(filePath: string): void {
+        try {
+            if (filePath && fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        } catch {
+            /* ignore */
+        }
     }
 
     /**
