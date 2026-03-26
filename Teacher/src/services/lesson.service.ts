@@ -19,10 +19,34 @@ export const createLesson = (
   data: LessonPayload
 ) => api.post(`/courses/${courseId}/sections/${sectionId}/lessons`, data);
 
+export const updateLesson = (
+  courseId: number,
+  sectionId: number,
+  lessonId: number,
+  data: Partial<LessonPayload>
+) =>
+  api.patch(
+    `/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`,
+    data
+  );
+
+export const deleteLesson = (
+  courseId: number,
+  sectionId: number,
+  lessonId: number
+) =>
+  api.delete(
+    `/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`
+  );
+
 export const uploadLessonVideos = (files: File[]) => {
   const formData = new FormData();
   files.forEach((file) => formData.append("videos", file));
   return api.post("/lessons/upload/videos", formData, {
     headers: { "Content-Type": "multipart/form-data" },
+    // Video dài: upload + Cloudinary có thể mất nhiều phút
+    timeout: 3_600_000,
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
   });
 };

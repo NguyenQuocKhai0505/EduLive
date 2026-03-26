@@ -13,7 +13,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {getMyCourses} from "../../../../services/course.service"
-import {getSectionsByCourse, createSection, updateSection} from "../../../../services/section.service"
+import {
+  getSectionsByCourse,
+  createSection,
+  updateSection,
+  deleteSection,
+} from "../../../../services/section.service";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { DndContext } from "@dnd-kit/core";
@@ -39,6 +52,17 @@ export default function SectionPage() {
   const [title, setTitle] = useState("");
   const [order, setOrder] = useState<number | "">("");
   const [creating, setCreating] = useState(false);
+  const [sectionToEdit, setSectionToEdit] = useState<Section | null>(null);
+  const [editSectionTitle, setEditSectionTitle] = useState("");
+  const [editSectionOrder, setEditSectionOrder] = useState<number | "">("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  useEffect(() => {
+    if (sectionToEdit) {
+      setEditSectionTitle(sectionToEdit.title);
+      setEditSectionOrder(sectionToEdit.order);
+    }
+  }, [sectionToEdit]);
 
   //Load courses
   useEffect(() => {
@@ -95,12 +119,65 @@ export default function SectionPage() {
       transform: CSS.Transform.toString(transform),
       transition,
     };
-  
+
     return (
-      <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-        {children}
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="flex items-stretch gap-2 rounded-lg border border-slate-200 dark:border-slate-800"
+      >
+        <button
+          type="button"
+          className="flex shrink-0 cursor-grab touch-none items-center px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+          aria-label="Kéo để sắp xếp"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <div className="min-w-0 flex-1 py-3 pr-3">{children}</div>
       </div>
     );
+  };
+
+  const handleSaveSectionEdit = async () => {
+    if (!sectionToEdit || !selectedCourseId || !editSectionTitle.trim()) return;
+    setSavingEdit(true);
+    try {
+      await updateSection(selectedCourseId, sectionToEdit.id, {
+        title: editSectionTitle.trim(),
+        order:
+          editSectionOrder === ""
+            ? sectionToEdit.order
+            : Number(editSectionOrder),
+      });
+      const res = await getSectionsByCourse(selectedCourseId);
+      setSections(res.data);
+      setSectionToEdit(null);
+      toast.success("Đã cập nhật section");
+    } catch {
+      toast.error("Không cập nhật được section");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteSection = async (section: Section) => {
+    if (!selectedCourseId) return;
+    if (
+      !confirm(
+        `Xóa section "${section.title}"? Toàn bộ lesson trong section sẽ bị xóa.`
+      )
+    )
+      return;
+    try {
+      await deleteSection(selectedCourseId, section.id);
+      const res = await getSectionsByCourse(selectedCourseId);
+      setSections(res.data);
+      toast.success("Đã xóa section");
+    } catch {
+      toast.error("Không xóa được section");
+    }
   };
   //Drag and drop 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -217,16 +294,37 @@ export default function SectionPage() {
               <div className="mt-4 space-y-3">
                 {sections.map((section) => (
                   <SortableItem key={section.id} id={section.id}>
-                    <div className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3 text-sm dark:border-slate-800">
-                      <div>
+                    <div className="flex items-center justify-between gap-2 text-sm">
+                      <div className="min-w-0">
                         <div className="font-medium text-slate-900 dark:text-white">
                           {section.title}
                         </div>
                         <div className="text-xs text-slate-500">
-                          Order: {section.order}
+                          Order: {section.order} · ID: {section.id}
                         </div>
                       </div>
-                      <span className="text-xs text-slate-400">ID: {section.id}</span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          aria-label="Sửa section"
+                          onClick={() => setSectionToEdit(section)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600 hover:text-red-700"
+                          aria-label="Xóa section"
+                          onClick={() => void handleDeleteSection(section)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </SortableItem>
                 ))}
@@ -235,6 +333,56 @@ export default function SectionPage() {
           </DndContext>
         )}
       </Card>
+
+      <Dialog
+        open={!!sectionToEdit}
+        onOpenChange={(open) => !open && setSectionToEdit(null)}
+      >
+        <DialogContent className="dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle>Sửa section</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            <div>
+              <label className="text-sm font-medium">Tiêu đề</label>
+              <Input
+                value={editSectionTitle}
+                onChange={(e) => setEditSectionTitle(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Thứ tự</label>
+              <Input
+                type="number"
+                value={editSectionOrder}
+                onChange={(e) =>
+                  setEditSectionOrder(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setSectionToEdit(null)}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              disabled={savingEdit || !editSectionTitle.trim()}
+              onClick={() => void handleSaveSectionEdit()}
+            >
+              {savingEdit ? "Đang lưu..." : "Lưu"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

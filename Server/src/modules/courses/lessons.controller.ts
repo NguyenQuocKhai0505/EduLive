@@ -16,7 +16,10 @@ import {
     UploadedFiles,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
+import { diskStorage } from 'multer';
+import { randomUUID } from 'crypto';
+import { extname } from 'path';
+import { tmpdir } from 'os';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
@@ -26,6 +29,10 @@ import { Roles } from '../../common/decorators/roles.decirator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { CloudinaryService } from '../../common/services/cloudinary.service';
 import { videoFileFilter } from '../../common/utils/file-upload.util';
+
+/** Mặc định 1GB/file — tăng bằng LESSON_UPLOAD_MAX_FILE_BYTES (byte) nếu cần. */
+const LESSON_VIDEO_MAX_BYTES =
+    Number(process.env.LESSON_UPLOAD_MAX_FILE_BYTES) || 1 * 1024 * 1024 * 1024;
 
 /**
  * CONTROLLER: LessonsController
@@ -76,10 +83,15 @@ export class LessonsController {
     @Roles(UserRole.TEACHER, UserRole.ADMIN)
     @UseInterceptors(
         FilesInterceptor('videos', 5, {
-            storage: memoryStorage(),
+            storage: diskStorage({
+                destination: tmpdir(),
+                filename: (req, file, cb) => {
+                    cb(null, `lesson-${randomUUID()}${extname(file.originalname)}`);
+                },
+            }),
             fileFilter: videoFileFilter,
             limits: {
-                fileSize: 200 * 1024 * 1024, // 200MB per file
+                fileSize: LESSON_VIDEO_MAX_BYTES,
             },
         })
     )
@@ -88,7 +100,22 @@ export class LessonsController {
             throw new BadRequestException('Video files are required');
         }
 
-        const urls = await this.cloudinaryService.uploadMultipleVideos(files, 'lessons');
+        const urls: string[] = [];
+        for (const file of files) {
+            const path = (file as Express.Multer.File & { path?: string }).path;
+            if (!path) {
+                throw new BadRequestException('Upload failed: missing temp file path');
+            }
+            try {
+                const url = await this.cloudinaryService.uploadLargeVideoFromPath(
+                    path,
+                    'lessons'
+                );
+                urls.push(url);
+            } finally {
+                this.cloudinaryService.tryUnlink(path);
+            }
+        }
         return { urls };
     }
 
