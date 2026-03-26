@@ -1,36 +1,50 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
+import api from "@/lib/api";
 
-export default async function MainLayout({
+const TEACHER_ALLOWED_ROLES = ["admin", "teacher"] as const;
+
+export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken");
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
 
-  if (!accessToken) {
-    redirect("/auth/login");
-  }
+  // `accessToken` is `httpOnly` on the API domain; Next.js server cannot read it here.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await api.get("/auth/me");
+        const role = me.data?.role as string | undefined;
+        if (!role || !TEACHER_ALLOWED_ROLES.includes(role as "admin" | "teacher")) {
+          router.replace("/auth/login");
+          return;
+        }
+        if (!cancelled) setAuthorized(true);
+      } catch {
+        router.replace("/auth/login");
+      }
+    })();
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
-  const res = await fetch(`${baseUrl}/auth/me`, {
-    headers: {
-      cookie: cookieStore.toString(),
-    },
-    cache: "no-store",
-  });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
-  if (!res.ok) {
-    redirect("/auth/login");
-  }
-
-  const user = await res.json();
-  if (!["admin", "teacher"].includes(user?.role)) {
-    redirect("/auth/login");
+  if (authorized === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        Đang kiểm tra quyền...
+      </div>
+    );
   }
 
   return (
