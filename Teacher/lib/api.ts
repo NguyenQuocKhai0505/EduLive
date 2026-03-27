@@ -12,7 +12,25 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Gửi token trong header (Teacher 3002 → API 3001 khác origin, cookie không gửi)
+let refreshInFlight: Promise<void> | null = null;
+
+function runRefresh(): Promise<void> {
+  if (!refreshInFlight) {
+    refreshInFlight = api
+      .post("/auth/refresh")
+      .then(() => undefined)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
+/** Dùng chung mutex với interceptor — tránh 2 refresh song song làm hỏng refresh-token xoay vòng. */
+export function refreshSession(): Promise<void> {
+  return runRefresh();
+}
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = Cookies.get("accessToken");
@@ -38,10 +56,10 @@ api.interceptors.response.use(
     ) {
       original._retry = true;
       try {
-        await api.post("/auth/refresh");
+        await runRefresh();
         return api(original);
-      } catch {
-        return Promise.reject(err);
+      } catch (refreshErr) {
+        return Promise.reject(refreshErr);
       }
     }
     return Promise.reject(err);

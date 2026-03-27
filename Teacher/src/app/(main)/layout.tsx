@@ -18,6 +18,7 @@ export default function MainLayout({
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   // `accessToken` is `httpOnly` on the API domain; Next.js server cannot read it here.
+  // Chạy một lần khi mount: tránh phụ thuộc `router` (đổi reference) gây gọi lại /auth/me và race với refresh khi upload lâu.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -30,14 +31,14 @@ export default function MainLayout({
         }
         if (!cancelled) setAuthorized(true);
       } catch {
-        router.replace("/auth/login");
+        if (!cancelled) router.replace("/auth/login");
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
   if (authorized === null) {
     return (

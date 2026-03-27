@@ -169,7 +169,8 @@ export class AuthService {
       if (!refreshToken) throw new UnauthorizedException("No refresh token");
     
       const payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret:
+          process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
       });
     
       const user = await this.usersService.findOne(payload.sub);
