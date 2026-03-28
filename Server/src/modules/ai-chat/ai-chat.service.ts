@@ -21,8 +21,9 @@ export class AiChatService {
     @InjectRepository(AiChatMessage)
     private readonly messageRepo: Repository<AiChatMessage>,
   ) {
+    // Tên model Google GenAI (Gemini API). Có thể override bằng GEMINI_MODEL trong .env
     this.geminiModelName =
-      this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.0-flash';
+      this.configService.get<string>('GEMINI_MODEL') || 'gemini-2.5-flash';
   }
 
   private getGeminiClient(): GoogleGenAI | null {
