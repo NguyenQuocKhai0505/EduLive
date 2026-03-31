@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { normalizeMediaUrl } from "@/lib/media-url";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -264,7 +265,12 @@ export default function CheckoutPage() {
             {selectedItems.map((item) => (
               <div key={item.id} className="flex gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="w-20 h-14 bg-slate-200 dark:bg-slate-800 relative rounded overflow-hidden">
-                  <Image src={item.course.thumbnail} alt={item.course.title} fill className="object-cover" />
+                  <Image
+                    src={normalizeMediaUrl(item.course.thumbnail) || "/placeholder.jpg"}
+                    alt={item.course.title}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold line-clamp-2">{item.course.title}</div>

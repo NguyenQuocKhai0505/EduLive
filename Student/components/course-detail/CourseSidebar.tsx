@@ -8,6 +8,7 @@ import { useI18n } from "@/context/I18nContext";
 import { useCart } from "@/context/CartContext";
 import AddToCartButton from "@/components/shared/AddToCartButton";
 import type { Course } from "@/lib/types/course.types";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 function toCartCourse(c: Record<string, unknown>): Course {
   const x = c as Record<string, unknown>;
@@ -39,6 +40,7 @@ export default function CourseSidebar({ course }: { course: Record<string, unkno
   const { addToCart, isInCart } = useCart();
   const cartCourse = toCartCourse(course);
   const courseId = Number(course.id);
+  const thumbUrl = normalizeMediaUrl(cartCourse.thumbnail) || "/placeholder.jpg";
 
   const handleBuyNow = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -59,7 +61,7 @@ export default function CourseSidebar({ course }: { course: Record<string, unkno
       {/* Video Preview */}
       <div className="relative aspect-video group cursor-pointer">
         {/* cartCourse.thumbnail đã được convert sang string để tránh lỗi kiểu build */}
-        <Image src={cartCourse.thumbnail} alt="Preview" fill className="object-cover" />
+        <Image src={thumbUrl} alt="Preview" fill className="object-cover" />
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-lg pl-1 group-hover:scale-110 transition-transform">
             <Play className="w-4 h-4 sm:w-6 sm:h-6 text-black fill-black" />

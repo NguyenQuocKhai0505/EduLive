@@ -4,6 +4,7 @@ import { CheckCircle, X } from "lucide-react";
 import { Course } from "@/lib/types/course.types";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 interface AddedToCartModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface AddedToCartModalProps {
 
 export default function AddedToCartModal({ isOpen, onClose, course }: AddedToCartModalProps) {
   const router = useRouter();
+  const thumbUrl = normalizeMediaUrl(course.thumbnail) || "/placeholder.jpg";
 
   if (!isOpen) return null;
 
@@ -33,7 +35,7 @@ export default function AddedToCartModal({ isOpen, onClose, course }: AddedToCar
         <div className="flex gap-4 mb-6">
           <div className="relative w-20 h-20 flex-shrink-0">
              <div className="w-full h-full bg-slate-200 rounded object-cover overflow-hidden">
-                <Image src={course.thumbnail || "/placeholder.jpg"} alt={course.title} fill className="object-cover"/>
+                <Image src={thumbUrl} alt={course.title} fill className="object-cover"/>
              </div>
           </div>
           <div>

@@ -39,6 +39,10 @@ const nextConfig = {
         hostname: 'res.cloudinary.com', // ✨ Cloudinary images
       },
       {
+        protocol: "https",
+        hostname: "**.onrender.com",
+      },
+      {
         protocol: 'https',
         hostname: 'jkwiatk1.github.io', // ✨ GitHub.io images
       },

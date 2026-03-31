@@ -8,6 +8,7 @@ import AddToCartButton from "./AddToCartButton";
 import { formatRating } from "@/lib/utils";
 import { useI18n } from "@/context/I18nContext";
 import { toast } from "sonner";
+import { normalizeMediaUrl } from "@/lib/media-url";
 
 const WISHLIST_KEY = "edulive_wishlist_course_ids";
 
@@ -29,6 +30,7 @@ interface CourseCardProps {
 export default function CourseCard({ item }: CourseCardProps) {
   const { t } = useI18n();
   const [wishlisted, setWishlisted] = useState(false);
+  const thumbUrl = normalizeMediaUrl(item?.thumbnail) || "/placeholder.jpg";
 
   useEffect(() => {
     const id = Number(item.id);
@@ -56,7 +58,7 @@ export default function CourseCard({ item }: CourseCardProps) {
       <div className="overflow-hidden rounded-lg aspect-video border border-slate-200 dark:border-slate-700 relative">
         <Link href={`/course/${item.id}`} className="block w-full h-full">
           <Image
-            src={item.thumbnail}
+            src={thumbUrl}
             alt={item.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"

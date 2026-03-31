@@ -34,6 +34,22 @@ import { videoFileFilter } from '../../common/utils/file-upload.util';
 const LESSON_VIDEO_MAX_BYTES =
     Number(process.env.LESSON_UPLOAD_MAX_FILE_BYTES) || 1 * 1024 * 1024 * 1024;
 
+function formatUploadErr(err: unknown): string {
+    if (!err) return 'Unknown error';
+    const e = err as any;
+    const msg =
+        e?.message ||
+        e?.error?.message ||
+        e?.response?.data?.error?.message ||
+        e?.response?.data?.message;
+    const code = e?.code || e?.errno;
+    const httpCode = e?.http_code || e?.statusCode || e?.response?.status;
+    const parts = [msg, code ? `code=${code}` : '', httpCode ? `http=${httpCode}` : '']
+        .filter(Boolean)
+        .join(' ');
+    return parts || 'Unknown error';
+}
+
 /**
  * CONTROLLER: LessonsController
  * 
@@ -112,6 +128,17 @@ export class LessonsController {
                     'lessons'
                 );
                 urls.push(url);
+            } catch (err: unknown) {
+                const raw = formatUploadErr(err);
+                // Render/containers thường giới hạn /tmp; lỗi phổ biến là ENOSPC (no space left on device)
+                if (raw.toLowerCase().includes('enospc') || raw.toLowerCase().includes('no space')) {
+                    throw new BadRequestException(
+                        `Upload failed (server temp storage full). Try a smaller video, split the video, or switch to direct-to-Cloudinary upload. Detail: ${raw}`
+                    );
+                }
+                throw new BadRequestException(
+                    `Upload failed for "${file.originalname}". Detail: ${raw}`
+                );
             } finally {
                 this.cloudinaryService.tryUnlink(path);
             }

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Send, Smile, Paperclip, ArrowLeft, PanelLeft, PanelLeftClose } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { normalizeMediaUrl } from "@/lib/media-url";
 import { toast } from "sonner";
 import {
   ChatAttachment,
@@ -313,7 +314,12 @@ export default function ChatPage() {
                                                         att.type?.startsWith("image/") ? (
                                                             <a key={i} href={att.url} target="_blank" rel="noopener noreferrer" className="block">
                                                                 <div className="relative h-48 w-48 max-w-full overflow-hidden rounded-lg">
-                                                                  <Image src={att.url} alt={att.name} fill className="object-cover" />
+                                                                  <Image
+                                                                    src={normalizeMediaUrl(att.url) || "/placeholder.jpg"}
+                                                                    alt={att.name}
+                                                                    fill
+                                                                    className="object-cover"
+                                                                  />
                                                                 </div>
                                                             </a>
                                                         ) : (
@@ -344,7 +350,12 @@ export default function ChatPage() {
                             <div key={i} className="relative inline-block">
                                 {att.type?.startsWith("image/") ? (
                                     <div className="relative h-16 w-16 overflow-hidden rounded">
-                                      <Image src={att.url} alt={att.name} fill className="object-cover" />
+                                      <Image
+                                        src={normalizeMediaUrl(att.url) || "/placeholder.jpg"}
+                                        alt={att.name}
+                                        fill
+                                        className="object-cover"
+                                      />
                                     </div>
                                 ) : (
                                     <span className="rounded bg-gray-200 px-2 py-1 text-xs dark:bg-slate-700">{att.name}</span>

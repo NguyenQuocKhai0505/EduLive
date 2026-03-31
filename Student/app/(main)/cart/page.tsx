@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { normalizeMediaUrl } from "@/lib/media-url";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getAllCourses, CourseResponse } from "@/services/course.service";
@@ -151,34 +152,48 @@ export default function CartPage() {
         <div className="mt-12 sm:mt-16 text-left">
           <h3 className="text-lg sm:text-xl font-bold mb-4 text-slate-900 dark:text-white">Learners are viewing</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {suggestedCourses.map(course => (
-              <div key={course.id} className="border dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-                <div className="relative h-40 w-full bg-slate-200">
-                  <Image src={course.thumbnail} alt={course.title} fill className="object-cover" />
-                </div>
-                <div className="p-4 flex-1 flex flex-col">
-                  <h4 className="font-bold line-clamp-2 h-12 mb-1 text-sm">{course.title}</h4>
-                  <div className="text-xs text-slate-500 mb-2">{course.instructor?.name || "Unknown"}</div>
-                  <div className="flex items-center mb-2">
-                    <span className="font-bold text-amber-500 mr-1 text-sm">{formatRating(course.rating)}</span>
-                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+            {suggestedCourses.map((course) => {
+              const thumb = normalizeMediaUrl(course.thumbnail) || "/placeholder.jpg";
+              return (
+                <div
+                  key={course.id}
+                  className="border dark:border-slate-800 rounded-lg overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+                >
+                  <div className="relative h-40 w-full bg-slate-200">
+                    <Image src={thumb} alt={course.title} fill className="object-cover" />
                   </div>
-                  <div className="flex items-center gap-2 mb-3 mt-auto">
-                    <span className="font-bold">
-                      {formatPrice(course.price)}
-                    </span>
-                    {course.originalPrice > course.price && (
-                      <span className="text-sm text-slate-400 line-through">
-                        {formatPrice(course.originalPrice)}
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h4 className="font-bold line-clamp-2 h-12 mb-1 text-sm">
+                      {course.title}
+                    </h4>
+                    <div className="text-xs text-slate-500 mb-2">
+                      {course.instructor?.name || "Unknown"}
+                    </div>
+                    <div className="flex items-center mb-2">
+                      <span className="font-bold text-amber-500 mr-1 text-sm">
+                        {formatRating(course.rating)}
                       </span>
-                    )}
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                    </div>
+                    <div className="flex items-center gap-2 mb-3 mt-auto">
+                      <span className="font-bold">{formatPrice(course.price)}</span>
+                      {course.originalPrice > course.price && (
+                        <span className="text-sm text-slate-400 line-through">
+                          {formatPrice(course.originalPrice)}
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => handleAddToCart(course.id)}
+                    >
+                      Add to cart
+                    </Button>
                   </div>
-                  <Button variant="outline" className="w-full" onClick={() => handleAddToCart(course.id)}>
-                    Add to cart
-                  </Button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -203,7 +218,10 @@ export default function CartPage() {
         </label>
 
         <div className="space-y-3 sm:space-y-4">
-          {items.map((item) => (
+          {items.map((item) => {
+            const itemThumb =
+              normalizeMediaUrl(item.course.thumbnail) || "/placeholder.jpg";
+            return (
             <div key={item.id} className="flex gap-3 sm:gap-4 border-t border-slate-200 dark:border-slate-800 py-3 sm:py-4">
               <div className="pt-1">
                 <input
@@ -213,7 +231,7 @@ export default function CartPage() {
                 />
               </div>
               <div className="w-20 h-14 sm:w-24 sm:h-16 md:w-32 md:h-20 bg-slate-200 dark:bg-slate-800 flex-shrink-0 relative rounded overflow-hidden">
-                <Image src={item.course.thumbnail} alt={item.course.title} fill className="object-cover" />
+                <Image src={itemThumb} alt={item.course.title} fill className="object-cover" />
               </div>
 
               <div className="flex-1 flex flex-col sm:flex-row sm:justify-between gap-2 min-w-0">
@@ -235,7 +253,8 @@ export default function CartPage() {
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 
