@@ -20,7 +20,7 @@ import {
   deleteLesson,
 } from "../../../../services/lesson.service";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, RefreshCw } from "lucide-react";
 import { confirmWithToast } from "../../../../../lib/confirm-toast";
 type Course = {
     id:number
@@ -61,6 +61,11 @@ export default function LessonCreatePage(){
     const [order,setOrder] = useState<number|"">("")
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [creating, setCreating] = useState(false);
+    /** Tiến độ gửi file từ browser → API (null = không đo được %) */
+    const [uploadClientPercent, setUploadClientPercent] = useState<number | null>(null);
+    /** Sau khi body đã gửi xong, server vẫn có thể đang upload lên Cloudinary */
+    const [uploadServerProcessing, setUploadServerProcessing] = useState(false);
+    const [lastUploadError, setLastUploadError] = useState<string | null>(null);
     const [expandedCourseId, setExpandedCourseId] = useState<number | null>(null);
     const [expandedSectionId, setExpandedSectionId] = useState<number | null>(null);
 
@@ -136,17 +141,29 @@ export default function LessonCreatePage(){
         return
       }
       setCreating(true)
+      setLastUploadError(null)
+      setUploadClientPercent(type === "video" ? 0 : null)
+      setUploadServerProcessing(false)
 
       try{
         let uploadedVideoUrl: string | undefined 
         
         if(type==="video"){
-          const uploadRes = await uploadLessonVideos([videoFile!])
+          const uploadRes = await uploadLessonVideos([videoFile!], {
+            onUploadProgress: (pct) => {
+              setUploadClientPercent(pct);
+              if (pct === 100) {
+                setUploadServerProcessing(true);
+              }
+            },
+          });
           uploadedVideoUrl = uploadRes.data.urls?.[0]
           if(!uploadedVideoUrl){
             toast.error("Failed to upload video")
+            setLastUploadError("Server did not return video URL.")
             return
           }
+          setUploadServerProcessing(false)
         }
 
         await createLesson(selectedCourseId,selectedSectionId,{
@@ -167,6 +184,8 @@ export default function LessonCreatePage(){
 
         await reloadAllLessons();
         toast.success("Lesson created successfully")
+        setUploadClientPercent(null)
+        setUploadServerProcessing(false)
       }catch(error: unknown){
         const ax = error as {
           response?: { data?: { message?: string | string[] } };
@@ -178,8 +197,11 @@ export default function LessonCreatePage(){
         else if (typeof m === "string") msg = m;
         else if (ax.message) msg = ax.message;
         toast.error(msg);
+        setLastUploadError(msg);
       }finally{
         setCreating(false)
+        setUploadClientPercent(null)
+        setUploadServerProcessing(false)
       }
     }
 
@@ -286,11 +308,19 @@ export default function LessonCreatePage(){
                   <Input
                     type="file"
                     accept="video/*"
-                    onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+                    onChange={(e) => {
+                      setVideoFile(e.target.files?.[0] ?? null);
+                      setLastUploadError(null);
+                    }}
                   />
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Video dài (vài GB) có thể upload 10–60+ phút — giữ tab mở. Giới hạn mặc định
-                    server 1GB/file (tăng bằng LESSON_UPLOAD_MAX_FILE_BYTES trên Render nếu cần).
+                    File lớn có thể mất nhiều phút — giữ tab mở. Thanh % chỉ phản ánh gửi lên server;
+                    sau đó server còn đẩy lên Cloudinary. Giới hạn mặc định 1GB/file (env{" "}
+                    <span className="font-mono">LESSON_UPLOAD_MAX_FILE_BYTES</span> trên Render nếu cần).
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Nếu lỗi không phải do hết hạn đăng nhập: thường là timeout/mạng hoặc quota Cloudinary.
+                    Phiên được làm mới định kỳ trong lúc upload (refresh token).
                   </p>
                 </div>
               )}
@@ -346,9 +376,50 @@ export default function LessonCreatePage(){
               </div>
             </div>
     
+            {creating && type === "video" && (
+              <div className="mt-4 space-y-2">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                  {uploadClientPercent === null ? (
+                    <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-500" />
+                  ) : (
+                    <div
+                      className="h-full rounded-full bg-blue-600 transition-[width] duration-300"
+                      style={{
+                        width: `${uploadServerProcessing ? 100 : uploadClientPercent}%`,
+                      }}
+                    />
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  {uploadServerProcessing
+                    ? "Đã gửi xong lên server — đang upload lên Cloudinary (có thể vài phút)…"
+                    : uploadClientPercent === null
+                      ? "Đang gửi file lên server…"
+                      : `Đang gửi lên server: ${uploadClientPercent}%`}
+                </p>
+              </div>
+            )}
+
+            {lastUploadError && type === "video" && videoFile && !creating && (
+              <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <p className="font-medium">Upload / tạo lesson thất bại</p>
+                <p className="mt-1 text-xs opacity-90">{lastUploadError}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 border-red-300 text-red-800 hover:bg-red-100 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950"
+                  onClick={() => void handleCreateLesson()}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Thử lại (giữ nguyên form & file)
+                </Button>
+              </div>
+            )}
+
             <Button
               className="mt-4"
-              onClick={handleCreateLesson}
+              onClick={() => void handleCreateLesson()}
               disabled={creating || !selectedSectionId || !title.trim()}
             >
               {creating ? "Creating..." : "Add Lesson"}
